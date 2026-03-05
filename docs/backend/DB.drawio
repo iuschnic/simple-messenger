@@ -187,7 +187,7 @@
           <mxGeometry x="410" y="224" width="180" height="70" as="geometry" />
         </mxCell>
         <mxCell id="snTa14MmPYj8h_46Rcrv-62" value="Chat" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1330" y="340" width="220" height="210" as="geometry" />
+          <mxGeometry x="1330" y="340" width="220" height="240" as="geometry" />
         </mxCell>
         <mxCell id="snTa14MmPYj8h_46Rcrv-63" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=1;" parent="snTa14MmPYj8h_46Rcrv-62" vertex="1">
           <mxGeometry y="30" width="220" height="30" as="geometry" />
@@ -263,6 +263,19 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="snTa14MmPYj8h_46Rcrv-118" value="Version: unsigned long long" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=6;overflow=hidden;whiteSpace=wrap;html=1;" parent="snTa14MmPYj8h_46Rcrv-116" vertex="1">
+          <mxGeometry x="30" width="190" height="30" as="geometry">
+            <mxRectangle width="190" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aBKxpXX4Ri4QFzpG9cGT-8" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1" parent="snTa14MmPYj8h_46Rcrv-62">
+          <mxGeometry y="210" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="aBKxpXX4Ri4QFzpG9cGT-9" value="" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;editable=1;overflow=hidden;whiteSpace=wrap;html=1;" vertex="1" parent="aBKxpXX4Ri4QFzpG9cGT-8">
+          <mxGeometry width="30" height="30" as="geometry">
+            <mxRectangle width="30" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="aBKxpXX4Ri4QFzpG9cGT-10" value="LastMessageNum: unsigned long long" style="shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=6;overflow=hidden;whiteSpace=wrap;html=1;" vertex="1" parent="aBKxpXX4Ri4QFzpG9cGT-8">
           <mxGeometry x="30" width="190" height="30" as="geometry">
             <mxRectangle width="190" height="30" as="alternateBounds" />
           </mxGeometry>
@@ -486,8 +499,8 @@
             <mxRectangle width="240" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="snTa14MmPYj8h_46Rcrv-119" value="Version - поле для версионирования чата и отправки клиентам изменений с момента отключения, инкрементируется когда происходит любое событие в чате (новое/удаленное/редактированное сообщение и тд)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
-          <mxGeometry x="1330" y="210" width="220" height="130" as="geometry" />
+        <mxCell id="snTa14MmPYj8h_46Rcrv-119" value="Version - поле для версионирования чата и отправки клиентам изменений с момента отключения, инкрементируется когда происходит любое событие в чате (новое/удаленное/редактированное сообщение и тд)&lt;div&gt;LastMessageNum - порядковый номер последнего сообщения в чате&lt;/div&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+          <mxGeometry x="1330" y="200" width="220" height="140" as="geometry" />
         </mxCell>
         <mxCell id="snTa14MmPYj8h_46Rcrv-123" value="Version - поле, отражающее версию чата, в которую произошло последнее, связанное с сообщением событие&lt;div&gt;Type - тип сообщения (обычное, ответ, форвард)&lt;br&gt;&lt;div&gt;ReplyToMessageId - Id сообщения, ответом на которое является данное сообщение. Храним явную ссылку на сообщение -&amp;gt; если оно удалено/изменено, нужно обновлять на фронтенде&lt;/div&gt;&lt;/div&gt;&lt;div&gt;ForwardedFrom... - поля, используемые, если сообщение является пересланным. Не хранится связь с оригиналом, это полный &quot;снимок&quot; исходного сообщения, включая и связи с вложениями&lt;/div&gt;&lt;div&gt;MessageNumber - порядковый номер сообщения в чате&lt;/div&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
           <mxGeometry x="940" y="961" width="270" height="280" as="geometry" />
