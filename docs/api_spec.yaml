@@ -137,12 +137,15 @@ components:
       items:
         $ref: '#/components/schemas/UserDto'
     
-    SyncMessagesResponse:
+    SyncChatResponse:
       type: object
       required:
         - messages
         - lastVersion
       properties:
+        chatId:
+          type: string
+          format: uuid
         messages:
           type: array
           items:
@@ -150,6 +153,17 @@ components:
         lastVersion:
           type: integer
           format: int64
+          
+    SyncChatsResponse:
+      type: object
+      required:
+        - messages
+        - lastVersion
+      properties:
+        sync_chats:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncChatResponse'
 
     ContactRequest:
       type: object
@@ -601,7 +615,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SyncMessagesResponse'
+                $ref: '#/components/schemas/SyncChatResponse'
         "403":
           description: User not in chat
         "404":
@@ -619,7 +633,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SyncMessagesResponse'
+                $ref: '#/components/schemas/SyncChatResponse'
 
   /messages/edit:
     put:
@@ -656,6 +670,10 @@ paths:
       responses:
         "200":
           description: Sync successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatsResponse'
 
   /internal/groups/{userId}:
     get:
