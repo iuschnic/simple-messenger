@@ -591,12 +591,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         "204":
           description: Successfully left chat
