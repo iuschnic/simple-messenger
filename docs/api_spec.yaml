@@ -514,8 +514,12 @@ paths:
                   type: string
                   format: uuid
       responses:
-        "201":
-          description: User added to chat
+        "200":
+          description: User removed, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
         "403":
           description: Not enough permissions
         "404":
