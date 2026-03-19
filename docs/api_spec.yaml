@@ -488,7 +488,7 @@ paths:
             schema:
               $ref: '#/components/schemas/KickUserRequest'
       responses:
-        "201":
+        "204":
           description: User removed
 
   /chats/leave:
@@ -515,6 +515,10 @@ paths:
       responses:
         "200":
           description: Message saved
+        "403":
+          description: User not in chat
+        "404":
+          description: User/chat no found
 
   /messages/reply:
     post:
@@ -527,6 +531,10 @@ paths:
       responses:
         "200":
           description: Message saved
+        "403":
+          description: User not in chat
+        "404":
+          description: User/chat/original message no found
 
   /messages/forward:
     post:
@@ -539,6 +547,10 @@ paths:
       responses:
         "200":
           description: Message saved
+        "403":
+          description: User not in chat
+        "404":
+          description: User/chat/original message no found
 
   /messages:
     get:
