@@ -136,6 +136,20 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/UserDto'
+    
+    SyncMessagesResponse:
+      type: object
+      required:
+        - messages
+        - lastVersion
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageDto'
+        lastVersion:
+          type: integer
+          format: int64
 
     ContactRequest:
       type: object
@@ -583,7 +597,11 @@ paths:
               $ref: '#/components/schemas/CreateMessageRequest'
       responses:
         "200":
-          description: Message saved
+          description: Message saved, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncMessagesResponse'
         "403":
           description: User not in chat
         "404":
@@ -597,7 +615,11 @@ paths:
               $ref: '#/components/schemas/DeleteMessageRequest'
       responses:
         "200":
-          description: Message deleted
+          description: Message deleted, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncMessagesResponse'
 
   /messages/edit:
     put:
