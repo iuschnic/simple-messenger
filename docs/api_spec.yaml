@@ -411,17 +411,23 @@ paths:
                 $ref: '#/components/schemas/UserDto'
         "404":
           description: User not found
+  
+  /users/me:
+    get:
+      summary: Get my profile
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        "404":
+          description: User not found
 
-  /users/{id}/contacts:
+  /users/me/contacts:
     get:
       summary: Get user's contacts
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         "200":
           description: Contact list
@@ -455,16 +461,10 @@ paths:
         "409":
           description: Contact already exists
 
-  /users/{userId}/contacts/{contactId}:
+  /users/me/contacts/{contactId}:
     delete:
       summary: Remove contact
       parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
         - name: contactId
           in: path
           required: true
