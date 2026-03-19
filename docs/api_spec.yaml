@@ -37,6 +37,16 @@ components:
         avatarFilePath:
           type: string
           nullable: true
+    
+    ContactDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto'
+        contactName:
+          type: string
+          description: Custom name given by user to this contact
+          nullable: true  # если пользователь не задал свое имя
 
     ChatDto:
       type: object
@@ -106,7 +116,7 @@ components:
 
     RegisterRequest:
       type: object
-      required: [uniqueName, password]
+      required: [uniqueName, email, password, displayedName]
       properties:
         uniqueName:
           type: string
@@ -126,13 +136,16 @@ components:
         password:
           type: string
 
-    ContactRequest:
+    AddContactRequest:
       type: object
-      required: [contactId]
+      required: [userContactId, contactName]
       properties:
         contactId:
           type: string
           format: uuid
+        contactName:
+          type: string
+          nullable: true
 
     CreatePrivateChatRequest:
       type: object
@@ -359,7 +372,7 @@ paths:
         "401":
           description: Invalid credentials
 
-  /users/search:
+  /users:
     get:
       summary: Search users
       parameters:
@@ -399,9 +412,16 @@ paths:
         "404":
           description: User not found
 
-  /contacts:
+  /users/{id}/contacts:
     get:
-      summary: Get contacts
+      summary: Get user's contacts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Contact list
@@ -410,16 +430,23 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserDto'
+                  $ref: '#/components/schemas/ContactDto'
 
     post:
       summary: Add contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContactRequest'
+              $ref: '#/components/schemas/AddContactRequest'
       responses:
         "201":
           description: Contact added
@@ -428,10 +455,16 @@ paths:
         "409":
           description: Contact already exists
 
-  /contacts/{contactId}:
+  /users/{userId}/contacts/{contactId}:
     delete:
       summary: Remove contact
       parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
         - name: contactId
           in: path
           required: true
