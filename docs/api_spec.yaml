@@ -440,13 +440,6 @@ paths:
 
     post:
       summary: Add contact
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
       requestBody:
         required: true
         content:
