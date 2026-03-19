@@ -577,6 +577,16 @@ paths:
           description: User not in chat
         "404":
           description: Chat or message not found
+    delete:
+      summary: Delete message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteMessageRequest'
+      responses:
+        "200":
+          description: Message deleted
 
   /messages/edit:
     put:
@@ -589,18 +599,6 @@ paths:
       responses:
         "200":
           description: Message edited
-
-  /messages:
-    delete:
-      summary: Delete message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteMessageRequest'
-      responses:
-        "200":
-          description: Message deleted
 
   /messages/read:
     post:
