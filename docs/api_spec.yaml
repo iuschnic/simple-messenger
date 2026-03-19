@@ -146,26 +146,53 @@ components:
         contactName:
           type: string
           nullable: true
-
+    
+    CreateChatRequest:
+      oneOf:
+        - $ref: '#/components/schemas/CreateGroupChatRequest'
+        - $ref: '#/components/schemas/CreatePrivateChatRequest'
+      discriminator:
+        propertyName: chatType
+        mapping:
+          group: '#/components/schemas/CreateGroupChatRequest'
+          private: '#/components/schemas/CreatePrivateChatRequest'
+    
+    BaseCreateChatRequest:
+      type: object
+      required:
+        - chatType
+      properties:
+        chatType:
+          type: string
+          description: Chat type
+          enum: [private, group]
+          
     CreatePrivateChatRequest:
-      type: object
-      required: [userId]
-      properties:
-        userId:
-          type: string
-          format: uuid
-
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateChatRequest'
+        - type: object
+          required:
+            - withUserId
+          properties:
+            withUserId:
+              type: string
+              format: uuid
+          additionalProperties: false
+    
     CreateGroupChatRequest:
-      type: object
-      required: [memberIds, chatName]
-      properties:
-        memberIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-        chatName:
-          type: string
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateChatRequest'
+        - type: object
+          required: [memberIds, chatName]
+          properties:
+            memberIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+            chatName:
+              type: string
+          additionalProperties: false
 
     InviteUserRequest:
       type: object
@@ -195,19 +222,19 @@ components:
         - $ref: '#/components/schemas/ReplyMessageRequest'
         - $ref: '#/components/schemas/ForwardMessageRequest'
       discriminator:
-        propertyName: type
+        propertyName: messageType
         mapping:
           send: '#/components/schemas/SendMessageRequest'
           reply: '#/components/schemas/ReplyMessageRequest'
           forward: '#/components/schemas/ForwardMessageRequest'
 
-    BaseMessageRequest:
+    BaseCreateMessageRequest:
       type: object
       required:
-        - type
+        - messageType
         - clientVersion
       properties:
-        type:
+        messageType:
           type: string
           description: Message type
           enum: [send, reply, forward]
@@ -217,7 +244,7 @@ components:
 
     SendMessageRequest:
       allOf:
-        - $ref: '#/components/schemas/BaseMessageRequest'
+        - $ref: '#/components/schemas/BaseCreateMessageRequest'
         - type: object
           required:
             - text
@@ -229,7 +256,7 @@ components:
 
     ReplyMessageRequest:
       allOf:
-        - $ref: '#/components/schemas/BaseMessageRequest'
+        - $ref: '#/components/schemas/BaseCreateMessageRequest'
         - type: object
           required:
             - text
@@ -284,6 +311,7 @@ components:
           type: array
           items:
             type: object
+            required: [chatId, clientVersion]
             properties:
               chatId:
                 type: string
@@ -477,6 +505,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ChatDto'
+    post:
+      summary: Create chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChatRequest'
+      responses:
+        "201":
+          description: Chat created
 
   /chats/{chatId}:
     get:
@@ -498,30 +536,6 @@ paths:
         "404":
           description: Chat not found
 
-  /chats/private:
-    post:
-      summary: Create private chat
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePrivateChatRequest'
-      responses:
-        "201":
-          description: Chat created
-
-  /chats/group:
-    post:
-      summary: Create group chat
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateGroupChatRequest'
-      responses:
-        "201":
-          description: Group chat created
-
   /chats/{chatId}/members:
     post:
       summary: Add user to chat
@@ -538,7 +552,7 @@ paths:
                   format: uuid
       responses:
         "200":
-          description: User removed, returning mini-sync messages
+          description: User added, returning mini-sync messages
           content:
             application/json:
               schema:
