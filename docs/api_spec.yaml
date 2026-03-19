@@ -495,42 +495,53 @@ paths:
         "201":
           description: Group chat created
 
-  /chats/invite:
+  /chats/{chatId}/members:
     post:
-      summary: Invite user to chat
+      summary: Add user to chat
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InviteUserRequest'
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  format: uuid
       responses:
-        "200":
-          description: User added
-
-  /chats/kick:
+        "201":
+          description: User added to chat
+        "403":
+          description: Not enough permissions
+        "404":
+          description: Chat or user not found
+        "409":
+          description: User already in chat
+  
+  /chats/{chatId}/members/{userId}:
     delete:
       summary: Remove user from chat
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/KickUserRequest'
-      responses:
-        "204":
-          description: User removed
-
-  /chats/leave:
-    delete:
-      summary: Leave group chat
       parameters:
         - name: chatId
-          in: query
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
           schema:
             type: string
             format: uuid
       responses:
         "204":
-          description: Left chat
+          description: User removed from chat
+        "403":
+          description: Not enough permissions
+        "404":
+          description: Chat or user not found
 
   /messages:
     get:
