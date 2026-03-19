@@ -187,51 +187,79 @@ components:
           type: string
           format: uuid
 
-    SendMessageRequest:
+    CreateMessageRequest:
+      oneOf:
+        - $ref: '#/components/schemas/SendMessageRequest'
+        - $ref: '#/components/schemas/ReplyMessageRequest'
+        - $ref: '#/components/schemas/ForwardMessageRequest'
+      discriminator:
+        propertyName: type
+        mapping:
+          send: '#/components/schemas/SendMessageRequest'
+          reply: '#/components/schemas/ReplyMessageRequest'
+          forward: '#/components/schemas/ForwardMessageRequest'
+
+    BaseMessageRequest:
       type: object
-      required: [chatId, text, clientVersion]
+      required:
+        - type
+        - chatId
+        - clientVersion
       properties:
+        type:
+          type: string
+          description: Message type
+          enum: [send, reply, forward]
         chatId:
           type: string
           format: uuid
-        text:
-          type: string
         clientVersion:
           type: integer
           format: int64
+
+    SendMessageRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseMessageRequest'
+        - type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              minLength: 1
+          additionalProperties: false
 
     ReplyMessageRequest:
-      type: object
-      required: [chatId, text, replyToMessageNumber, clientVersion]
-      properties:
-        chatId:
-          type: string
-          format: uuid
-        text:
-          type: string
-        replyToMessageNumber:
-          type: integer
-          format: int64
-        clientVersion:
-          type: integer
-          format: int64
+      allOf:
+        - $ref: '#/components/schemas/BaseMessageRequest'
+        - type: object
+          required:
+            - text
+            - replyToMessageId
+          properties:
+            text:
+              type: string
+              minLength: 1
+            replyToMessageId:
+              type: integer
+              format: int64
+          additionalProperties: false
 
     ForwardMessageRequest:
-      type: object
-      required: [chatId, forwardedFromChatId, forwardedFromMessageNumber, clientVersion]
-      properties:
-        chatId:
-          type: string
-          format: uuid
-        forwardedFromChatId:
-          type: string
-          format: uuid
-        forwardedFromMessageNumber:
-          type: integer
-          format: int64
-        clientVersion:
-          type: integer
-          format: int64
+      allOf:
+        - $ref: '#/components/schemas/BaseMessageRequest'
+        - type: object
+          required:
+            - forwardedFromChatId
+            - forwardedFromMessageId
+          properties:
+            forwardedFromChatId:
+              type: string
+              format: uuid
+            forwardedFromMessageId:
+              type: integer
+              format: int64
+          additionalProperties: false
 
     EditMessageRequest:
       type: object
@@ -504,54 +532,6 @@ paths:
         "204":
           description: Left chat
 
-  /messages/send:
-    post:
-      summary: Send message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SendMessageRequest'
-      responses:
-        "200":
-          description: Message saved
-        "403":
-          description: User not in chat
-        "404":
-          description: User/chat no found
-
-  /messages/reply:
-    post:
-      summary: Reply to message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReplyMessageRequest'
-      responses:
-        "200":
-          description: Message saved
-        "403":
-          description: User not in chat
-        "404":
-          description: User/chat/original message no found
-
-  /messages/forward:
-    post:
-      summary: Forward message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ForwardMessageRequest'
-      responses:
-        "200":
-          description: Message saved
-        "403":
-          description: User not in chat
-        "404":
-          description: User/chat/original message no found
-
   /messages:
     get:
       summary: Get message history
@@ -582,6 +562,21 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MessageDto'
+    post:
+      summary: Create message (send / reply / forward)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        "200":
+          description: Message saved
+        "403":
+          description: User not in chat
+        "404":
+          description: Chat or message not found
 
   /messages/edit:
     put:
