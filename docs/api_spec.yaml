@@ -126,45 +126,6 @@ components:
         password:
           type: string
 
-    LoginResponse:
-      type: object
-      properties:
-        token:
-          type: string
-
-    SearchUsersResponse:
-      type: array
-      items:
-        $ref: '#/components/schemas/UserDto'
-    
-    SyncChatResponse:
-      type: object
-      required:
-        - messages
-        - lastVersion
-      properties:
-        chatId:
-          type: string
-          format: uuid
-        messages:
-          type: array
-          items:
-            $ref: '#/components/schemas/MessageDto'
-        lastVersion:
-          type: integer
-          format: int64
-          
-    SyncChatsResponse:
-      type: object
-      required:
-        - messages
-        - lastVersion
-      properties:
-        sync_chats:
-          type: array
-          items:
-            $ref: '#/components/schemas/SyncChatResponse'
-
     ContactRequest:
       type: object
       required: [contactId]
@@ -344,6 +305,45 @@ components:
               clientVersion:
                 type: integer
                 format: int64
+    
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    SearchUsersResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/UserDto'
+    
+    SyncChatResponse:
+      type: object
+      required:
+        - messages
+        - lastVersion
+      properties:
+        chatId:
+          type: string
+          format: uuid
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageDto'
+        lastVersion:
+          type: integer
+          format: int64
+          
+    SyncChatsResponse:
+      type: object
+      required:
+        - messages
+        - lastVersion
+      properties:
+        sync_chats:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncChatResponse'
 
 paths:
 
@@ -659,7 +659,7 @@ paths:
         "200":
           description: Messages marked as read
 
-  /sync/chats:
+  /chats/sync:
     post:
       summary: Sync chats
       requestBody:
@@ -674,27 +674,3 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatsResponse'
-
-  /internal/groups/{userId}:
-    get:
-      security: []
-      summary: Get user chat groups
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Chat list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-                  format: uuid
-        "404":
-          description: User not found
