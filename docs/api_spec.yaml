@@ -192,16 +192,12 @@ components:
       type: object
       required:
         - type
-        - chatId
         - clientVersion
       properties:
         type:
           type: string
           description: Message type
           enum: [send, reply, forward]
-        chatId:
-          type: string
-          format: uuid
         clientVersion:
           type: integer
           format: int64
@@ -571,12 +567,13 @@ paths:
         "404":
           description: Chat or user not found
 
-  /messages:
+  /chats/{chatId}/messages:
     get:
       summary: Get message history
       parameters:
         - name: chatId
-          in: query
+          in: path
+          required: true
           schema:
             type: string
             format: uuid
@@ -603,6 +600,13 @@ paths:
                   $ref: '#/components/schemas/MessageDto'
     post:
       summary: Create message (send / reply / forward)
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
