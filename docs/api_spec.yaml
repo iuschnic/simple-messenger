@@ -202,14 +202,14 @@ components:
 
     ReplyMessageRequest:
       type: object
-      required: [chatId, text, replyToMessageId, clientVersion]
+      required: [chatId, text, replyToMessageNumber, clientVersion]
       properties:
         chatId:
           type: string
           format: uuid
         text:
           type: string
-        replyToMessageId:
+        replyToMessageNumber:
           type: integer
           format: int64
         clientVersion:
@@ -218,7 +218,7 @@ components:
 
     ForwardMessageRequest:
       type: object
-      required: [chatId, forwardedFromChatId, forwardedFromMessageId, clientVersion]
+      required: [chatId, forwardedFromChatId, forwardedFromMessageNumber, clientVersion]
       properties:
         chatId:
           type: string
@@ -226,7 +226,7 @@ components:
         forwardedFromChatId:
           type: string
           format: uuid
-        forwardedFromMessageId:
+        forwardedFromMessageNumber:
           type: integer
           format: int64
         clientVersion:
@@ -561,7 +561,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: fromMessageId
+        - name: fromMessageNumber
           in: query
           schema:
             type: integer
