@@ -246,7 +246,7 @@ components:
 
     ForwardMessageRequest:
       allOf:
-        - $ref: '#/components/schemas/BaseMessageRequest'
+        - $ref: '#/components/schemas/BaseCreateMessageRequest'
         - type: object
           required:
             - forwardedFromChatId
@@ -514,6 +514,13 @@ paths:
   /chats/{chatId}/members:
     post:
       summary: Add user to chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -696,7 +703,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EditMessageRequest'
       responses:
-        responses:
         "200":
           description: Message edited, returning mini-sync messages
           content:
