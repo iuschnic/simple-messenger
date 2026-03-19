@@ -28,7 +28,8 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         uniqueName:
           type: string
         displayName:
@@ -41,14 +42,16 @@ components:
       type: object
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         name:
           type: string
         type:
           type: string
           enum: [private, group]
         ownerId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -70,9 +73,11 @@ components:
           type: integer
           format: int64
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         senderId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         text:
           type: string
         createdAt:
@@ -95,7 +100,8 @@ components:
           format: int64
           nullable: true
         forwardedFromUserId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
           nullable: true
 
     RegisterRequest:
@@ -136,14 +142,16 @@ components:
       required: [contactId]
       properties:
         contactId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
 
     CreatePrivateChatRequest:
       type: object
       required: [userId]
       properties:
         userId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
 
     CreateGroupChatRequest:
       type: object
@@ -152,7 +160,8 @@ components:
         memberIds:
           type: array
           items:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
         chatName:
           type: string
 
@@ -161,25 +170,30 @@ components:
       required: [chatId, userId]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         userId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
 
     KickUserRequest:
       type: object
       required: [chatId, userId]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         userId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
 
     SendMessageRequest:
       type: object
       required: [chatId, text, clientVersion]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         text:
           type: string
         clientVersion:
@@ -191,7 +205,8 @@ components:
       required: [chatId, text, replyToMessageId, clientVersion]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         text:
           type: string
         replyToMessageId:
@@ -206,9 +221,11 @@ components:
       required: [chatId, forwardedFromChatId, forwardedFromMessageId, clientVersion]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         forwardedFromChatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         forwardedFromMessageId:
           type: integer
           format: int64
@@ -221,7 +238,8 @@ components:
       required: [chatId, messageNumber, newText, clientVersion]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         messageNumber:
           type: integer
           format: int64
@@ -236,7 +254,8 @@ components:
       required: [chatId, messageNumber, clientVersion]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         messageNumber:
           type: integer
           format: int64
@@ -249,7 +268,8 @@ components:
       required: [chatId, lastMessageNum]
       properties:
         chatId:
-          $ref: '#/components/schemas/Guid'
+          type: string
+          format: uuid
         lastMessageNum:
           type: integer
           format: int64
@@ -263,7 +283,8 @@ components:
             type: object
             properties:
               chatId:
-                $ref: '#/components/schemas/Guid'
+                type: string
+                format: uuid
               clientVersion:
                 type: integer
                 format: int64
@@ -334,7 +355,8 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
       responses:
         "200":
           description: User found
@@ -382,7 +404,8 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
       responses:
         "204":
           description: Contact removed
@@ -408,7 +431,8 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
       responses:
         "200":
           description: Chat info
@@ -474,7 +498,8 @@ paths:
         - name: chatId
           in: query
           schema:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
       responses:
         "204":
           description: Left chat
@@ -522,7 +547,8 @@ paths:
         - name: chatId
           in: query
           schema:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
         - name: fromMessageId
           in: query
           schema:
@@ -602,7 +628,8 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/Guid'
+            type: string
+            format: uuid
       responses:
         "200":
           description: Chat list
@@ -611,6 +638,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Guid'
+                  type: string
+                  format: uuid
         "404":
           description: User not found
