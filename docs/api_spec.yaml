@@ -20,10 +20,6 @@ components:
 
   schemas:
 
-    Guid:
-      type: string
-      format: uuid
-
     UserDto:
       type: object
       properties:
@@ -193,28 +189,6 @@ components:
             chatName:
               type: string
           additionalProperties: false
-
-    InviteUserRequest:
-      type: object
-      required: [chatId, userId]
-      properties:
-        chatId:
-          type: string
-          format: uuid
-        userId:
-          type: string
-          format: uuid
-
-    KickUserRequest:
-      type: object
-      required: [chatId, userId]
-      properties:
-        chatId:
-          type: string
-          format: uuid
-        userId:
-          type: string
-          format: uuid
 
     CreateMessageRequest:
       oneOf:
@@ -409,6 +383,7 @@ paths:
           in: query
           schema:
             type: integer
+            format: int64
       responses:
         "200":
           description: Users found
@@ -624,14 +599,17 @@ paths:
           in: query
           schema:
             type: integer
+            format: int64
         - name: limit
           in: query
           schema:
             type: integer
+            format: int64
         - name: clientVersion
           in: query
           schema:
             type: integer
+            format: int64
       responses:
         "200":
           description: Messages retrieved
@@ -683,11 +661,13 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
         - name: clientVersion
           in: query
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         "200":
           description: Message deleted, returning mini-sync messages
@@ -709,6 +689,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       requestBody:
         content:
           application/json:
