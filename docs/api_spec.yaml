@@ -271,11 +271,8 @@ components:
 
     ReadMessagesRequest:
       type: object
-      required: [chatId, lastMessageNum]
+      required: [lastMessageNum]
       properties:
-        chatId:
-          type: string
-          format: uuid
         lastMessageNum:
           type: integer
           format: int64
@@ -712,17 +709,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
 
-  /messages/read:
+  /chats/{chatId}/messages/read:
     post:
       summary: Mark messages as read
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ReadMessagesRequest'
       responses:
-        "200":
+        "201":
           description: Messages marked as read
+        "403":
+          description: User not in chat
+        "404":
+          description: Chat or message not found
 
   /chats/sync:
     post:
