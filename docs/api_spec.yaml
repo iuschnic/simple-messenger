@@ -248,30 +248,10 @@ components:
 
     EditMessageRequest:
       type: object
-      required: [chatId, messageNumber, newText, clientVersion]
+      required: [newText, clientVersion]
       properties:
-        chatId:
-          type: string
-          format: uuid
-        messageNumber:
-          type: integer
-          format: int64
         newText:
           type: string
-        clientVersion:
-          type: integer
-          format: int64
-
-    DeleteMessageRequest:
-      type: object
-      required: [chatId, messageNumber, clientVersion]
-      properties:
-        chatId:
-          type: string
-          format: uuid
-        messageNumber:
-          type: integer
-          format: int64
         clientVersion:
           type: integer
           format: int64
@@ -624,13 +604,27 @@ paths:
           description: User not in chat
         "404":
           description: Chat or message not found
+                
+  /chats/{chatId}/messages/{messageNum}:
     delete:
       summary: Delete message
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteMessageRequest'
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: messageNum
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: clientVersion
+          in: query
+          required: true
+          schema:
+            type: integer
       responses:
         "200":
           description: Message deleted, returning mini-sync messages
@@ -638,18 +632,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
-
-  /messages/edit:
-    put:
+    patch:
       summary: Edit message
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: messageNum
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EditMessageRequest'
       responses:
+        responses:
         "200":
-          description: Message edited
+          description: Message edited, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
 
   /messages/read:
     post:
