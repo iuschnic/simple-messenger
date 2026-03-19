@@ -525,7 +525,35 @@ paths:
   
   /chats/{chatId}/members/{userId}:
     delete:
-      summary: Remove user from chat
+      summary: Remove user from chat (by admin)
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User removed, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+        "403":
+          description: Not enough permissions
+        "404":
+          description: Chat or user not found
+          
+  /chats/{chatId}/members/me:
+    delete:
+      summary: Leave chat
       parameters:
         - name: chatId
           in: path
@@ -541,7 +569,7 @@ paths:
             format: uuid
       responses:
         "204":
-          description: User removed from chat
+          description: Successfully left chat
         "403":
           description: Not enough permissions
         "404":
