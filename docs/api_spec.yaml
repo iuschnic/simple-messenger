@@ -1,0 +1,750 @@
+openapi: 3.0.3
+info:
+  title: Messenger API
+  description: REST API for messaging service
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        uniqueName:
+          type: string
+        displayName:
+          type: string
+        avatarFilePath:
+          type: string
+          nullable: true
+    
+    ContactDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto'
+        contactName:
+          type: string
+          description: Custom name given by user to this contact
+          nullable: true  # если пользователь не задал свое имя
+
+    ChatDto:
+      type: object
+      properties:
+        chatId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [private, group]
+        ownerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int64
+        lastMessageNum:
+          type: integer
+          format: int64
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDto'
+
+    MessageDto:
+      type: object
+      properties:
+        messageNumber:
+          type: integer
+          format: int64
+        chatId:
+          type: string
+          format: uuid
+        senderId:
+          type: string
+          format: uuid
+        text:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+          nullable: true
+        deleted:
+          type: boolean
+        version:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [regular, reply, forward, system]
+        replyToMessageNumber:
+          type: integer
+          format: int64
+          nullable: true
+        forwardedFromUserId:
+          type: string
+          format: uuid
+          nullable: true
+
+    RegisterRequest:
+      type: object
+      required: [uniqueName, email, password, displayedName]
+      properties:
+        uniqueName:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        displayedName:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [uniqueName, password]
+      properties:
+        uniqueName:
+          type: string
+        password:
+          type: string
+
+    AddContactRequest:
+      type: object
+      required: [userContactId, contactName]
+      properties:
+        contactId:
+          type: string
+          format: uuid
+        contactName:
+          type: string
+          nullable: true
+    
+    CreateChatRequest:
+      oneOf:
+        - $ref: '#/components/schemas/CreateGroupChatRequest'
+        - $ref: '#/components/schemas/CreatePrivateChatRequest'
+      discriminator:
+        propertyName: chatType
+        mapping:
+          group: '#/components/schemas/CreateGroupChatRequest'
+          private: '#/components/schemas/CreatePrivateChatRequest'
+    
+    BaseCreateChatRequest:
+      type: object
+      required:
+        - chatType
+      properties:
+        chatType:
+          type: string
+          description: Chat type
+          enum: [private, group]
+          
+    CreatePrivateChatRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateChatRequest'
+        - type: object
+          required:
+            - withUserId
+          properties:
+            withUserId:
+              type: string
+              format: uuid
+          additionalProperties: false
+    
+    CreateGroupChatRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateChatRequest'
+        - type: object
+          required: [memberIds, chatName]
+          properties:
+            memberIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+            chatName:
+              type: string
+          additionalProperties: false
+
+    CreateMessageRequest:
+      oneOf:
+        - $ref: '#/components/schemas/SendMessageRequest'
+        - $ref: '#/components/schemas/ReplyMessageRequest'
+        - $ref: '#/components/schemas/ForwardMessageRequest'
+      discriminator:
+        propertyName: messageType
+        mapping:
+          send: '#/components/schemas/SendMessageRequest'
+          reply: '#/components/schemas/ReplyMessageRequest'
+          forward: '#/components/schemas/ForwardMessageRequest'
+
+    BaseCreateMessageRequest:
+      type: object
+      required:
+        - messageType
+        - clientVersion
+      properties:
+        messageType:
+          type: string
+          description: Message type
+          enum: [send, reply, forward]
+        clientVersion:
+          type: integer
+          format: int64
+
+    SendMessageRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateMessageRequest'
+        - type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              minLength: 1
+          additionalProperties: false
+
+    ReplyMessageRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateMessageRequest'
+        - type: object
+          required:
+            - text
+            - replyToMessageId
+          properties:
+            text:
+              type: string
+              minLength: 1
+            replyToMessageId:
+              type: integer
+              format: int64
+          additionalProperties: false
+
+    ForwardMessageRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCreateMessageRequest'
+        - type: object
+          required:
+            - forwardedFromChatId
+            - forwardedFromMessageId
+          properties:
+            forwardedFromChatId:
+              type: string
+              format: uuid
+            forwardedFromMessageId:
+              type: integer
+              format: int64
+          additionalProperties: false
+
+    EditMessageRequest:
+      type: object
+      required: [newText, clientVersion]
+      properties:
+        newText:
+          type: string
+        clientVersion:
+          type: integer
+          format: int64
+
+    ReadMessagesRequest:
+      type: object
+      required: [lastMessageNum]
+      properties:
+        lastMessageNum:
+          type: integer
+          format: int64
+
+    SyncChatsRequest:
+      type: object
+      properties:
+        chats:
+          type: array
+          items:
+            type: object
+            required: [chatId, clientVersion]
+            properties:
+              chatId:
+                type: string
+                format: uuid
+              clientVersion:
+                type: integer
+                format: int64
+    
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    SearchUsersResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/UserDto'
+    
+    SyncChatResponse:
+      type: object
+      required:
+        - messages
+        - lastVersion
+      properties:
+        chatId:
+          type: string
+          format: uuid
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageDto'
+        lastVersion:
+          type: integer
+          format: int64
+          
+    SyncChatsResponse:
+      type: object
+      required:
+        - messages
+        - lastVersion
+      properties:
+        sync_chats:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncChatResponse'
+
+paths:
+
+  /auth/register:
+    post:
+      security: []
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "201":
+          description: Account created
+        "409":
+          description: UniqueName already exists
+
+  /auth/login:
+    post:
+      security: []
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "401":
+          description: Invalid credentials
+
+  /users:
+    get:
+      summary: Search users
+      parameters:
+        - name: substr
+          in: query
+          schema:
+            type: string
+        - name: maxUsers
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Users found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchUsersResponse'
+
+  /users/{id}:
+    get:
+      summary: Get user by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        "404":
+          description: User not found
+  
+  /users/me:
+    get:
+      summary: Get my profile
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        "404":
+          description: User not found
+
+  /users/me/contacts:
+    get:
+      summary: Get user's contacts
+      responses:
+        "200":
+          description: Contact list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactDto'
+
+    post:
+      summary: Add contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddContactRequest'
+      responses:
+        "201":
+          description: Contact added
+        "404":
+          description: User not found
+        "409":
+          description: Contact already exists
+
+  /users/me/contacts/{contactId}:
+    delete:
+      summary: Remove contact
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Contact removed
+
+  /chats:
+    get:
+      summary: Get user chats
+      responses:
+        "200":
+          description: Chat list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatDto'
+    post:
+      summary: Create chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChatRequest'
+      responses:
+        "201":
+          description: Chat created
+
+  /chats/{chatId}:
+    get:
+      summary: Get chat info
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Chat info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+        "404":
+          description: Chat not found
+
+  /chats/{chatId}/members:
+    post:
+      summary: Add user to chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: User added, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+        "403":
+          description: Not enough permissions
+        "404":
+          description: Chat or user not found
+        "409":
+          description: User already in chat
+  
+  /chats/{chatId}/members/{userId}:
+    delete:
+      summary: Remove user from chat (by admin)
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User removed, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+        "403":
+          description: Not enough permissions
+        "404":
+          description: Chat or user not found
+          
+  /chats/{chatId}/members/me:
+    delete:
+      summary: Leave chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Successfully left chat
+        "403":
+          description: Not enough permissions
+        "404":
+          description: Chat or user not found
+
+  /chats/{chatId}/messages:
+    get:
+      summary: Get message history
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fromMessageNumber
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: clientVersion
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Messages retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageDto'
+    post:
+      summary: Create message (send / reply / forward)
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        "200":
+          description: Message saved, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+        "403":
+          description: User not in chat
+        "404":
+          description: Chat or message not found
+                
+  /chats/{chatId}/messages/{messageNum}:
+    delete:
+      summary: Delete message
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: messageNum
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: clientVersion
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Message deleted, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+    patch:
+      summary: Edit message
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: messageNum
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditMessageRequest'
+      responses:
+        "200":
+          description: Message edited, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+
+  /chats/{chatId}/messages/read:
+    post:
+      summary: Mark messages as read
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadMessagesRequest'
+      responses:
+        "201":
+          description: Messages marked as read
+        "403":
+          description: User not in chat
+        "404":
+          description: Chat or message not found
+
+  /chats/sync:
+    post:
+      summary: Sync chats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncChatsRequest'
+      responses:
+        "200":
+          description: Sync successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatsResponse'
