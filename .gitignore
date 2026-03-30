@@ -53,5 +53,6 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 
+.idea/
 # drawio
 *.bkp
