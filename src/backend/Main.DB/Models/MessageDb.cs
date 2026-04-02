@@ -9,13 +9,13 @@ public class MessageDb
     public MessageDb(
         ulong messageNumber,
         Guid chatId,
-        Guid senderUserId,
+        Guid? senderUserId,
         string text,
-        MessageTypeDb type,
         DateTime createdAt,
         DateTime? editedAt,
         bool deleted,
         ulong version,
+        MessageTypeDb type,
         ulong? replyToMessageNumber = null,
         Guid? forwardedFromUserId = null)
     {
