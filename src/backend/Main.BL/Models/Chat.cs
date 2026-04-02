@@ -21,9 +21,8 @@ public class Chat
                 if (participants.Count != 2)
                     throw new ArgumentException("Private chat must have exactly 2 participants");
                 break;
-
             case ChatType.Group:
-                if (participants.Count < 2)
+                if (participants.Count < 1)
                     throw new ArgumentException("Group must have at least 1 participant");
                 break;
         }
