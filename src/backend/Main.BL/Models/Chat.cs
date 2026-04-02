@@ -7,7 +7,7 @@ public class Chat
         Guid id,
         string? name,
         ChatType type,
-        Guid? ownerId,
+        Guid? userOwnerId,
         DateTime createdAt,
         ulong version,
         ulong lastMessageNum,
@@ -16,8 +16,6 @@ public class Chat
         switch (type)
         {
             case ChatType.Private:
-                if (ownerId != null)
-                    throw new ArgumentException("Private chat cannot have an owner");
                 if (participants.Count != 2)
                     throw new ArgumentException("Private chat must have exactly 2 participants");
                 break;
@@ -31,7 +29,7 @@ public class Chat
         Id = id;
         Name = type == ChatType.Private ? null : name;
         Type = type;
-        OwnerId = ownerId;
+        UserOwnerId = type == ChatType.Private ? null : userOwnerId;
         CreatedAt = createdAt;
         Version = version;
         LastMessageNum = lastMessageNum;
@@ -40,13 +38,13 @@ public class Chat
 
     public static Chat CreateGroup(
         string name,
-        Guid? ownerId,
+        Guid? userOwnerId,
         List<ChatParticipant> participants)
     {
         return new Chat(Guid.NewGuid(),
             name,
             ChatType.Group,
-            ownerId,
+            userOwnerId,
             DateTime.UtcNow,
             0,
             0,
@@ -66,10 +64,30 @@ public class Chat
             participants);
     }
 
+    public static Chat Create(
+        Guid id,
+        string? name,
+        ChatType type,
+        Guid? userOwnerId,
+        DateTime createdAt,
+        ulong version,
+        ulong lastMessageNum,
+        List<ChatParticipant> participants)
+    {
+        return new Chat(id,
+            name,
+            type,
+            userOwnerId,
+            createdAt,
+            version,
+            lastMessageNum,
+            participants);
+    }
+
     public Guid Id { get; }
     public string? Name { get; }  //у приватного чата нет названия, у публичного есть
     public ChatType Type { get; }
-    public Guid? OwnerId { get; }  //может быть удален + у личного чата нет владельца
+    public Guid? UserOwnerId { get; }  //может быть удален + у личного чата нет владельца
     public DateTime CreatedAt { get; }
     public ulong Version { get; }
     public ulong LastMessageNum { get; }
