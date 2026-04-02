@@ -3,7 +3,7 @@ namespace Main.BL.Models;
 
 public class Message
 {
-    public Message(
+    private Message(
         ulong messageNumber,
         Guid chatId,
         Guid? senderId,
@@ -71,6 +71,106 @@ public class Message
         ReplyToMessageNumber = replyToMessageNumber;
         ForwardedFromUserId = forwardedFromUserId;
     }
+    public static Message CreateRegular(
+        Guid chatId,
+        Guid senderId,
+        string text)
+    {
+        return new Message(
+            0, // правильный номер будет установлен репозиторием в рамках транзакции
+            chatId,
+            senderId,
+            text,
+            DateTime.UtcNow,
+            null,
+            false,
+            0, // правильная версия будет установлена репозиторием в рамках транзакции
+            MessageType.Regular,
+            null,
+            null);
+    }
+    public static Message CreateReply(
+        Guid chatId,
+        Guid senderId,
+        string text,
+        ulong replyToMessageNumber)
+    {
+        return new Message(
+            0, // правильный номер будет установлен репозиторием в рамках транзакции
+            chatId,
+            senderId,
+            text,
+            DateTime.UtcNow,
+            null,
+            false,
+            0,
+            MessageType.Reply,
+            replyToMessageNumber,
+            null);
+    }
+    public static Message CreateForward(
+        Guid chatId,
+        Guid senderId,
+        string text,
+        Guid? forwardedFromUserId = null)  // может быть null, если автор удален
+    {
+        return new Message(
+            0, // правильный номер будет установлен репозиторием в рамках транзакции
+            chatId,
+            senderId,
+            text,
+            DateTime.UtcNow,
+            null,
+            false,
+            1,
+            MessageType.Forward,
+            null,
+            forwardedFromUserId);
+    }
+    public static Message CreateSystem(
+        Guid chatId,
+        string text)
+    {
+        return new Message(
+            0, // правильный номер будет установлен репозиторием в рамках транзакции
+            chatId,
+            null,
+            text,
+            DateTime.UtcNow,
+            null,
+            false,
+            0,
+            MessageType.System,
+            null,
+            null);
+    }
+    public static Message Create(
+        ulong messageNumber,
+        Guid chatId,
+        Guid? senderId,
+        string text,
+        DateTime createdAt,
+        DateTime? editedAt,
+        bool deleted,
+        ulong version,
+        MessageType type,
+        ulong? replyToMessageNumber,
+        Guid? forwardedFromUserId)
+    {
+        return new Message(
+            messageNumber,
+            chatId,
+            senderId,
+            text,
+            createdAt,
+            editedAt,
+            deleted,
+            version,
+            type,
+            replyToMessageNumber,
+            forwardedFromUserId);
+    }
+
     public ulong MessageNumber { get; }
     public Guid ChatId { get; }
     public Guid? SenderId { get; }  //может быть удален или сообщение системное

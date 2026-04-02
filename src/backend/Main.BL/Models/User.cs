@@ -1,10 +1,29 @@
-﻿namespace Main.BL.Models;
+﻿using System;
 
-public class User(Guid id, 
-    string uniqueName, 
-    string displayedName)
+namespace Main.BL.Models;
+
+public class User
 {
-    public Guid Id { get; } = id;
-    public string UniqueName { get; } = uniqueName;
-    public string DisplayedName { get; } = displayedName;
+    private User(Guid id,
+        string uniqueName,
+        string displayedName)
+    {
+        Id = id;
+        UniqueName = uniqueName;
+        DisplayedName = displayedName;
+    }
+    public static User CreateNew(string uniqueName,
+        string displayedName)
+    {
+        return new User(Guid.NewGuid(), uniqueName, displayedName);
+    }
+    public static User Create(Guid id,
+        string uniqueName,
+        string displayedName)
+    {
+        return new User(id, uniqueName, displayedName);
+    }
+    public Guid Id { get; }
+    public string UniqueName { get; }
+    public string DisplayedName { get; }
 }

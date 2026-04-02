@@ -3,9 +3,9 @@ namespace Main.BL.Models;
 
 public class Chat
 {
-    public Chat(
+    private Chat(
         Guid id,
-        string name,
+        string? name,
         ChatType type,
         Guid? ownerId,
         DateTime createdAt,
@@ -24,21 +24,50 @@ public class Chat
             case ChatType.Group:
                 if (participants.Count < 1)
                     throw new ArgumentException("Group must have at least 1 participant");
+                if (string.IsNullOrWhiteSpace(name))
+                    throw new ArgumentException("Group chat must have a no-null name");
                 break;
         }
-
         Id = id;
-        Name = name;
+        Name = type == ChatType.Private ? null : name;
         Type = type;
         OwnerId = ownerId;
         CreatedAt = createdAt;
         Version = version;
         LastMessageNum = lastMessageNum;
-        Participants = participants;
+        Participants = participants.AsReadOnly();
+    }
+
+    public static Chat CreateGroup(
+        string name,
+        Guid? ownerId,
+        List<ChatParticipant> participants)
+    {
+        return new Chat(Guid.NewGuid(),
+            name,
+            ChatType.Group,
+            ownerId,
+            DateTime.UtcNow,
+            0,
+            0,
+            participants);
+    }
+
+    public static Chat CreatePrivate(
+        List<ChatParticipant> participants)
+    {
+        return new Chat(Guid.NewGuid(),
+            null,
+            ChatType.Private,
+            null,
+            DateTime.UtcNow,
+            0,
+            0,
+            participants);
     }
 
     public Guid Id { get; }
-    public string Name { get; }
+    public string? Name { get; }  //у приватного чата нет названия, у публичного есть
     public ChatType Type { get; }
     public Guid? OwnerId { get; }  //может быть удален + у личного чата нет владельца
     public DateTime CreatedAt { get; }
