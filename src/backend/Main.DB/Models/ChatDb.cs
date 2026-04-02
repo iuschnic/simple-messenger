@@ -7,7 +7,7 @@ public class ChatDb
 {
     internal ChatDb() { }
     public ChatDb(Guid id,
-        string name,
+        string? name,
         ChatTypeDb type,
         Guid? ownerUserId,
         DateTime createdAt,
@@ -25,7 +25,7 @@ public class ChatDb
     [Required]
     public Guid Id { get; set; }
     [Required]
-    public string Name { get; set; }
+    public string? Name { get; set; }  //у приватного чата нет названия, у публичного есть
     [Required]
     public ChatTypeDb Type { get; set; }
     public Guid? OwnerUserId { get; set; }    // пользователь может быть удален
