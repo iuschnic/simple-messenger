@@ -24,7 +24,7 @@ public class Chat
 
             case ChatType.Group:
                 if (participants.Count < 2)
-                    throw new ArgumentException("Group must have at least 2 participants");
+                    throw new ArgumentException("Group must have at least 1 participant");
                 break;
         }
 
