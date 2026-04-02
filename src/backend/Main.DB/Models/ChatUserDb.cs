@@ -6,10 +6,12 @@ public class ChatUserDb
 {
     internal ChatUserDb() { }
     public ChatUserDb(Guid chatId,
-        Guid userId)
+        Guid userId,
+        ulong lastMessageRead)
     {
         ChatId = chatId;
         UserId = userId;
+        LastMessageRead = lastMessageRead;
     }
     [Required]
     public Guid ChatId { get; set; }  //hard delete при удалении чата
