@@ -7,7 +7,7 @@ public class Chat
         Guid id,
         string? name,
         ChatType type,
-        Guid? userOwnerId,
+        Guid? ownerUserId,
         DateTime createdAt,
         ulong version,
         ulong lastMessageNum,
@@ -29,7 +29,7 @@ public class Chat
         Id = id;
         Name = type == ChatType.Private ? null : name;
         Type = type;
-        UserOwnerId = type == ChatType.Private ? null : userOwnerId;
+        OwnerUserId = type == ChatType.Private ? null : ownerUserId;
         CreatedAt = createdAt;
         Version = version;
         LastMessageNum = lastMessageNum;
@@ -38,13 +38,13 @@ public class Chat
 
     public static Chat CreateGroup(
         string name,
-        Guid? userOwnerId,
+        Guid? ownerUserId,
         List<ChatParticipant> participants)
     {
         return new Chat(Guid.NewGuid(),
             name,
             ChatType.Group,
-            userOwnerId,
+            ownerUserId,
             DateTime.UtcNow,
             0,
             0,
@@ -68,7 +68,7 @@ public class Chat
         Guid id,
         string? name,
         ChatType type,
-        Guid? userOwnerId,
+        Guid? ownerUserId,
         DateTime createdAt,
         ulong version,
         ulong lastMessageNum,
@@ -77,7 +77,7 @@ public class Chat
         return new Chat(id,
             name,
             type,
-            userOwnerId,
+            ownerUserId,
             createdAt,
             version,
             lastMessageNum,
@@ -87,7 +87,7 @@ public class Chat
     public Guid Id { get; }
     public string? Name { get; }  //у приватного чата нет названия, у публичного есть
     public ChatType Type { get; }
-    public Guid? UserOwnerId { get; }  //может быть удален + у личного чата нет владельца
+    public Guid? OwnerUserId { get; }  //может быть удален + у личного чата нет владельца
     public DateTime CreatedAt { get; }
     public ulong Version { get; }
     public ulong LastMessageNum { get; }
