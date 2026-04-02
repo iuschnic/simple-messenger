@@ -9,47 +9,49 @@ public class MessageDb
     public MessageDb(
         ulong messageNumber,
         Guid chatId,
-        Guid senderId,
+        Guid senderUserId,
         string text,
         MessageTypeDb type,
+        DateTime createdAt,
+        DateTime? editedAt,
+        bool deleted,
+        ulong version,
         ulong? replyToMessageNumber = null,
         Guid? forwardedFromUserId = null)
     {
         MessageNumber = messageNumber;
         ChatId = chatId;
-        SenderId = senderId;
+        SenderUserId = senderUserId;
         Text = text;
         Type = type;
+        CreatedAt = createdAt;
+        EditedAt = editedAt;
+        Deleted = deleted;
+        Version = version;
         ReplyToMessageNumber = replyToMessageNumber;
         ForwardedFromUserId = forwardedFromUserId;
-        CreatedAt = DateTime.UtcNow;
-        EditedAt = DateTime.UtcNow;
-        Deleted = false;
-        Version = 1;
     }
     [Required]
     public ulong MessageNumber { get; set; }
     [Required]
-    public Guid ChatId { get; set; }
-    [Required]
-    public Guid SenderId { get; set; }
+    public Guid ChatId { get; set; }  //hard delete при удалении чата
+    public Guid? SenderUserId { get; set; }  //пользователь может быть удален при не удаленном чате
     [Required]
     public string Text { get; set; }
     [Required]
     public DateTime CreatedAt { get; set; }
+    public DateTime? EditedAt { get; set; }  //может не быть изменено
     [Required]
-    public DateTime EditedAt { get; set; }
-    [Required]
-    public bool Deleted { get; set; }
+    public bool Deleted { get; set; }  //soft-delete для сообщений при существующем чате
     [Required]
     public ulong Version { get; set; }
     [Required]
     public MessageTypeDb Type { get; set; }
-
     public ulong? ReplyToMessageNumber { get; set; }
     public Guid? ForwardedFromUserId { get; set; }
+
     public ChatDb? Chat { get; set; }
-    public UserDb? Sender { get; set; }
+    public UserDb? SenderUser { get; set; }
     public MessageDb? ReplyToMessage { get; set; }
     public UserDb? ForwardedFromUser { get; set; }
 }

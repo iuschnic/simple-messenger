@@ -12,9 +12,9 @@ public class ChatUserDb
         UserId = userId;
     }
     [Required]
-    public Guid ChatId { get; set; }
+    public Guid ChatId { get; set; }  //hard delete при удалении чата
     [Required]
-    public Guid UserId { get; set; }
+    public Guid UserId { get; set; }  //hard delete при удалении пользователя
     [Required]
     public ulong LastMessageRead { get; set; }
 

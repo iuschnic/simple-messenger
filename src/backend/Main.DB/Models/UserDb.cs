@@ -20,5 +20,4 @@ public class UserDb
 
     public ICollection<ContactDb> Contacts { get; set; } = [];
     public ICollection<ChatUserDb> UserChats { get; set; } = [];
-    public ICollection<MessageDb> SentMessages { get; set; } = [];
 }

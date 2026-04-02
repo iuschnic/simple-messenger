@@ -9,7 +9,7 @@ public class ChatDb
     public ChatDb(Guid id,
         string name,
         ChatTypeDb type,
-        Guid ownerId,
+        Guid? ownerUserId,
         DateTime createdAt,
         ulong version,
         ulong lastMessageNum)
@@ -17,8 +17,8 @@ public class ChatDb
         Id = id; 
         Name = name; 
         Type = type; 
-        OwnerId = ownerId;
-        CreatedAt = DateTime.UtcNow;
+        OwnerUserId = ownerUserId;
+        CreatedAt = createdAt;
         Version = version;
         LastMessageNum = lastMessageNum;
     }
@@ -28,8 +28,7 @@ public class ChatDb
     public string Name { get; set; }
     [Required]
     public ChatTypeDb Type { get; set; }
-    [Required]
-    public Guid OwnerId { get; set; }
+    public Guid? OwnerUserId { get; set; }    // пользователь может быть удален
     [Required]
     public DateTime CreatedAt { get; set; }
     [Required]
@@ -37,8 +36,8 @@ public class ChatDb
     [Required]
     public ulong LastMessageNum { get; set; }
 
-    public UserDb? Owner {  get; set; }
-    public ICollection<ChatUserDb> Participants { get; set; } = [];
+    public UserDb? OwnerUser {  get; set; }
+    public ICollection<ChatUserDb> ChatUsers { get; set; } = [];
     public ICollection<MessageDb> Messages { get; set; } = [];
     
 }
