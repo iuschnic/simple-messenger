@@ -11,7 +11,7 @@ public class Chat
         DateTime createdAt,
         ulong version,
         ulong lastMessageNum,
-        List<ChatParticipant> participants)
+        List<ChatUser> participants)
     {
         switch (type)
         {
@@ -39,7 +39,7 @@ public class Chat
     public static Chat CreateGroup(
         string name,
         Guid? ownerUserId,
-        List<ChatParticipant> participants)
+        List<ChatUser> participants)
     {
         return new Chat(Guid.NewGuid(),
             name,
@@ -52,7 +52,7 @@ public class Chat
     }
 
     public static Chat CreatePrivate(
-        List<ChatParticipant> participants)
+        List<ChatUser> participants)
     {
         return new Chat(Guid.NewGuid(),
             null,
@@ -72,7 +72,7 @@ public class Chat
         DateTime createdAt,
         ulong version,
         ulong lastMessageNum,
-        List<ChatParticipant> participants)
+        List<ChatUser> participants)
     {
         return new Chat(id,
             name,
@@ -91,5 +91,5 @@ public class Chat
     public DateTime CreatedAt { get; }
     public ulong Version { get; }
     public ulong LastMessageNum { get; }
-    public IReadOnlyList<ChatParticipant> Participants { get; }
+    public IReadOnlyList<ChatUser> Participants { get; }
 }

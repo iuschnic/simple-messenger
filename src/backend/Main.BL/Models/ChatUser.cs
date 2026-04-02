@@ -1,6 +1,6 @@
 ﻿namespace Main.BL.Models;
 
-public class ChatParticipant(Guid userId, 
+public class ChatUser(Guid userId, 
     ulong lastMessageRead)
 {
     public Guid UserId { get; } = userId;
