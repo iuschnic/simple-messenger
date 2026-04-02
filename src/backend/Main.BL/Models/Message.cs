@@ -6,7 +6,7 @@ public class Message
     private Message(
         ulong messageNumber,
         Guid chatId,
-        Guid? senderId,
+        Guid? senderUserId,
         string text,
         DateTime createdAt,
         DateTime? editedAt,
@@ -47,8 +47,8 @@ public class Message
              * Не должно иметь ссылок на ReplyToMessageNumber или ForwardedFromUserId
              */
             case MessageType.System:
-                if (senderId != null && senderId != Guid.Empty)
-                    throw new ArgumentException("System message should not have a sender", nameof(senderId));
+                if (senderUserId != null && senderUserId != Guid.Empty)
+                    throw new ArgumentException("System message should not have a sender");
                 if (replyToMessageNumber != null)
                     throw new ArgumentException("System message cannot be a reply");
                 if (forwardedFromUserId != null)
@@ -58,10 +58,10 @@ public class Message
                 throw new ArgumentException($"Unknown message type: {type}", nameof(type));
         }
         if (editedAt != null && editedAt < createdAt)
-            throw new ArgumentException("EditedAt cannot be earlier than CreatedAt", nameof(editedAt));
+            throw new ArgumentException("EditedAt cannot be earlier than CreatedAt");
         MessageNumber = messageNumber;
         ChatId = chatId;
-        SenderId = senderId;
+        SenderUserId = senderUserId;
         Text = text;
         CreatedAt = createdAt;
         EditedAt = editedAt;
@@ -173,7 +173,7 @@ public class Message
 
     public ulong MessageNumber { get; }
     public Guid ChatId { get; }
-    public Guid? SenderId { get; }  //может быть удален или сообщение системное
+    public Guid? SenderUserId { get; }  //может быть удален или сообщение системное
     public string Text { get; }
     public DateTime CreatedAt { get; }
     public DateTime? EditedAt { get; }  //может не быть изменено
