@@ -14,17 +14,13 @@ public class ChatRepository : IChatRepository
     {
         _context = context;
     }
-
     public async Task<Chat?> GetByIdAsync(Guid id)
     {
         var chatDb = await _context.Chats
             .Include(c => c.ChatUsers)
             .FirstOrDefaultAsync(c => c.Id == id);
-        if (chatDb == null)
-            return null;
-        return chatDb.ToDomain([.. chatDb.ChatUsers]);
+        return chatDb?.ToDomain([.. chatDb.ChatUsers]);
     }
-
     public async Task<IEnumerable<Chat>> GetUserChatsAsync(Guid userId)
     {
         var chatsDb = await _context.Chats
@@ -33,45 +29,32 @@ public class ChatRepository : IChatRepository
             .ToListAsync();
         return chatsDb.Select(c => c.ToDomain([.. c.ChatUsers]));
     }
-
-    public async Task<Chat> CreateAsync(Chat chat)
+    public async Task CreateAsync(Chat chat)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
-        {
-            var chatDb = chat.ToDb();
-            foreach (var p in chat.Participants)
-                chatDb.ChatUsers.Add(p.ToDb(chat.Id));
-            await _context.Chats.AddAsync(chatDb);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return chat;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-    }
-
-    public async Task UpdateNameAsync(Guid chatId, string newName)
-    {
-        var chatDb = await _context.Chats.FindAsync(chatId) ?? 
-            throw new InvalidOperationException($"Chat {chatId} not found");
-        chatDb.Name = newName;
+        var chatDb = chat.ToDb();
+        foreach (var p in chat.Participants)
+            chatDb.ChatUsers.Add(p.ToDb(chat.Id));
+        await _context.Chats.AddAsync(chatDb);
         await _context.SaveChangesAsync();
     }
-
-    public async Task DeleteAsync(Guid id)
+    public async Task<bool> TryUpdateNameAsync(Guid chatId, string newName)
+    {
+        var chatDb = await _context.Chats.FindAsync(chatId);
+        if (chatDb == null)
+            return false;
+        chatDb.Name = newName;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    public async Task<bool> TryDeleteAsync(Guid id)
     {
         var chat = await _context.Chats.FindAsync(id);
-        if (chat != null)
-        {
-            _context.Chats.Remove(chat);
-            await _context.SaveChangesAsync();
-        }
+        if (chat == null)
+            return false;
+        _context.Chats.Remove(chat);
+        await _context.SaveChangesAsync();
+        return true;
     }
-
     public async Task<bool> ExistsAsync(Guid id)
     {
         return await _context.Chats.AnyAsync(c => c.Id == id);
