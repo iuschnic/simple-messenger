@@ -1,76 +1,71 @@
-class IMessengerService
-{
-public:
-    virtual ~IMessengerService() = default;
+using System;
+using System.Collections.Generic;
 
+public interface IMessengerService
+{
     // регистрация
-    virtual User RegisterUser(
-        const std::string& uniqueName,
-        const std::string& password,
-        const std::string& email) = 0;
+    User RegisterUser(
+        string uniqueName,
+        string password,
+        string email);
 
     // вход
-    virtual User Login(
-        const std::string& uniqueName,
-        const std::string& password) = 0;
+    User Login(
+        string uniqueName,
+        string password);
 
+    User GetUserById(Guid userId);
 
-    virtual User GetUserById(Guid userId) = 0;
-
-    virtual User UpdateUniqueName(
+    User UpdateUniqueName(
         Guid userId,
-        const std::string& uniqueName) = 0;
+        string uniqueName);
 
-    virtual std::vector<User> FindUsersByUniqueName(
-        const std::string& uniqueName) = 0;
+    List<User> FindUsersByUniqueName(
+        string uniqueName);
 
-
-    virtual void AddContact(
+    void AddContact(
         Guid ownerId,
-        const std::string& contactUniqueName) = 0;
+        string contactUniqueName);
 
-    virtual std::vector<User> GetContacts(Guid userId) = 0;
-
+    List<User> GetContacts(Guid userId);
 
     // список чатов пользователя
-    virtual std::vector<Chat> GetUserChats(Guid userId) = 0;
-
+    List<Chat> GetUserChats(Guid userId);
 
     // создать групповой чат
-    virtual Chat CreateChat(
-        const std::string& name,
+    Chat CreateChat(
+        string name,
         Guid creatorId,
-        const std::vector<std::string>& participants) = 0;
+        List<string> participants);
 
     // участники чата
-    virtual std::vector<User> GetChatParticipants(Guid chatId) = 0;
+    List<User> GetChatParticipants(Guid chatId);
 
     // добавить пользователя
-    virtual void AddUserToChat(
+    void AddUserToChat(
         Guid chatId,
-        const std::string& uniqueName) = 0;
+        string uniqueName);
 
     // выйти из чата
-    virtual void LeaveChat(
+    void LeaveChat(
         Guid chatId,
-        Guid userId) = 0;
-
+        Guid userId);
 
     // сообщения чата
-    virtual std::vector<Message> GetChatMessages(
-        Guid chatId) = 0;
+    List<Message> GetChatMessages(
+        Guid chatId);
 
     // отправить сообщение
-    virtual Message SendMessage(
+    Message SendMessage(
         Guid chatId,
         Guid senderId,
-        const std::string& text) = 0;
+        string text);
 
     // редактировать сообщение
-    virtual Message EditMessage(
+    Message EditMessage(
         Guid messageId,
-        const std::string& newText) = 0;
+        string newText);
 
     // удалить сообщение
-    virtual void DeleteMessage(Guid messageId) = 0;
-};
+    void DeleteMessage(Guid messageId);
+}
