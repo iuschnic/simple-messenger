@@ -1,0 +1,76 @@
+class IMessengerService
+{
+public:
+    virtual ~IMessengerService() = default;
+
+    // регистрация
+    virtual User RegisterUser(
+        const std::string& uniqueName,
+        const std::string& password,
+        const std::string& email) = 0;
+
+    // вход
+    virtual User Login(
+        const std::string& uniqueName,
+        const std::string& password) = 0;
+
+
+    virtual User GetUserById(Guid userId) = 0;
+
+    virtual User UpdateUniqueName(
+        Guid userId,
+        const std::string& uniqueName) = 0;
+
+    virtual std::vector<User> FindUsersByUniqueName(
+        const std::string& uniqueName) = 0;
+
+
+    virtual void AddContact(
+        Guid ownerId,
+        const std::string& contactUniqueName) = 0;
+
+    virtual std::vector<User> GetContacts(Guid userId) = 0;
+
+
+    // список чатов пользователя
+    virtual std::vector<Chat> GetUserChats(Guid userId) = 0;
+
+
+    // создать групповой чат
+    virtual Chat CreateChat(
+        const std::string& name,
+        Guid creatorId,
+        const std::vector<std::string>& participants) = 0;
+
+    // участники чата
+    virtual std::vector<User> GetChatParticipants(Guid chatId) = 0;
+
+    // добавить пользователя
+    virtual void AddUserToChat(
+        Guid chatId,
+        const std::string& uniqueName) = 0;
+
+    // выйти из чата
+    virtual void LeaveChat(
+        Guid chatId,
+        Guid userId) = 0;
+
+
+    // сообщения чата
+    virtual std::vector<Message> GetChatMessages(
+        Guid chatId) = 0;
+
+    // отправить сообщение
+    virtual Message SendMessage(
+        Guid chatId,
+        Guid senderId,
+        const std::string& text) = 0;
+
+    // редактировать сообщение
+    virtual Message EditMessage(
+        Guid messageId,
+        const std::string& newText) = 0;
+
+    // удалить сообщение
+    virtual void DeleteMessage(Guid messageId) = 0;
+};

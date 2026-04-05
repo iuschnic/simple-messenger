@@ -1,0 +1,89 @@
+public interface IAuthRepository
+{
+    // регистрация пользователя
+    User Register(string uniqueName, string passwordHash, string email);
+
+    // аутентификация
+    User Authenticate(string uniqueName, string passwordHash);
+
+    // получить пользователя по id
+    User Get(Guid id);
+}
+
+public interface IUserRepository
+{
+    // найти пользователя по id
+    User Find(Guid id);
+
+    // найти пользователя по uniqueName
+    User FindByUniqueName(string uniqueName);
+
+    // поиск пользователей по uniqueName
+    List<User> FindByUniqueNameLike(string uniqueName);
+
+    // получить список контактов пользователя
+    List<User> FindContacts(Guid ownerId);
+
+    // добавить контакт по uniqueName
+    User SaveContact(Guid ownerId, string contactUniqueName);
+
+    // сохранить пользователя
+    User Save(User user);
+
+    // изменить uniqueName
+    User UpdateUniqueName(Guid userId, string uniqueName);
+
+    // удалить пользователя
+    void Delete(Guid id);
+}
+
+public interface IMessageRepository
+{
+    // найти сообщение
+    Message Find(Guid id);
+
+    // получить сообщения чата
+    List<Message> FindChatMessages(Guid chatId);
+
+    // сохранить сообщение
+    Message Save(Message message);
+
+    // редактировать сообщение
+    Message Edit(Guid id, DateTime editedAt, string newText);
+
+    // удалить сообщение
+    void Delete(Guid id);
+}
+
+public interface IChatRepository
+{
+    // найти чат
+    Chat Find(Guid id);
+
+    // список чатов пользователя
+    List<Chat> GetUserChats(Guid userId);
+
+    // участники чата
+    List<User> FindChatUsers(Guid chatId);
+
+    // добавить пользователя в чат
+    void AddUserToChat(Guid chatId, Guid userId);
+
+    // выйти из чата
+    void RemoveUserFromChat(Guid chatId, Guid userId);
+
+    // сообщения чата
+    List<Message> FindChatMessages(Guid chatId);
+
+    // создать чат
+    Chat Save(Chat chat);
+
+    // изменить имя чата
+    Chat UpdateName(Guid chatId, string name);
+
+    // обновить версию чата
+    Chat UpdateVersion(Guid chatId, ulong version);
+
+    // удалить чат
+    void Delete(Guid id);
+}
