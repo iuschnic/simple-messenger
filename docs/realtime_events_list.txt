@@ -1,0 +1,8 @@
+MessageReceived
+MessageUpdated
+MessageRead
+UserChanged
+ChatCreated
+ChatUpdated
+ChatUserJoined
+ChatUserLeft
