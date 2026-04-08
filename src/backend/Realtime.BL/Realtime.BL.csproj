@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Shared.Main.Realtime\Shared.Main.Realtime.csproj" />
+    </ItemGroup>
+
 </Project>
