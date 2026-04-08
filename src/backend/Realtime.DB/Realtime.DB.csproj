@@ -7,4 +7,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Realtime.BL\Realtime.BL.csproj" />
+    </ItemGroup>
+
 </Project>
