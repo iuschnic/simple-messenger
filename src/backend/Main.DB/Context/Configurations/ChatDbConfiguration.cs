@@ -27,5 +27,7 @@ public class ChatDbConfiguration : IEntityTypeConfiguration<ChatDb>
             .WithOne(m => m.Chat)
             .HasForeignKey(m => m.ChatId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(e => e.RowVersion).IsRowVersion();
     }
 }
