@@ -52,7 +52,7 @@ public class Chat
     }
 
     public static Chat CreatePrivate(
-        List<ChatUser> participants)
+        ChatUser participant1, ChatUser participant2)
     {
         return new Chat(Guid.NewGuid(),
             null,
@@ -61,7 +61,7 @@ public class Chat
             DateTime.UtcNow,
             0,
             0,
-            participants);
+            [participant1, participant2]);
     }
 
     public static Chat Create(
