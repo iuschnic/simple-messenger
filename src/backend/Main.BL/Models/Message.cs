@@ -112,7 +112,7 @@ public class Message
         Guid chatId,
         Guid senderId,
         string text,
-        Guid? forwardedFromUserId = null)  // может быть null, если автор удален
+        Guid? forwardedFromUserId)  // может быть null, если автор удален
     {
         return new Message(
             0, // правильный номер будет установлен репозиторием в рамках транзакции
