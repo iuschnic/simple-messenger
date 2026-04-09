@@ -38,7 +38,7 @@ public class Chat
 
     public static Chat CreateGroup(
         string name,
-        Guid? ownerUserId,
+        Guid ownerUserId,
         List<ChatUser> participants)
     {
         return new Chat(Guid.NewGuid(),
