@@ -8,11 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="HotChocolate.AspNetCore" Version="16.0.0-rc.1.27" />
+        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="16.0.0-rc.1.27" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Realtime.BL\Realtime.BL.csproj" />
+      <ProjectReference Include="..\Realtime.DB\Realtime.DB.csproj" />
+      <ProjectReference Include="..\Realtime.Main.BR\Realtime.Main.BR.csproj" />
     </ItemGroup>
 
 </Project>

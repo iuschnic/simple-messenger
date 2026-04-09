@@ -97,9 +97,11 @@ public class KafkaMessageConsumer : BackgroundService
     }
 }
 
-public record KafkaConsumerConfig(
-    string BootstrapServers,
-    string GroupId,
-    string Topic,
-    bool EnableAutoCommit = false,
-    AutoOffsetReset AutoOffsetReset = AutoOffsetReset.Earliest);
+public class KafkaConsumerConfig
+{
+    public string BootstrapServers { get; set; } = string.Empty;
+    public string GroupId { get; set; } = string.Empty;
+    public string Topic { get; set; } = string.Empty;
+    public bool EnableAutoCommit { get; set; } = false;
+    public AutoOffsetReset AutoOffsetReset { get; set; } = AutoOffsetReset.Earliest;
+}
