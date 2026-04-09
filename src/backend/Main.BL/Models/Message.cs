@@ -103,7 +103,7 @@ public class Message
             DateTime.UtcNow,
             null,
             false,
-            0,
+            0, // правильная версия будет установлена репозиторием в рамках транзакции
             MessageType.Reply,
             replyToMessageNumber,
             null);
@@ -122,7 +122,7 @@ public class Message
             DateTime.UtcNow,
             null,
             false,
-            1,
+            0, // правильная версия будет установлена репозиторием в рамках транзакции
             MessageType.Forward,
             null,
             forwardedFromUserId);
@@ -139,7 +139,7 @@ public class Message
             DateTime.UtcNow,
             null,
             false,
-            0,
+            0, // правильная версия будет установлена репозиторием в рамках транзакции
             MessageType.System,
             null,
             null);
