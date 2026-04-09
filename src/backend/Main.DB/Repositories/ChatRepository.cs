@@ -1,7 +1,8 @@
 ﻿using Main.BL.Models;
 using Main.BL.OutPorts;
-using Main.DB.Converters;
 using Main.DB.Context;
+using Main.DB.Converters;
+using Main.DB.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Main.DB.Repositories;
@@ -33,7 +34,11 @@ public class ChatRepository : IChatRepository
     {
         var chatDb = chat.ToDb();
         foreach (var p in chat.Participants)
-            chatDb.ChatUsers.Add(p.ToDb(chat.Id));
+        {
+            var dbp = p.ToDb(chat.Id);
+            dbp.LastMessageRead = 0;
+            chatDb.ChatUsers.Add(dbp);
+        }
         await _context.Chats.AddAsync(chatDb);
         await _context.SaveChangesAsync();
     }
@@ -58,5 +63,13 @@ public class ChatRepository : IChatRepository
     public async Task<bool> ExistsAsync(Guid id)
     {
         return await _context.Chats.AnyAsync(c => c.Id == id);
+    }
+    public async Task<bool> ExistsPrivateBetweenUsersAsync(Guid user1Id, Guid user2Id)
+    {
+        return await _context.Chats
+            .AnyAsync(c =>
+                c.Type == ChatTypeDb.Private &&
+                c.ChatUsers.Any(cu => cu.UserId == user1Id) &&
+                c.ChatUsers.Any(cu => cu.UserId == user2Id));
     }
 }

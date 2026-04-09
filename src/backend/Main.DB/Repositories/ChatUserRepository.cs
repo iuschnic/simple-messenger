@@ -47,7 +47,11 @@ public class ChatUserRepository : IChatUserRepository
             .AnyAsync(cu => cu.ChatId == chatId && cu.UserId == chatUser.UserId);
         if (exists)
             return false;
+        var chat = await _context.Chats.FindAsync(chatId);
+        if (chat == null)
+            return false;
         var chatUserDb = chatUser.ToDb(chatId);
+        chatUserDb.LastMessageRead = chat.LastMessageNum;
         await _context.ChatsUsers.AddAsync(chatUserDb);
         await _context.SaveChangesAsync();
         return true;
@@ -85,7 +89,7 @@ public class ChatUserRepository : IChatUserRepository
         await _context.SaveChangesAsync();
         return true;
     }
-    public async Task<bool> ExistsAsync(Guid chatId, Guid userId)
+    public async Task<bool> IsParticipantAsync(Guid chatId, Guid userId)
     {
         return await _context.ChatsUsers
             .AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
