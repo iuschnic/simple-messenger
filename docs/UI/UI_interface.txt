@@ -1,0 +1,71 @@
+using System;
+using System.Collections.Generic;
+
+public interface IMessengerService
+{
+    // регистрация
+    User RegisterUser(
+        string uniqueName,
+        string password,
+        string email);
+
+    // вход
+    User Login(
+        string uniqueName,
+        string password);
+
+    User GetUserById(Guid userId);
+
+    User UpdateUniqueName(
+        Guid userId,
+        string uniqueName);
+
+    List<User> FindUsersByUniqueName(
+        string uniqueName);
+
+    void AddContact(
+        Guid ownerId,
+        string contactUniqueName);
+
+    List<User> GetContacts(Guid userId);
+
+    // список чатов пользователя
+    List<Chat> GetUserChats(Guid userId);
+
+    // создать групповой чат
+    Chat CreateChat(
+        string name,
+        Guid creatorId,
+        List<string> participants);
+
+    // участники чата
+    List<User> GetChatParticipants(Guid chatId);
+
+    // добавить пользователя
+    void AddUserToChat(
+        Guid chatId,
+        string uniqueName);
+
+    // выйти из чата
+    void LeaveChat(
+        Guid chatId,
+        Guid userId);
+
+    // сообщения чата
+    List<Message> GetChatMessages(
+        Guid chatId);
+
+    // отправить сообщение
+    Message SendMessage(
+        Guid chatId,
+        Guid senderId,
+        string text);
+
+    // редактировать сообщение
+    Message EditMessage(
+        Guid messageId,
+        string newText);
+
+    // удалить сообщение
+    void DeleteMessage(Guid messageId);
+}
