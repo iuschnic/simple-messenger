@@ -10,4 +10,9 @@
       <ProjectReference Include="..\Realtime.BL\Realtime.BL.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Confluent.Kafka" Version="2.14.0" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0-preview.2.26159.112" />
+    </ItemGroup>
+
 </Project>
