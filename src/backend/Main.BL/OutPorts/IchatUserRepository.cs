@@ -12,5 +12,5 @@ public interface IChatUserRepository
     Task<int> TryAddManyAsync(Guid chatId, IEnumerable<ChatUser> chatUsers);
     Task<bool> TryUpdateLastMessageReadAsync(Guid chatId, Guid userId, ulong lastMessageRead);
     Task<bool> TryRemoveAsync(Guid chatId, Guid userId);
-    Task<bool> ExistsAsync(Guid chatId, Guid userId);
+    Task<bool> IsParticipantAsync(Guid chatId, Guid userId);
 }
