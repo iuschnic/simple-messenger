@@ -1,3 +1,7 @@
-﻿namespace Shared.Main.Realtime.Models;
+﻿using Newtonsoft.Json;
 
-public record BrokerMessage(string EventType, object Data);
+namespace Shared.Main.Realtime.Models;
+
+public record BrokerMessage(
+    [JsonProperty] EventType EventType,
+    [JsonProperty] string DataJson);
