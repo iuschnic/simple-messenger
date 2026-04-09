@@ -35,6 +35,8 @@ public class ChatDb
     public ulong Version { get; set; }  
     [Required]
     public ulong LastMessageNum { get; set; }
+    [Timestamp]
+    public uint RowVersion { get; set; }    // для оптимистической блокировки при обновлении сообщений чата
 
     public UserDb? OwnerUser {  get; set; }
     public ICollection<ChatUserDb> ChatUsers { get; set; } = [];
