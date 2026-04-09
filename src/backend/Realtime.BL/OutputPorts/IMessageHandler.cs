@@ -1,8 +1,8 @@
-﻿using Shared.Main.Realtime.Models;
+﻿using Shared.Main.Realtime;
 
 namespace Realtime.BL.OutputPorts;
 
 public interface IMessageHandler
 {
-    Task OnMessageReceivedFromBrokerAsync(BrokerMessage message);
+    Task OnMessageReceivedFromBrokerAsync(EventType eventType, string dataJson);
 }
