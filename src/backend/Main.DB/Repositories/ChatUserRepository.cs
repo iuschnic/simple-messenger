@@ -20,12 +20,20 @@ public class ChatUserRepository : IChatUserRepository
             .FirstOrDefaultAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
         return chatUserDb?.ToDomain();
     }
-    public async Task<IEnumerable<ChatUser>> GetChatParticipantsAsync(Guid chatId)
+    public async Task<IEnumerable<ChatUser>> GetChatParticipantsIdsAsync(Guid chatId)
     {
         var participantsDb = await _context.ChatsUsers
             .Where(cu => cu.ChatId == chatId)
             .ToListAsync();
         return participantsDb.Select(cu => cu.ToDomain());
+    }
+    public async Task<IEnumerable<User>> GetChatParticipantsAsync(Guid chatId)
+    {
+        var participantsDb = await _context.ChatsUsers
+            .Include(cu => cu.User)
+            .Where(cu => cu.ChatId == chatId)
+            .ToListAsync();
+        return participantsDb.Select(cu => cu.User.ToDomain());
     }
     public async Task<ulong> GetLastMessageReadAsync(Guid chatId, Guid userId)
     {
