@@ -4,33 +4,41 @@ namespace Main.BL.InPorts;
 
 public interface IMessageService
 {
-    Task<IEnumerable<Message>> GetMessagesAsync(
+    Task<IEnumerable<Message>> GetOlderMessagesAsync(
         Guid chatId,
-        ulong? fromMessageNumber,
+        ulong fromMessageNumber,
+        int limit,
+        Guid currentUserId);
+    Task<IEnumerable<Message>> GetNewerMessagesAsync(
+        Guid chatId,
+        ulong fromMessageNumber,
+        int limit,
+        Guid currentUserId);
+    Task<IEnumerable<Message>> GetLastMessagesAsync(
+        Guid chatId,
         int limit,
         Guid currentUserId);
     Task CreateRegularMessageAsync(
         Guid chatId,
-        Guid senderId,
+        Guid currentUserId,
         string text);
     Task CreateReplyMessageAsync(
         Guid chatId,
-        Guid senderId,
+        Guid currentUserId,
         string text,
         ulong replyToMessageNumber);
     Task CreateForwardMessageAsync(
-        Guid chatId,
-        Guid senderId,
-        string text,
-        Guid forwardedFromUserId);
+        Guid targetChatId,
+        Guid sourceChatId,
+        ulong sourceMessageNumber,
+        Guid currentUserId);
     Task DeleteMessageAsync(
         Guid chatId,
-        ulong messageNum,
-        ulong clientVersion,
+        ulong messageNumber,
         Guid currentUserId);
     Task EditMessageAsync(
         Guid chatId,
-        ulong messageNum,
+        ulong messageNumber,
         string newText,
         Guid currentUserId);
     Task MarkMessagesAsReadAsync(

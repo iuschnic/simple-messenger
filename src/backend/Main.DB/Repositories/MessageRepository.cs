@@ -19,15 +19,34 @@ public class MessageRepository : IMessageRepository
             .FirstOrDefaultAsync(m => m.ChatId == chatId && m.MessageNumber == messageNumber);
         return messageDb?.ToDomain();
     }
-    public async Task<IEnumerable<Message>> GetChatMessagesAsync(Guid chatId, ulong fromMessageNumber = 0, int limit = 50)
+    public async Task<IEnumerable<Message>> GetOlderMessagesAsync(Guid chatId, ulong fromMessageNumber, int limit = 50)
     {
-        var query = _context.Messages
-            .Where(m => m.ChatId == chatId);
-        if (fromMessageNumber > 0)
-            query = query.Where(m => m.MessageNumber > fromMessageNumber);
-        var messagesDb = await query
+        var messagesDb = await _context.Messages
+            .Where(m => m.ChatId == chatId && m.MessageNumber < fromMessageNumber)
+            .OrderByDescending(m => m.MessageNumber)
+            .Take(limit)
+            .OrderBy(m => m.MessageNumber)
+            .ToListAsync();
+
+        return messagesDb.Select(m => m.ToDomain());
+    }
+    public async Task<IEnumerable<Message>> GetNewerMessagesAsync(Guid chatId, ulong fromMessageNumber, int limit = 50)
+    {
+        var messagesDb = await _context.Messages
+            .Where(m => m.ChatId == chatId && m.MessageNumber > fromMessageNumber)
             .OrderBy(m => m.MessageNumber)
             .Take(limit)
+            .ToListAsync();
+
+        return messagesDb.Select(m => m.ToDomain());
+    }
+    public async Task<IEnumerable<Message>> GetLastMessagesAsync(Guid chatId, int limit = 50)
+    {
+        var messagesDb = await _context.Messages
+            .Where(m => m.ChatId == chatId)
+            .OrderByDescending(m => m.MessageNumber)
+            .Take(limit)
+            .OrderBy(m => m.MessageNumber)
             .ToListAsync();
         return messagesDb.Select(m => m.ToDomain());
     }
