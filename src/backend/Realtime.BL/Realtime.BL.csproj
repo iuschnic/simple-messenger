@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Shared.Main.Realtime\Shared.Main.Realtime.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Serilog" Version="4.3.2-dev-02419" />
+    </ItemGroup>
+
 </Project>

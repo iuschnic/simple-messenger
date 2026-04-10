@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Realtime.BL.OutputPorts;
+using Serilog;
 using Shared.Main.Realtime;
 
 namespace Realtime.Main.BR;
@@ -12,12 +13,15 @@ public class KafkaMessageConsumer : BackgroundService
     private readonly IConsumer<Null, byte[]> _consumer;
     private readonly IMessageHandler _messageHandler;
     private readonly string _topic;
+    private readonly ILogger _logger;
     
     public KafkaMessageConsumer(
         IMessageHandler messageHandler,
-        IOptions<KafkaConsumerConfig> config)
+        IOptions<KafkaConsumerConfig> config,
+        ILogger logger)
     {
         _messageHandler = messageHandler;
+        _logger = logger;
         
         var kafkaConfig = config.Value;
         _topic = kafkaConfig.Topic;
@@ -36,6 +40,7 @@ public class KafkaMessageConsumer : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _consumer.Subscribe(_topic);
+        _logger.Information("Subscribed to {Topic}", _topic);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -48,13 +53,15 @@ public class KafkaMessageConsumer : BackgroundService
             {
                 break;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Error(ex, "Broken message from broker. Skipping...");
                 await Task.Delay(1000, stoppingToken);
             }
         }
         
         _consumer.Close();
+        _logger.Information("Consumer stopped");
     }
     
     private async Task ProcessMessageAsync(ConsumeResult<Null, byte[]> consumeResult)
@@ -62,6 +69,7 @@ public class KafkaMessageConsumer : BackgroundService
         var eventType = ExtractEventTypeFromHeaders(consumeResult.Message.Headers);
         if (!eventType.HasValue)
         {
+            _logger.Error("Received message from broker doesn't have type of event. Skipping...");
             _consumer.Commit(consumeResult);
             return;
         }

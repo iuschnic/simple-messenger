@@ -9,6 +9,8 @@ using Realtime.BL.InputPorts;
 using Realtime.BL.OutputPorts;
 using Realtime.DB;
 using Realtime.Main.BR;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +49,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Services.AddSingleton<ILogger>(_ => logger);
 
 builder.Services.Configure<KafkaConsumerConfig>(
     builder.Configuration.GetSection("KafkaConsumer"));

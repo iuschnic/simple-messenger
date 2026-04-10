@@ -1,15 +1,18 @@
 ﻿using Newtonsoft.Json;
 using Realtime.BL.InputPorts;
 using Realtime.BL.OutputPorts;
+using Serilog;
 using Shared.Main.Realtime;
 using Shared.Main.Realtime.Models;
 
 namespace Realtime.BL;
 
-public class MessageHandler(IConnectionsRepository repository, IGroupManager groupManager) : IMessageHandler
+public class MessageHandler(IConnectionsRepository repository,
+    IGroupManager groupManager, ILogger logger) : IMessageHandler
 {
     public async Task OnMessageReceivedFromBrokerAsync(EventType eventType, string dataJson)
     {
+        logger.Information("Received message from broker: {EventType} {DataJson}", eventType, dataJson);
         switch (eventType)
         {
             case EventType.MessageReceived or EventType.MessageUpdated:
