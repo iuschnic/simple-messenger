@@ -20,8 +20,22 @@ public class ChatParticipantInfo
     public ulong LastMessageRead { get; init; }
 }
 
+public enum ChatSyncStatus
+{
+    // Чат существует и клиент о нем знает (обычная синхронизация)
+    Synced = 0,
+    // Новый чат: клиент не знал о нем
+    New = 1,
+    // Чат удален: клиент знал о чате, но на сервере его больше нет
+    Deleted = 2,
+    // Клиент покинул чат (был удален или вышел сам с другого клиента)
+    Left = 3,
+}
+
 public class ChatSync
 {
+    // Статус чата
+    public ChatSyncStatus Status { get; init; }
     // Мета-информация о чате
     public ChatMeta ChatMeta { get; init; }
     // Список новых/удаленных/измененных сообщений
