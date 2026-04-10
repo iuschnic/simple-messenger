@@ -144,34 +144,9 @@ public class SyncService: ISyncService
         if (!await _userRepo.ExistsAsync(userId))
             throw new NotFoundException(nameof(User), userId);
     }
-    private async Task EnsureChatExists(Guid chatId)
-    {
-        if (!await _chatRepo.ExistsAsync(chatId))
-            throw new NotFoundException(nameof(Chat), chatId);
-    }
-    private async Task EnsureParticipant(Guid chatId, Guid userId)
-    {
-        if (!await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ForbiddenException("User is not a participant of this chat");
-    }
-    private async Task EnsureNotParticipant(Guid chatId, Guid userId)
-    {
-        if (await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ConflictException("User is already a participant");
-    }
     private async Task<Chat> GetChatOrThrow(Guid chatId)
     {
         return await _chatRepo.GetByIdAsync(chatId)
             ?? throw new NotFoundException(nameof(Chat), chatId);
-    }
-    private void EnsureOwner(Chat chat, Guid userId)
-    {
-        if (chat.OwnerUserId != userId)
-            throw new ForbiddenException("Only chat owner can perform this action");
-    }
-    private void EnsureNotOwner(Chat chat, Guid userId)
-    {
-        if (chat.OwnerUserId == userId)
-            throw new ForbiddenException("Chat owner can not perform this action");
     }
 }
