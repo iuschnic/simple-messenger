@@ -16,7 +16,7 @@ public class MessageHandler(IConnectionsRepository repository, IGroupManager gro
                 var message = JsonConvert.DeserializeObject<MessageDto>(dataJson);
                 
                 if (message is null)
-                    throw new NullReferenceException();
+                    throw new FailedToDeserializeMessageException();
                 
                 await groupManager.SendToGroupAsync(message.ChatId.ToString(), eventType.ToString(), dataJson);
                 break;
@@ -24,7 +24,7 @@ public class MessageHandler(IConnectionsRepository repository, IGroupManager gro
                 var user = JsonConvert.DeserializeObject<UserDto>(dataJson);
                 
                 if (user is null)
-                    throw new NullReferenceException();
+                    throw new FailedToDeserializeMessageException();
                 
                 await groupManager.SendToAllUserGroupsAsync(user.Id.ToString(), eventType.ToString(), dataJson);
                 break;
@@ -32,7 +32,7 @@ public class MessageHandler(IConnectionsRepository repository, IGroupManager gro
                 var chatUser = JsonConvert.DeserializeObject<ChatUserDto>(dataJson);
                 
                 if (chatUser is null)
-                    throw new NullReferenceException();
+                    throw new FailedToDeserializeMessageException();
                 
                 var connections = repository.GetConnectionIdsByUserId(chatUser.User.Id.ToString());
                 foreach (var connectionId in connections)
@@ -47,7 +47,7 @@ public class MessageHandler(IConnectionsRepository repository, IGroupManager gro
                 var chat = JsonConvert.DeserializeObject<ChatDto>(dataJson);
                 
                 if (chat is null)
-                    throw new NullReferenceException();
+                    throw new FailedToDeserializeMessageException();
                 
                 await groupManager.SendToGroupAsync(chat.Id.ToString(), eventType.ToString(), dataJson);
                 break;
@@ -55,7 +55,7 @@ public class MessageHandler(IConnectionsRepository repository, IGroupManager gro
                 var newChat = JsonConvert.DeserializeObject<NewChatDto>(dataJson);
                 
                 if (newChat is null)
-                    throw new NullReferenceException();
+                    throw new FailedToDeserializeMessageException();
 
                 foreach (var connectionId in newChat.Participants.Select(participant => 
                              repository.GetConnectionIdsByUserId(participant.User.Id.ToString()))

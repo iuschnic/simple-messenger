@@ -14,7 +14,7 @@ public class RealtimeHub(IConnectionManager connectionManager, IGroupManager gro
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
         if (userId is null)
-            return;
+            throw new HubException("Unauthorized: Please provide valid JWT token");
 
         await connectionManager.OnUserConnectedAsync(userId, Context.ConnectionId);
         
@@ -32,7 +32,7 @@ public class RealtimeHub(IConnectionManager connectionManager, IGroupManager gro
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
         if (userId is null)
-            return;
+            throw new HubException("Unauthorized: Please provide valid JWT token");
 
         await connectionManager.OnUserDisconnectedAsync(userId, Context.ConnectionId);
         

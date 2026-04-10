@@ -17,7 +17,7 @@ public class ConnectionRepository : IConnectionsRepository
     {
         if (!_connections.TryGetValue(userId, out var connections))
             return;
-        connections.Remove(connectionId, out _);
+        connections.TryRemove(connectionId, out _);
         if (connections.IsEmpty)
             _connections.TryRemove(userId, out _);
     }
