@@ -4,10 +4,11 @@ namespace Main.BL.Converters;
 
 public static class ChatSyncConverter
 {
-    public static ChatSync ToSync(this Chat chat, List<User> users, List<Message> messages)
+    public static ChatSync ToSync(this Chat chat, List<User> users, List<Message> messages, ChatSyncStatus status)
     {
         return new ChatSync
         {
+            Status = status,
             ChatMeta = new ChatMeta
             {
                 Id = chat.Id,
