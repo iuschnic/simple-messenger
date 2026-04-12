@@ -5,21 +5,13 @@ using Main.BL.OutPorts;
 
 namespace Main.BL.Services;
 
-public class ChatService: IChatService
+public class ChatService: BaseService, IChatService
 {
-    private readonly IChatRepository _chatRepo;
-    private readonly IUserRepository _userRepo;
-    private readonly IChatUserRepository _chatUserRepo;
-
     public ChatService(
         IChatRepository chatRepo,
         IUserRepository userRepo,
-        IChatUserRepository chatUserRepo)
-    {
-        _chatRepo = chatRepo;
-        _userRepo = userRepo;
-        _chatUserRepo = chatUserRepo;
-    }
+        IChatUserRepository chatUserRepo,
+        IMessageRepository messageRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
 
     public async Task<IEnumerable<Chat>> GetChatsAsync(Guid currentUserId)
     {
@@ -120,40 +112,5 @@ public class ChatService: IChatService
 
         if (!await _chatUserRepo.TryRemoveAsync(chatId, currentUserId))
             throw new TechnicalException("Failed to remove member");
-    }
-    private async Task EnsureUserExists(Guid userId)
-    {
-        if (!await _userRepo.ExistsAsync(userId))
-            throw new NotFoundException(nameof(User), userId);
-    }
-    private async Task EnsureChatExists(Guid chatId)
-    {
-        if (!await _chatRepo.ExistsAsync(chatId))
-            throw new NotFoundException(nameof(Chat), chatId);
-    }
-    private async Task EnsureParticipant(Guid chatId, Guid userId)
-    {
-        if (!await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ForbiddenException("User is not a participant of this chat");
-    }
-    private async Task EnsureNotParticipant(Guid chatId, Guid userId)
-    {
-        if (await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ConflictException("User is already a participant");
-    }
-    private async Task<Chat> GetChatOrThrow(Guid chatId)
-    {
-        return await _chatRepo.GetByIdAsync(chatId)
-            ?? throw new NotFoundException(nameof(Chat), chatId);
-    }
-    private void EnsureOwner(Chat chat, Guid userId)
-    {
-        if (chat.OwnerUserId != userId)
-            throw new ForbiddenException("Only chat owner can perform this action");
-    }
-    private void EnsureNotOwner(Chat chat, Guid userId)
-    {
-        if (chat.OwnerUserId == userId)
-            throw new ForbiddenException("Chat owner can not perform this action");
     }
 }
