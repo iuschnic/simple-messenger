@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Main.BL\Main.BL.csproj" />
+      <ProjectReference Include="..\Main.Application\Main.Application.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,7 +1,5 @@
 ﻿using Main.BL.Models;
-
-namespace Main.BL.InPorts;
-
+namespace Main.Application.InPorts;
 public interface IChatService
 {
     Task<IEnumerable<Chat>> GetChatsAsync(Guid currentUserId);

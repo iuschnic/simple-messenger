@@ -1,6 +1,7 @@
 ﻿using Main.BL.Enums;
+using Main.BL.Models;
 
-namespace Main.BL.Models;
+namespace Main.Application.Dtos;
 public class ChatMeta
 {
     public Guid Id { get; init; }

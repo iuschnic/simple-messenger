@@ -1,9 +1,9 @@
 ﻿using Main.BL.Exceptions;
-using Main.BL.InPorts;
+using Main.Application.InPorts;
 using Main.BL.Models;
-using Main.BL.OutPorts;
+using Main.Application.OutPorts;
 
-namespace Main.BL.Services;
+namespace Main.Application.Services;
 
 public class ChatService: BaseService, IChatService
 {

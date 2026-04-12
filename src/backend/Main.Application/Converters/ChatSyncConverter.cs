@@ -1,6 +1,6 @@
 ﻿using Main.BL.Models;
 
-namespace Main.BL.Converters;
+namespace Main.Application.Converters;
 
 public static class ChatSyncConverter
 {
