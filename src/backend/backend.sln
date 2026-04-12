@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main.API", "Main.API\Main.API.csproj", "{5F62B508-9FD3-4B56-A488-06457CABD810}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Realtime.API", "Realtime.API\Realtime.API.csproj", "{DC5EAFCC-C2BD-4AA5-A01E-5800C3577778}"
@@ -29,6 +32,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Main.Auth", "Shared.Main.Auth\Shared.Main.Auth.csproj", "{DA6A5539-F0A5-490E-9B79-EB21E3EFE2E0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Main.Realtime", "Shared.Main.Realtime\Shared.Main.Realtime.csproj", "{F7208B18-9D32-4F25-9B40-D61E15BB34D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main.Application", "Main.Application\Main.Application.csproj", "{31A7E4B6-92D6-4F96-AF0F-9085D0CF86CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,5 +101,15 @@ Global
 		{F7208B18-9D32-4F25-9B40-D61E15BB34D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7208B18-9D32-4F25-9B40-D61E15BB34D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7208B18-9D32-4F25-9B40-D61E15BB34D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31A7E4B6-92D6-4F96-AF0F-9085D0CF86CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31A7E4B6-92D6-4F96-AF0F-9085D0CF86CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31A7E4B6-92D6-4F96-AF0F-9085D0CF86CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31A7E4B6-92D6-4F96-AF0F-9085D0CF86CD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DFB0EC75-A8B0-425C-B6A7-FB5087A3C671}
 	EndGlobalSection
 EndGlobal

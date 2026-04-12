@@ -1,8 +1,8 @@
-﻿using Main.BL.InPorts;
-using Main.BL.Models;
-using Main.BL.OutPorts;
+﻿using Main.Application.Dtos;
+using Main.Application.InPorts;
+using Main.Application.OutPorts;
 
-namespace Main.BL.Services;
+namespace Main.Application.Services;
 
 public class SyncService: BaseService, ISyncService
 {

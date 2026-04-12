@@ -1,6 +1,6 @@
 ﻿using Main.BL.Models;
 
-namespace Main.BL.OutPorts;
+namespace Main.Application.OutPorts;
 
 public interface IChatRepository
 {

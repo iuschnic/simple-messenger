@@ -1,9 +1,9 @@
 ﻿using Main.BL.Exceptions;
 using Main.BL.Models;
-using Main.BL.OutPorts;
-using Main.BL.InPorts;
+using Main.Application.OutPorts;
+using Main.Application.InPorts;
 
-namespace Main.BL.Services;
+namespace Main.Application.Services;
 
 public class ContactService: BaseService, IContactService
 {

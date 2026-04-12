@@ -1,6 +1,7 @@
-﻿using Main.BL.Models;
+﻿using Main.Application.Dtos;
+using Main.BL.Models;
 
-namespace Main.BL.OutPorts;
+namespace Main.Application.OutPorts;
 
 public interface IChatUserRepository
 {

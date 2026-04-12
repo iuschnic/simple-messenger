@@ -1,6 +1,6 @@
 ﻿using Main.BL.Models;
-using Main.DB.Models;
-using Main.BL.OutPorts;
+using Main.Application.Dtos;
+using Main.Application.OutPorts;
 using Main.DB.Context;
 using Main.DB.Converters;
 using Microsoft.EntityFrameworkCore;

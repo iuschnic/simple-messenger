@@ -1,6 +1,5 @@
 ﻿using Main.BL.Models;
-namespace Main.BL.InPorts;
-
+namespace Main.Application.InPorts;
 public interface IContactService
 {
     Task<IEnumerable<Contact>> GetMyContactsAsync(Guid userId);

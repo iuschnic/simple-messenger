@@ -1,7 +1,5 @@
 ﻿using Main.BL.Models;
-
-namespace Main.BL.InPorts;
-
+namespace Main.Application.InPorts;
 public interface IMessageService
 {
     Task<IEnumerable<Message>> GetOlderMessagesAsync(
