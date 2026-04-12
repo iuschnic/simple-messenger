@@ -26,6 +26,23 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.UniqueName == uniqueName);
         return userDb?.ToDomain();
     }
+    public async Task<IEnumerable<User>> SearchAsync(
+        string substr,
+        int maxUsers)
+    {
+        var query = _context.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(substr))
+        {
+            query = query.Where(u =>
+                u.UniqueName.Contains(substr) ||
+                u.DisplayedName.Contains(substr));
+        }
+        var usersDb = await query
+            .OrderBy(u => u.DisplayedName)
+            .Take(maxUsers)
+            .ToListAsync();
+        return usersDb.Select(u => u.ToDomain());
+    }
     public async Task<bool> ExistsAsync(Guid id)
     {
         return await _context.Users.AnyAsync(u => u.Id == id);
