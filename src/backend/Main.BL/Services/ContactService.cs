@@ -5,16 +5,17 @@ using Main.BL.InPorts;
 
 namespace Main.BL.Services;
 
-public class ContactService: IContactService
+public class ContactService: BaseService, IContactService
 {
-    private readonly IUserRepository _userRepo;
     private readonly IContactRepository _contactRepo;
 
     public ContactService(
         IUserRepository userRepo,
-        IContactRepository contactRepo)
+        IMessageRepository messageRepo,
+        IChatRepository chatRepo,
+        IChatUserRepository chatUserRepo,
+        IContactRepository contactRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo)
     {
-        _userRepo = userRepo;
         _contactRepo = contactRepo;
     }
     public async Task<IEnumerable<Contact>> GetMyContactsAsync(Guid userId)
@@ -48,11 +49,6 @@ public class ContactService: IContactService
             throw new ConflictException("Contact doesnt exist");
         if (!await _contactRepo.TryRemoveAsync(ownerUserId, contactUserId))
             throw new TechnicalException("Failed to remove contact");
-    }
-    private async Task EnsureUserExists(Guid userId)
-    {
-        if (!await _userRepo.ExistsAsync(userId))
-            throw new NotFoundException(nameof(User), userId);
     }
 }
 

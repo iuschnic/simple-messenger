@@ -5,24 +5,13 @@ using Main.BL.OutPorts;
 
 namespace Main.BL.Services;
 
-public class MessageService: IMessageService
+public class MessageService: BaseService, IMessageService
 {
-    private readonly IUserRepository _userRepo;
-    private readonly IMessageRepository _messageRepo;
-    private readonly IChatRepository _chatRepo;
-    private readonly IChatUserRepository _chatUserRepo;
-
     public MessageService(
         IUserRepository userRepo,
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
-        IChatUserRepository chatUserRepo)
-    {
-        _userRepo = userRepo;
-        _messageRepo = messageRepo;
-        _chatRepo = chatRepo;
-        _chatUserRepo = chatUserRepo;
-    }
+        IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
     public async Task<IEnumerable<Message>> GetOlderMessagesAsync(
         Guid chatId,
         ulong fromMessageNumber,
@@ -154,31 +143,5 @@ public class MessageService: IMessageService
         await EnsureChatExists(chatId);
         if (!await _chatUserRepo.TryUpdateLastMessageReadAsync(chatId, currentUserId, lastMessageRead))
             throw new TechnicalException("Failed to mark messages read");
-    }
-
-    private async Task EnsureUserExists(Guid userId)
-    {
-        if (!await _userRepo.ExistsAsync(userId))
-            throw new NotFoundException(nameof(User), userId);
-    }
-    private async Task EnsureMessageExists(Guid chatId, ulong messageNum)
-    {
-        if (!await _messageRepo.ExistsAsync(chatId, messageNum))
-            throw new NotFoundException(nameof(Message), messageNum);
-    }
-    private async Task<Message> GetMessageOrThrow(Guid chatId, ulong messageNum)
-    {
-        return await _messageRepo.GetByNumberAsync(chatId, messageNum)
-            ?? throw new NotFoundException(nameof(Message), messageNum);
-    }
-    private async Task EnsureChatExists(Guid chatId)
-    {
-        if (!await _chatRepo.ExistsAsync(chatId))
-            throw new NotFoundException(nameof(Chat), chatId);
-    }
-    private async Task EnsureParticipant(Guid chatId, Guid userId)
-    {
-        if (!await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ForbiddenException("User is not a participant of this chat");
     }
 }

@@ -1,28 +1,16 @@
-﻿using Main.BL.Exceptions;
-using Main.BL.InPorts;
+﻿using Main.BL.InPorts;
 using Main.BL.Models;
 using Main.BL.OutPorts;
 
 namespace Main.BL.Services;
 
-public class SyncService: ISyncService
+public class SyncService: BaseService, ISyncService
 {
-    private readonly IUserRepository _userRepo;
-    private readonly IMessageRepository _messageRepo;
-    private readonly IChatRepository _chatRepo;
-    private readonly IChatUserRepository _chatUserRepo;
-
     public SyncService(
         IUserRepository userRepo,
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
-        IChatUserRepository chatUserRepo)
-    {
-        _userRepo = userRepo;
-        _messageRepo = messageRepo;
-        _chatRepo = chatRepo;
-        _chatUserRepo = chatUserRepo;
-    }
+        IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
     public async Task<List<ChatSync>> SyncChatsAsync(
         List<(Guid ChatId, ulong ClientVersion)> clientChats,
         Guid currentUserId)
@@ -71,6 +59,7 @@ public class SyncService: ISyncService
         Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
+        await EnsureParticipant(chatId, currentUserId);
         var chat = await GetChatOrThrow(chatId);
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
@@ -138,15 +127,5 @@ public class SyncService: ISyncService
             Messages = [.. lastMessages],
             Participants = [.. participants]
         };
-    }
-    private async Task EnsureUserExists(Guid userId)
-    {
-        if (!await _userRepo.ExistsAsync(userId))
-            throw new NotFoundException(nameof(User), userId);
-    }
-    private async Task<Chat> GetChatOrThrow(Guid chatId)
-    {
-        return await _chatRepo.GetByIdAsync(chatId)
-            ?? throw new NotFoundException(nameof(Chat), chatId);
     }
 }
