@@ -1,5 +1,7 @@
-﻿using Main.BL.Models;
+﻿using Main.Application.Converters;
+using Main.Application.Dtos;
 using Main.Application.OutPorts;
+using Main.BL.Models;
 using Main.DB.Context;
 using Main.DB.Converters;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +22,22 @@ public class ContactRepository : IContactRepository
             .FirstOrDefaultAsync(c => c.OwnerUserId == ownerUserId && c.ContactUserId == contactUserId);
         return contactDb?.ToDomain();
     }
-    public async Task<IEnumerable<Contact>> GetUserContactsAsync(Guid ownerUserId)
+    public async Task<IEnumerable<Contact>> GetContactsAsync(Guid ownerUserId)
     {
         var contactsDb = await _context.Contacts
             .Where(c => c.OwnerUserId == ownerUserId)
             .OrderBy(c => c.ContactName)
             .ToListAsync();
         return contactsDb.Select(c => c.ToDomain());
+    }
+    public async Task<IEnumerable<ContactWithUser>> GetContactsWithUserAsync(Guid ownerUserId)
+    {
+        var contactsDb = await _context.Contacts
+            .Include(c => c.ContactUser)
+            .Where(c => c.OwnerUserId == ownerUserId)
+            .OrderBy(c => c.ContactName)
+            .ToListAsync();
+        return contactsDb.Select(c => c.ToDomain().ToContactWithUser(c.ContactUser.ToDomain()));
     }
     public async Task<bool> ExistsAsync(Guid ownerUserId, Guid contactUserId)
     {
