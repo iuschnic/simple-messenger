@@ -37,7 +37,11 @@ public class ContactRepository : IContactRepository
             .Where(c => c.OwnerUserId == ownerUserId)
             .OrderBy(c => c.ContactName)
             .ToListAsync();
-        return contactsDb.Select(c => c.ToDomain().ToContactWithUser(c.ContactUser.ToDomain()));
+        return contactsDb.Select(c => new ContactWithUser
+        {
+            ContactUser = c.ContactUser.ToDomain(),
+            ContactName = c.ContactName
+        });
     }
     public async Task<bool> ExistsAsync(Guid ownerUserId, Guid contactUserId)
     {
