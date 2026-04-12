@@ -1,5 +1,6 @@
 ﻿using Main.BL.Exceptions;
 using Main.BL.Models;
+using Main.Application.Dtos;
 using Main.Application.OutPorts;
 using Main.Application.InPorts;
 
@@ -18,10 +19,10 @@ public class ContactService: BaseService, IContactService
     {
         _contactRepo = contactRepo;
     }
-    public async Task<IEnumerable<Contact>> GetMyContactsAsync(Guid userId)
+    public async Task<IEnumerable<ContactWithUser>> GetMyContactsAsync(Guid userId)
     {
         await EnsureUserExists(userId);
-        return await _contactRepo.GetUserContactsAsync(userId);
+        return await _contactRepo.GetContactsWithUserAsync(userId);
     }
     public async Task AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
     {
