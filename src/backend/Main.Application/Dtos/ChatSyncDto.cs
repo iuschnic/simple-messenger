@@ -1,5 +1,6 @@
 ﻿using Main.BL.Enums;
 using Main.BL.Models;
+using Main.Application.Enums;
 
 namespace Main.Application.Dtos;
 public class ChatMeta
@@ -18,16 +19,6 @@ public class ChatParticipantInfo
     public string UniqueName { get; init; }
     public string DisplayedName { get; init; }
     public ulong LastMessageRead { get; init; }
-}
-
-public enum ChatSyncStatus
-{
-    // Чат существует и клиент о нем знает (обычная синхронизация)
-    Synced = 0,
-    // Новый чат: клиент не знал о нем
-    New = 1,
-    // Чат удален: клиент знал о чате, но на сервере этой связи уже нет (удален или пользователь вышел из него)
-    Deleted = 2
 }
 
 public class ChatSyncDto
