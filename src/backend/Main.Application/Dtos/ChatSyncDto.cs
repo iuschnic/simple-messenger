@@ -3,7 +3,7 @@ using Main.BL.Models;
 using Main.Application.Enums;
 
 namespace Main.Application.Dtos;
-public class ChatMeta
+public class ChatMetaDto
 {
     public string? Name { get; init; }
     public ChatType Type { get; init; }
@@ -13,7 +13,7 @@ public class ChatMeta
     public ulong LastMessageNum { get; init; }
 }
 
-public class ChatParticipantInfo
+public class ChatParticipantInfoDto
 {
     public Guid UserId { get; init; }
     public string UniqueName { get; init; }
@@ -28,9 +28,9 @@ public class ChatSyncDto
     // Статус чата
     public ChatSyncStatus Status { get; init; }
     // Мета-информация о чате
-    public ChatMeta? ChatMeta { get; init; }
+    public ChatMetaDto? ChatMeta { get; init; }
     // Список новых/удаленных/измененных сообщений
     public List<Message>? Messages { get; init; }
     // Список участников чата, включая информацию о последних прочитанных сообщениях
-    public List<ChatParticipantInfo>? Participants { get; init; }
+    public List<ChatParticipantInfoDto>? Participants { get; init; }
 }

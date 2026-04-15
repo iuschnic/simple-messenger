@@ -1,5 +1,4 @@
 ﻿using Main.BL.Models;
-using Main.Application.Dtos;
 using Main.Application.OutPorts;
 using Main.DB.Context;
 using Main.DB.Converters;
@@ -35,13 +34,13 @@ public class ChatUserRepository : IChatUserRepository
             .ToListAsync();
         return participantsDb.Select(cu => cu.User.ToDomain());
     }
-    public async Task<IEnumerable<ChatParticipantInfo>> GetChatParticipantsInfosAsync(Guid chatId)
+    public async Task<IEnumerable<ChatParticipantInfoDto>> GetChatParticipantsInfosAsync(Guid chatId)
     {
         var participantsDb = await _context.ChatsUsers
             .Include(cu => cu.User)
             .Where(cu => cu.ChatId == chatId)
             .ToListAsync();
-        return participantsDb.Select(cu => new ChatParticipantInfo()
+        return participantsDb.Select(cu => new ChatParticipantInfoDto()
         {
             UserId = cu.UserId,
             UniqueName = cu.User.UniqueName,

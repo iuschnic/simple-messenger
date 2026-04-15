@@ -1,5 +1,6 @@
 ﻿using Main.Application.Dtos;
 using Main.BL.Models;
+using Main.Application.Enums;
 namespace Main.Application.Mappers;
 
 public static class ChatSyncMapper
@@ -14,7 +15,7 @@ public static class ChatSyncMapper
         {
             ChatId = domain.Id,
             Status = status,
-            ChatMeta = status == ChatSyncStatus.Deleted ? null : new ChatMeta
+            ChatMeta = status == ChatSyncStatus.Deleted ? null : new ChatMetaDto
             {
                 Name = domain.Name,
                 Type = domain.Type,

@@ -8,7 +8,7 @@ public interface IChatUserRepository
     Task<ChatUser?> GetAsync(Guid chatId, Guid userId);
     Task<IEnumerable<ChatUser>> GetChatParticipantsIdsAsync(Guid chatId);
     Task<IEnumerable<User>> GetChatParticipantsAsync(Guid chatId);
-    Task<IEnumerable<ChatParticipantInfo>> GetChatParticipantsInfosAsync(Guid chatId);
+    Task<IEnumerable<ChatParticipantInfoDto>> GetChatParticipantsInfosAsync(Guid chatId);
     Task<ulong> GetLastMessageReadAsync(Guid chatId, Guid userId);
     Task<bool> TryAddAsync(Guid chatId, ChatUser chatUser);
     Task<int> TryAddManyAsync(Guid chatId, IEnumerable<ChatUser> chatUsers);
