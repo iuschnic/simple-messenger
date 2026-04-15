@@ -2,6 +2,8 @@
 using Main.BL.Models;
 using Main.Application.OutPorts;
 using Main.BL.Exceptions;
+using Main.Application.Dtos;
+using Main.Application.Mappers;
 
 namespace Main.Application.Services;
 
@@ -13,28 +15,30 @@ public class UserService : BaseService, IUserService
         IChatRepository chatRepo,
         IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
 
-    public async Task<User> GetUserByIdAsync(Guid userId, Guid currentUserId)
+    public async Task<UserDto> GetUserByIdAsync(Guid userId, Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
-        return await GetUserOrThrow(userId);
+        var user = await GetUserOrThrow(userId);
+        return user.ToDto();
     }
-    public async Task<User> CreateUserAsync(string uniqueName, string displayedName)
+    public async Task<UserDto> CreateUserAsync(string uniqueName, string displayedName)
     {
         if (await _userRepo.ExistsByUniqueNameAsync(uniqueName))
             throw new RuleViolationException("User with the same unique name already exists");
         var user = User.CreateNew(uniqueName, displayedName);
         if (!await _userRepo.CreateAsync(user))
             throw new TechnicalException("Failed to create user");
-        return user;
+        return user.ToDto();
     }
-    public async Task<User> GetMyProfileAsync(Guid currentUserId)
+    public async Task<UserDto> GetMyProfileAsync(Guid currentUserId)
     {
-        return await GetUserOrThrow(currentUserId);
+        var user = await GetUserOrThrow(currentUserId);
+        return user.ToDto();
     }
-    public async Task<IEnumerable<User>> SearchUsersAsync(string substr, int maxUsers, Guid currentUserId)
+    public async Task<IEnumerable<UserDto>> SearchUsersAsync(string substr, int maxUsers, Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
         var users = await _userRepo.SearchAsync(substr, maxUsers);
-        return users.Where(u => u.Id != currentUserId);
+        return users.Where(u => u.Id != currentUserId).Select(u => u.ToDto());
     }
 }
