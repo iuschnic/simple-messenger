@@ -24,23 +24,33 @@ public class ContactService: BaseService, IContactService
         await EnsureUserExists(userId);
         return await _contactRepo.GetContactsWithUserAsync(userId);
     }
-    public async Task AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
+    public async Task<ContactWithUser> AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
     {
         await EnsureUserExists(ownerUserId);
-        await EnsureUserExists(contactUserId);
+        var contactUser = await GetUserOrThrow(contactUserId);
         if (await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
             throw new ConflictException("Contact already exists");
         if (!await _contactRepo.TryAddAsync(ownerUserId, new Contact(contactUserId, contactName)))
             throw new TechnicalException("Failed to add contact");
+        return new ContactWithUser
+        {
+            ContactUser = contactUser,
+            ContactName = contactName
+        };
     }
-    public async Task ChangeContactNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName)
+    public async Task<ContactWithUser> ChangeContactNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName)
     {
         await EnsureUserExists(ownerUserId);
-        await EnsureUserExists(contactUserId);
+        var contactUser = await GetUserOrThrow(contactUserId);
         if (!await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
             throw new ConflictException("Contact doesnt exist");
         if (!await _contactRepo.TryUpdateNameAsync(ownerUserId, contactUserId, newContactName))
             throw new TechnicalException("Failed to update contact");
+        return new ContactWithUser
+        {
+            ContactUser = contactUser,
+            ContactName = newContactName
+        };
     }
     public async Task RemoveContactAsync(Guid ownerUserId, Guid contactUserId)
     {
