@@ -33,7 +33,7 @@ public enum ChatSyncStatus
     Left = 3,
 }
 
-public class ChatSync
+public class ChatSyncDto
 {
     // Статус чата
     public ChatSyncStatus Status { get; init; }

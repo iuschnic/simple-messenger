@@ -11,7 +11,7 @@ public class SyncService: BaseService, ISyncService
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
         IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
-    public async Task<List<ChatSync>> SyncChatsAsync(
+    public async Task<List<ChatSyncDto>> SyncChatsAsync(
         List<(Guid ChatId, ulong ClientVersion)> clientChats,
         Guid currentUserId)
     {
@@ -21,7 +21,7 @@ public class SyncService: BaseService, ISyncService
 
         var clientChatIds = clientChats.Select(c => c.ChatId).ToHashSet();
 
-        var result = new List<ChatSync>();
+        var result = new List<ChatSyncDto>();
 
         // чаты, которые есть и на клиенте, и на сервере (sync)
         var commonChatIds = clientChatIds.Intersect(serverChatIds);
@@ -44,7 +44,7 @@ public class SyncService: BaseService, ISyncService
         var deletedChatIds = clientChatIds.Except(serverChatIds);
         foreach (var chatId in deletedChatIds)
         {
-            result.Add(new ChatSync
+            result.Add(new ChatSyncDto
             {
                 Status = ChatSyncStatus.Deleted,
                 ChatMeta = new ChatMeta { Id = chatId }
@@ -54,7 +54,7 @@ public class SyncService: BaseService, ISyncService
         return result;
     }
 
-    public async Task<ChatSync> SyncChatAsync(
+    public async Task<ChatSyncDto> SyncChatAsync(
         Guid chatId, ulong clientVersion,
         Guid currentUserId)
     {
@@ -63,7 +63,7 @@ public class SyncService: BaseService, ISyncService
         var chat = await GetChatOrThrow(chatId);
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
-        return new ChatSync
+        return new ChatSyncDto
         {
             Status = ChatSyncStatus.Synced,
             ChatMeta = new ChatMeta
@@ -81,7 +81,7 @@ public class SyncService: BaseService, ISyncService
         };
     }
 
-    private async Task<ChatSync> SyncExistingChatAsync(
+    private async Task<ChatSyncDto> SyncExistingChatAsync(
         Guid chatId,
         ulong clientVersion)
     {
@@ -89,7 +89,7 @@ public class SyncService: BaseService, ISyncService
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
 
-        return new ChatSync
+        return new ChatSyncDto
         {
             Status = ChatSyncStatus.Synced,
             ChatMeta = new ChatMeta
@@ -106,12 +106,12 @@ public class SyncService: BaseService, ISyncService
             Participants = [.. participants]
         };
     }
-    private async Task<ChatSync> SyncNewChatAsync(Guid chatId)
+    private async Task<ChatSyncDto> SyncNewChatAsync(Guid chatId)
     {
         var chat = await _chatRepo.GetByIdAsync(chatId);
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var lastMessages = await _messageRepo.GetLastMessagesAsync(chatId, 50);
-        return new ChatSync
+        return new ChatSyncDto
         {
             Status = ChatSyncStatus.New,
             ChatMeta = new ChatMeta

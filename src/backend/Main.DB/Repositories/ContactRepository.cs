@@ -30,14 +30,14 @@ public class ContactRepository : IContactRepository
             .ToListAsync();
         return contactsDb.Select(c => c.ToDomain());
     }
-    public async Task<IEnumerable<ContactWithUser>> GetContactsWithUserAsync(Guid ownerUserId)
+    public async Task<IEnumerable<ContactWithUserDto>> GetContactsWithUserAsync(Guid ownerUserId)
     {
         var contactsDb = await _context.Contacts
             .Include(c => c.ContactUser)
             .Where(c => c.OwnerUserId == ownerUserId)
             .OrderBy(c => c.ContactName)
             .ToListAsync();
-        return contactsDb.Select(c => new ContactWithUser
+        return contactsDb.Select(c => new ContactWithUserDto
         {
             ContactUser = c.ContactUser.ToDomain(),
             ContactName = c.ContactName

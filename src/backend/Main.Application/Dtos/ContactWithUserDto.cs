@@ -2,7 +2,7 @@
 
 namespace Main.Application.Dtos;
 
-public class ContactWithUser
+public class ContactWithUserDto
 {
     public User ContactUser { get; init; }
     public string ContactName { get; init; }
