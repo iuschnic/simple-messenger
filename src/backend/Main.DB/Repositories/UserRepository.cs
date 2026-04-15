@@ -26,6 +26,13 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.UniqueName == uniqueName);
         return userDb?.ToDomain();
     }
+    public async Task<IEnumerable<User>> GetByIdsAsync(List<Guid> userIds)
+    {
+        var usersDb = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToListAsync();
+        return usersDb.Select(u => u.ToDomain());
+    }
     public async Task<IEnumerable<User>> SearchAsync(
         string substr,
         int maxUsers)
