@@ -1,7 +1,9 @@
-﻿using Main.BL.Exceptions;
+﻿using Main.Application.Dtos;
 using Main.Application.InPorts;
-using Main.BL.Models;
 using Main.Application.OutPorts;
+using Main.BL.Exceptions;
+using Main.BL.Models;
+using Main.Application.Mappers;
 
 namespace Main.Application.Services;
 
@@ -12,7 +14,7 @@ public class MessageService: BaseService, IMessageService
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
         IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
-    public async Task<IEnumerable<Message>> GetOlderMessagesAsync(
+    public async Task<IEnumerable<MessageDto>> GetOlderMessagesAsync(
         Guid chatId,
         ulong fromMessageNumber,
         int limit,
@@ -24,9 +26,10 @@ public class MessageService: BaseService, IMessageService
         await EnsureUserExists(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
-        return await _messageRepo.GetOlderMessagesAsync(chatId, fromMessageNumber, limit);
+        var messages = await _messageRepo.GetOlderMessagesAsync(chatId, fromMessageNumber, limit);
+        return messages.Select(m => m.ToDto());
     }
-    public async Task<IEnumerable<Message>> GetNewerMessagesAsync(
+    public async Task<IEnumerable<MessageDto>> GetNewerMessagesAsync(
         Guid chatId,
         ulong fromMessageNumber,
         int limit,
@@ -38,9 +41,10 @@ public class MessageService: BaseService, IMessageService
         await EnsureUserExists(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
-        return await _messageRepo.GetNewerMessagesAsync(chatId, fromMessageNumber, limit);
+        var messages = await _messageRepo.GetNewerMessagesAsync(chatId, fromMessageNumber, limit);
+        return messages.Select(m => m.ToDto());
     }
-    public async Task<IEnumerable<Message>> GetLastMessagesAsync(
+    public async Task<IEnumerable<MessageDto>> GetLastMessagesAsync(
         Guid chatId,
         int limit,
         Guid currentUserId)
@@ -51,7 +55,8 @@ public class MessageService: BaseService, IMessageService
         await EnsureUserExists(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
-        return await _messageRepo.GetLastMessagesAsync(chatId, limit);
+        var messages = await _messageRepo.GetLastMessagesAsync(chatId, limit);
+        return messages.Select(m => m.ToDto());
     }
     public async Task CreateRegularMessageAsync(
         Guid chatId,
