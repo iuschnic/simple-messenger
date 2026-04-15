@@ -72,7 +72,7 @@ components:
     MessageDto:
       type: object
       properties:
-        messageNumber:
+        messageNum:
           type: integer
           format: int64
         chatId:
@@ -99,7 +99,7 @@ components:
         type:
           type: string
           enum: [regular, reply, forward, system]
-        replyToMessageNumber:
+        replyToMessageNum:
           type: integer
           format: int64
           nullable: true
@@ -120,6 +120,7 @@ components:
           type: string
           nullable: true
         type:
+          type: string
           enum: [group, private]
         ownerUserId:
           type: string
@@ -146,13 +147,10 @@ components:
         userId:
           type: string
           format: uuid
-
         uniqueName:
           type: string
-
         displayedName:
           type: string
-
         lastMessageRead:
           type: integer
           format: int64
@@ -170,13 +168,17 @@ components:
           type: string
           enum: [synced, new, deleted]
         chatMeta:
-          $ref: '#/components/schemas/ChatMetaDto'
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ChatMetaDto'
         messages:
           type: array
+          nullable: true
           items:
             $ref: '#/components/schemas/MessageDto'
         participants:
           type: array
+          nullable: true
           items:
             $ref: '#/components/schemas/ChatParticipantInfoDto'
 
@@ -206,7 +208,7 @@ components:
       type: object
       required: [userContactId, contactName]
       properties:
-        contactId:
+        userContactId:
           type: string
           format: uuid
         contactName:
@@ -275,7 +277,6 @@ components:
       required:
         - messageType
         - clientVersion
-        - chatId
       properties:
         messageType:
           type: string
@@ -284,9 +285,6 @@ components:
         clientVersion:
           type: integer
           format: int64
-        chatId:
-          type: string
-          format: uuid
 
     SendMessageRequest:
       allOf:
@@ -306,12 +304,12 @@ components:
         - type: object
           required:
             - text
-            - replyToMessageId
+            - replyToMessageNum
           properties:
             text:
               type: string
               minLength: 1
-            replyToMessageId:
+            replyToMessageNum:
               type: integer
               format: int64
           additionalProperties: false
@@ -511,6 +509,10 @@ paths:
       responses:
         "201":
           description: Contact added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDto'
         "404":
           description: User not found
         "409":
@@ -545,13 +547,18 @@ paths:
     post:
       summary: Create chat
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateChatRequest'
       responses:
         "201":
-          description: Chat created
+          description: Chat created, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
 
   /chats/{chatId}:
     get:
@@ -648,7 +655,7 @@ paths:
             format: uuid
       responses:
         "204":
-          description: Successfully left chat
+          description: Success
         "403":
           description: Not enough permissions
         "404":
@@ -664,17 +671,12 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: fromMessageNumber
+        - name: fromMessageNum
           in: query
           schema:
             type: integer
             format: int64
         - name: limit
-          in: query
-          schema:
-            type: integer
-            format: int64
-        - name: clientVersion
           in: query
           schema:
             type: integer
@@ -760,6 +762,7 @@ paths:
             type: integer
             format: int64
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -783,12 +786,13 @@ paths:
             type: string
             format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ReadMessagesRequest'
       responses:
-        "201":
+        "200":
           description: Messages marked as read
         "403":
           description: User not in chat
@@ -799,6 +803,7 @@ paths:
     post:
       summary: Sync chats
       requestBody:
+        required: true
         content:
           application/json:
             schema:
