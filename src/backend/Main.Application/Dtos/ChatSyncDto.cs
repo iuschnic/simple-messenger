@@ -4,7 +4,6 @@ using Main.BL.Models;
 namespace Main.Application.Dtos;
 public class ChatMeta
 {
-    public Guid Id { get; init; }
     public string? Name { get; init; }
     public ChatType Type { get; init; }
     public Guid? OwnerUserId { get; init; }
@@ -27,20 +26,20 @@ public enum ChatSyncStatus
     Synced = 0,
     // Новый чат: клиент не знал о нем
     New = 1,
-    // Чат удален: клиент знал о чате, но на сервере его больше нет
-    Deleted = 2,
-    // Клиент покинул чат (был удален или вышел сам с другого клиента)
-    Left = 3,
+    // Чат удален: клиент знал о чате, но на сервере этой связи уже нет (удален или пользователь вышел из него)
+    Deleted = 2
 }
 
 public class ChatSyncDto
 {
+    // Id чата
+    public Guid ChatId { get; init; }
     // Статус чата
     public ChatSyncStatus Status { get; init; }
     // Мета-информация о чате
-    public ChatMeta ChatMeta { get; init; }
+    public ChatMeta? ChatMeta { get; init; }
     // Список новых/удаленных/измененных сообщений
-    public List<Message> Messages { get; init; } = new();
+    public List<Message>? Messages { get; init; }
     // Список участников чата, включая информацию о последних прочитанных сообщениях
-    public List<ChatParticipantInfo> Participants { get; init; } = new();
+    public List<ChatParticipantInfo>? Participants { get; init; }
 }
