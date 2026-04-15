@@ -7,7 +7,7 @@ public interface IContactRepository
 {
     Task<Contact?> GetAsync(Guid ownerUserId, Guid contactUserId);
     Task<IEnumerable<Contact>> GetContactsAsync(Guid ownerUserId);
-    Task<IEnumerable<ContactWithUser>> GetContactsWithUserAsync(Guid ownerUserId);
+    Task<IEnumerable<ContactWithUserDto>> GetContactsWithUserAsync(Guid ownerUserId);
     Task<bool> ExistsAsync(Guid ownerUserId, Guid contactUserId);
     Task<bool> TryAddAsync(Guid ownerUserId, Contact contact);
     Task<bool> TryUpdateNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName);

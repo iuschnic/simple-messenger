@@ -19,12 +19,12 @@ public class ContactService: BaseService, IContactService
     {
         _contactRepo = contactRepo;
     }
-    public async Task<IEnumerable<ContactWithUser>> GetMyContactsAsync(Guid userId)
+    public async Task<IEnumerable<ContactWithUserDto>> GetMyContactsAsync(Guid userId)
     {
         await EnsureUserExists(userId);
         return await _contactRepo.GetContactsWithUserAsync(userId);
     }
-    public async Task<ContactWithUser> AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
+    public async Task<ContactWithUserDto> AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
     {
         await EnsureUserExists(ownerUserId);
         var contactUser = await GetUserOrThrow(contactUserId);
@@ -32,13 +32,13 @@ public class ContactService: BaseService, IContactService
             throw new ConflictException("Contact already exists");
         if (!await _contactRepo.TryAddAsync(ownerUserId, new Contact(contactUserId, contactName)))
             throw new TechnicalException("Failed to add contact");
-        return new ContactWithUser
+        return new ContactWithUserDto
         {
             ContactUser = contactUser,
             ContactName = contactName
         };
     }
-    public async Task<ContactWithUser> ChangeContactNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName)
+    public async Task<ContactWithUserDto> ChangeContactNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName)
     {
         await EnsureUserExists(ownerUserId);
         var contactUser = await GetUserOrThrow(contactUserId);
@@ -46,7 +46,7 @@ public class ContactService: BaseService, IContactService
             throw new ConflictException("Contact doesnt exist");
         if (!await _contactRepo.TryUpdateNameAsync(ownerUserId, contactUserId, newContactName))
             throw new TechnicalException("Failed to update contact");
-        return new ContactWithUser
+        return new ContactWithUserDto
         {
             ContactUser = contactUser,
             ContactName = newContactName

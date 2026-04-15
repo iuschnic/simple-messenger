@@ -3,7 +3,7 @@ using Main.BL.Models;
 
 namespace Main.Application.Dtos;
 
-public class ChatWithUsers
+public class ChatWithUsersDto
 {
     public Guid Id { get; init; }
     public string? Name { get; init; }

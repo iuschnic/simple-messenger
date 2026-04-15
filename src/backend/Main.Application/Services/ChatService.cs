@@ -13,7 +13,7 @@ public class ChatService: BaseService, IChatService
         IUserRepository userRepo,
         IChatUserRepository chatUserRepo,
         IMessageRepository messageRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
-    public async Task<IEnumerable<ChatWithUsers>> GetChatsAsync(Guid currentUserId)
+    public async Task<IEnumerable<ChatWithUsersDto>> GetChatsAsync(Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
         var chats = await _chatRepo.GetUserChatsAsync(currentUserId);
@@ -24,7 +24,7 @@ public class ChatService: BaseService, IChatService
             .ToList();
         var users = await _userRepo.GetByIdsAsync(userIds);
         var userMap = users.ToDictionary(u => u.Id);
-        return chats.Select(chat => new ChatWithUsers
+        return chats.Select(chat => new ChatWithUsersDto
         {
             Id = chat.Id,
             Name = chat.Name,
@@ -39,14 +39,14 @@ public class ChatService: BaseService, IChatService
         });
     }
 
-    public async Task<ChatWithUsers> GetChatByIdAsync(Guid chatId, Guid currentUserId)
+    public async Task<ChatWithUsersDto> GetChatByIdAsync(Guid chatId, Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
         var chat = await _chatRepo.GetByIdAsync(chatId);
         var userIds = chat.Participants.Select(p => p.UserId).ToList();
         var users = await _userRepo.GetByIdsAsync(userIds);
         var userMap = users.ToDictionary(u => u.Id);
-        return new ChatWithUsers
+        return new ChatWithUsersDto
         {
             Id = chat.Id,
             Name = chat.Name,
