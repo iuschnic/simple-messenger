@@ -1,18 +1,18 @@
-﻿using Main.BL.Models;
+﻿using Main.Application.Dtos;
 namespace Main.Application.InPorts;
 public interface IMessageService
 {
-    Task<IEnumerable<Message>> GetOlderMessagesAsync(
+    Task<IEnumerable<MessageDto>> GetOlderMessagesAsync(
         Guid chatId,
         ulong fromMessageNumber,
         int limit,
         Guid currentUserId);
-    Task<IEnumerable<Message>> GetNewerMessagesAsync(
+    Task<IEnumerable<MessageDto>> GetNewerMessagesAsync(
         Guid chatId,
         ulong fromMessageNumber,
         int limit,
         Guid currentUserId);
-    Task<IEnumerable<Message>> GetLastMessagesAsync(
+    Task<IEnumerable<MessageDto>> GetLastMessagesAsync(
         Guid chatId,
         int limit,
         Guid currentUserId);
