@@ -10,12 +10,11 @@ public static class ChatSyncMapper
         List<ChatParticipantInfo>? participants = null,
         List<Message>? messages = null)
     {
-        var isDeletedOrLeft = status == ChatSyncStatus.Deleted || status == ChatSyncStatus.Left;
         return new ChatSyncDto
         {
             ChatId = domain.Id,
             Status = status,
-            ChatMeta = isDeletedOrLeft ? null : new ChatMeta
+            ChatMeta = status == ChatSyncStatus.Deleted ? null : new ChatMeta
             {
                 Name = domain.Name,
                 Type = domain.Type,
@@ -24,8 +23,8 @@ public static class ChatSyncMapper
                 Version = domain.Version,
                 LastMessageNum = domain.LastMessageNum
             },
-            Messages = isDeletedOrLeft ? null : messages,
-            Participants = isDeletedOrLeft ? null : participants
+            Messages = status == ChatSyncStatus.Deleted ? null : messages,
+            Participants = status == ChatSyncStatus.Deleted ? null : participants
         };
     }
 }

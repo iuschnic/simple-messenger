@@ -1,6 +1,7 @@
 ﻿using Main.Application.Dtos;
 using Main.Application.InPorts;
 using Main.Application.OutPorts;
+using Main.Application.Mappers;
 
 namespace Main.Application.Services;
 
@@ -47,85 +48,51 @@ public class SyncService: BaseService, ISyncService
             result.Add(new ChatSyncDto
             {
                 Status = ChatSyncStatus.Deleted,
-                ChatMeta = new ChatMeta { Id = chatId }
+                ChatId = chatId
             });
         }
 
         return result;
     }
-
     public async Task<ChatSyncDto> SyncChatAsync(
-        Guid chatId, ulong clientVersion,
+        Guid chatId,
+        ulong clientVersion,
         Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
-        await EnsureParticipant(chatId, currentUserId);
-        var chat = await GetChatOrThrow(chatId);
+        var chat = await _chatRepo.GetByIdAsync(chatId);
+        if (chat == null || !await _chatUserRepo.IsParticipantAsync(chatId, currentUserId))
+        {
+            return new ChatSyncDto
+            {
+                ChatId = chatId,
+                Status = ChatSyncStatus.Deleted,
+                ChatMeta = null,
+                Messages = null,
+                Participants = null
+            };
+        }
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
-        return new ChatSyncDto
-        {
-            Status = ChatSyncStatus.Synced,
-            ChatMeta = new ChatMeta
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                Type = chat.Type,
-                OwnerUserId = chat.OwnerUserId,
-                CreatedAt = chat.CreatedAt,
-                Version = chat.Version,
-                LastMessageNum = chat.LastMessageNum
-            },
-            Messages = [.. updatedMessages],
-            Participants = [.. participants]
-        };
+        return chat.ToDto(ChatSyncStatus.Synced, participants.ToList(), updatedMessages.ToList());
     }
 
     private async Task<ChatSyncDto> SyncExistingChatAsync(
         Guid chatId,
         ulong clientVersion)
     {
-        var chat = await _chatRepo.GetByIdAsync(chatId);
+        var chat = await GetChatOrThrow(chatId);
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
 
-        return new ChatSyncDto
-        {
-            Status = ChatSyncStatus.Synced,
-            ChatMeta = new ChatMeta
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                Type = chat.Type,
-                OwnerUserId = chat.OwnerUserId,
-                CreatedAt = chat.CreatedAt,
-                Version = chat.Version,
-                LastMessageNum = chat.LastMessageNum
-            },
-            Messages = [.. updatedMessages],
-            Participants = [.. participants]
-        };
+        return chat.ToDto(ChatSyncStatus.Synced, [.. participants], [.. updatedMessages]);
     }
     private async Task<ChatSyncDto> SyncNewChatAsync(Guid chatId)
     {
-        var chat = await _chatRepo.GetByIdAsync(chatId);
+        var chat = await GetChatOrThrow(chatId);
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var lastMessages = await _messageRepo.GetLastMessagesAsync(chatId, 50);
-        return new ChatSyncDto
-        {
-            Status = ChatSyncStatus.New,
-            ChatMeta = new ChatMeta
-            {
-                Id = chat.Id,
-                Name = chat.Name,
-                Type = chat.Type,
-                OwnerUserId = chat.OwnerUserId,
-                CreatedAt = chat.CreatedAt,
-                Version = chat.Version,
-                LastMessageNum = chat.LastMessageNum
-            },
-            Messages = [.. lastMessages],
-            Participants = [.. participants]
-        };
+
+        return chat.ToDto(ChatSyncStatus.New, [.. participants], [.. lastMessages]);
     }
 }
