@@ -1,6 +1,7 @@
 ﻿using Main.Application.InPorts;
 using Main.BL.Models;
 using Main.Application.OutPorts;
+using Main.BL.Exceptions;
 
 namespace Main.Application.Services;
 
@@ -16,6 +17,13 @@ public class UserService : BaseService, IUserService
     {
         await EnsureUserExists(currentUserId);
         return await GetUserOrThrow(userId);
+    }
+    public async Task<User> CreateUserAsync(string uniqueName, string displayedName)
+    {
+        var user = User.CreateNew(uniqueName, displayedName);
+        if (!await _userRepo.CreateAsync(user))
+            throw new TechnicalException("Failed to create user");
+        return user;
     }
     public async Task<User> GetMyProfileAsync(Guid currentUserId)
     {
