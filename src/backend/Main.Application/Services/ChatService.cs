@@ -1,7 +1,8 @@
-﻿using Main.BL.Exceptions;
+﻿using Main.Application.Dtos;
 using Main.Application.InPorts;
-using Main.BL.Models;
 using Main.Application.OutPorts;
+using Main.BL.Exceptions;
+using Main.BL.Models;
 
 namespace Main.Application.Services;
 
@@ -12,24 +13,52 @@ public class ChatService: BaseService, IChatService
         IUserRepository userRepo,
         IChatUserRepository chatUserRepo,
         IMessageRepository messageRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
-
-    public async Task<IEnumerable<Chat>> GetChatsAsync(Guid currentUserId)
+    public async Task<IEnumerable<ChatWithUsers>> GetChatsAsync(Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
         var chats = await _chatRepo.GetUserChatsAsync(currentUserId);
-        return chats;
+        var userIds = chats
+            .SelectMany(c => c.Participants)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToList();
+        var users = await _userRepo.GetByIdsAsync(userIds);
+        var userMap = users.ToDictionary(u => u.Id);
+        return chats.Select(chat => new ChatWithUsers
+        {
+            Id = chat.Id,
+            Name = chat.Name,
+            Type = chat.Type,
+            OwnerUserId = chat.OwnerUserId,
+            CreatedAt = chat.CreatedAt,
+            Version = chat.Version,
+            LastMessageNum = chat.LastMessageNum,
+            Participants = chat.Participants
+                .Select(p => userMap[p.UserId])
+                .ToList()
+        });
     }
 
-    public async Task<Chat> GetChatByIdAsync(Guid chatId, Guid currentUserId)
+    public async Task<ChatWithUsers> GetChatByIdAsync(Guid chatId, Guid currentUserId)
     {
         await EnsureUserExists(currentUserId);
-        await EnsureParticipant(chatId, currentUserId);
-
-        var chat = await GetChatOrThrow(chatId);
-
-        return chat;
+        var chat = await _chatRepo.GetByIdAsync(chatId);
+        var userIds = chat.Participants.Select(p => p.UserId).ToList();
+        var users = await _userRepo.GetByIdsAsync(userIds);
+        var userMap = users.ToDictionary(u => u.Id);
+        return new ChatWithUsers
+        {
+            Id = chat.Id,
+            Name = chat.Name,
+            Type = chat.Type,
+            OwnerUserId = chat.OwnerUserId,
+            CreatedAt = chat.CreatedAt,
+            Version = chat.Version,
+            LastMessageNum = chat.LastMessageNum,
+            Participants = users.ToList()
+        };
     }
-    public async Task<Chat> CreatePrivateChatAsync(Guid otherUserId, Guid currentUserId)
+    public async Task<Guid> CreatePrivateChatAsync(Guid otherUserId, Guid currentUserId)
     {
         if (currentUserId == otherUserId)
             throw new RuleViolationException("Cannot create private chat with yourself");
@@ -44,9 +73,9 @@ public class ChatService: BaseService, IChatService
 
         var chat = Chat.CreatePrivate(participant1, participant2);
         await _chatRepo.CreateAsync(chat);
-        return chat;
+        return chat.Id;
     }
-    public async Task<Chat> CreateGroupChatAsync(string name, List<Guid> memberIds, Guid currentUserId)
+    public async Task<Guid> CreateGroupChatAsync(string name, List<Guid> memberIds, Guid currentUserId)
     {
         var allUserIds = memberIds.Append(currentUserId).Distinct();
         foreach (var userId in allUserIds)
@@ -58,7 +87,7 @@ public class ChatService: BaseService, IChatService
         var participants = allUserIds.Select(userId => new ChatUser(userId, 0)).ToList();
         var chat = Chat.CreateGroup(name, currentUserId, participants);
         await _chatRepo.CreateAsync(chat);
-        return chat;
+        return chat.Id;
     }
     public async Task UpdateChatNameAsync(Guid chatId, string newName, Guid currentUserId)
     {
