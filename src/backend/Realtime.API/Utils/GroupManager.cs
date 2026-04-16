@@ -6,7 +6,7 @@ namespace Realtime.API.Utils;
 public class GroupManager(IHubContext<RealtimeHub> hubContext, HttpChatReceiver chatReceiver) : IGroupManager
 {
     public async Task SendToGroupAsync(string groupName, string eventType, string messageJson) => 
-        await hubContext.Clients.Group(groupName).SendAsync("ReceiveMessage", eventType + "&" + messageJson);
+        await hubContext.Clients.Group(groupName).SendAsync(eventType, messageJson);
 
     public async Task SendToAllUserGroupsAsync(string userId, string eventType, string messageJson)
     {
