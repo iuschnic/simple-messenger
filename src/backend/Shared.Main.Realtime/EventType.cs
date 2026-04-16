@@ -8,6 +8,7 @@ public enum EventType
     UserChanged,
     ChatCreated,
     ChatUpdated,
+    ChatDeleted,
     ChatUserJoined,
     ChatUserLeft
 }

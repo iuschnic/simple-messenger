@@ -17,6 +17,6 @@ public record ChatDto(
     [JsonProperty] ulong Version,
     [JsonProperty] ulong LastMessageNum);
     
-public record NewChatDto(
+public record FullChatDto(
     [JsonProperty] ChatDto Chat,
     [JsonProperty] List<ChatUserDto> Participants);

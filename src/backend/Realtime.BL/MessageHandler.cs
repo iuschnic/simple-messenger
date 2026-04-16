@@ -27,6 +27,9 @@ public class MessageHandler(IConnectionsRepository repository,
             case EventType.ChatUpdated:
                 await ChatUpdated(dataJson);
                 break;
+            case EventType.ChatDeleted:
+                await ChatDeleted(dataJson);
+                break;
             case EventType.ChatCreated:
                 await ChatCreated(dataJson);
                 break;
@@ -79,19 +82,35 @@ public class MessageHandler(IConnectionsRepository repository,
                 
         await groupManager.SendToGroupAsync(chat.Id.ToString(), nameof(EventType.ChatUpdated), dataJson);
     }
+
+    private async Task ChatDeleted(string dataJson)
+    {
+        var chat = JsonConvert.DeserializeObject<FullChatDto>(dataJson);
+        
+        if (chat is null)
+            throw new FailedToDeserializeMessageException();
+        
+        await groupManager.SendToGroupAsync(chat.Chat.Id.ToString(), nameof(EventType.ChatDeleted),
+            JsonConvert.SerializeObject(chat.Chat));
+
+        foreach (var connectionId in chat.Participants.Select(participant => 
+                         repository.GetConnectionIdsByUserId(participant.User.Id.ToString()))
+                     .SelectMany(x => x))
+            await groupManager.RemoveFromGroupAsync(connectionId, chat.Chat.Id.ToString());
+    }
     
     private async Task ChatCreated(string dataJson)
     {
-        var newChat = JsonConvert.DeserializeObject<NewChatDto>(dataJson);
+        var chat = JsonConvert.DeserializeObject<FullChatDto>(dataJson);
                 
-        if (newChat is null)
+        if (chat is null)
             throw new FailedToDeserializeMessageException();
 
-        foreach (var connectionId in newChat.Participants.Select(participant => 
+        foreach (var connectionId in chat.Participants.Select(participant => 
                          repository.GetConnectionIdsByUserId(participant.User.Id.ToString()))
                      .SelectMany(x => x))
-            await groupManager.AddToGroupAsync(connectionId, newChat.Chat.Id.ToString());
+            await groupManager.AddToGroupAsync(connectionId, chat.Chat.Id.ToString());
                 
-        await groupManager.SendToGroupAsync(newChat.Chat.Id.ToString(), nameof(EventType.ChatCreated), dataJson);
+        await groupManager.SendToGroupAsync(chat.Chat.Id.ToString(), nameof(EventType.ChatCreated), dataJson);
     }
 }
