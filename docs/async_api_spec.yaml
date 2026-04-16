@@ -1,0 +1,227 @@
+asyncapi: '2.6.0'
+id: 'realtimehub'
+info:
+  title: Realtime Hub API
+  version: '1.0.0'
+  description: SignalR Realtime Hub Specification
+
+channels:
+  MessageReceived:
+    description: Пришло новое сообщение
+    subscribe:
+      message:
+        $ref: '#/components/messages/MessageReceived'
+  MessageUpdated:
+    description: Сообщение изменилось или было удалено
+    subscribe:
+      message:
+        $ref: '#/components/messages/MessageUpdated'
+  MessageRead:
+    description: Пользователь прочитал сообщение
+    subscribe:
+      message:
+        $ref: '#/components/messages/MessageRead'
+  ChatUserJoined:
+    description: Пользователь присоединился к чату
+    subscribe:
+      message:
+        $ref: '#/components/messages/ChatUserJoined'
+  ChatUserLeft:
+    description: Пользователь вышел из чата
+    subscribe:
+      message:
+        $ref: '#/components/messages/ChatUserLeft'
+  UserChanged:
+    description: Пользователь изменил свои данные
+    subscribe:
+      message:
+        $ref: '#/components/messages/UserChanged'
+  ChatCreated:
+    description: Чат был создан
+    subscribe:
+      message:
+        $ref: '#/components/messages/ChatCreated'
+  ChatDeleted:
+    description: Чат был удалён
+    subscribe: 
+      message: 
+        $ref: '#/components/messages/ChatDeleted'
+  ChatUpdated:
+    description: Чат был изменён
+    subscribe:
+      message:
+        $ref: '#/components/messages/ChatUpdated'
+
+components:
+  messages:
+    MessageReceived:
+      payload:
+        $ref: '#/components/schemas/MessageDto'
+    MessageUpdated:
+      payload:
+        $ref: '#/components/schemas/MessageDto'
+    MessageRead:
+      payload:
+        $ref: '#/components/schemas/ChatUserDto'
+    ChatUserJoined:
+      payload:
+        $ref: '#/components/schemas/ChatUserDto'
+    ChatUserLeft:
+      payload:
+        $ref: '#/components/schemas/ChatUserDto'
+    UserChanged:
+      payload:
+        $ref: '#/components/schemas/UserDto'
+    ChatCreated:
+      payload:
+        $ref: '#/components/schemas/FullChatDto'
+    ChatDeleted:
+      payload: 
+        $ref: '#/components/schemas/ChatDto'
+    ChatUpdated:
+      payload:
+        $ref: '#/components/schemas/ChatDto'
+
+  schemas:
+    UserDto:
+      type: object
+      required:
+        - Id
+        - UniqueName
+        - DisplayedName
+      properties:
+        Id:
+          type: string
+          format: uuid
+        UniqueName:
+          type: string
+        DisplayedName:
+          type: string
+
+    ChatDto:
+      type: object
+      required:
+        - Id
+        - Type
+        - CreatedAt
+        - Version
+        - LastMessageNum
+      properties:
+        Id:
+          type: string
+          format: uuid
+        Name:
+          type: string
+          nullable: true
+        Type:
+          $ref: '#/components/schemas/ChatType'
+        OwnerId:
+          type: string
+          format: uuid
+          nullable: true
+        CreatedAt:
+          type: string
+          format: date-time
+        Version:
+          type: integer
+          format: uint64
+        LastMessageNum:
+          type: integer
+          format: uint64
+
+    ChatUserDto:
+      type: object
+      required:
+        - ChatId
+        - User
+        - LastMessageRead
+      properties:
+        ChatId:
+          type: string
+          format: uuid
+        User:
+          $ref: '#/components/schemas/UserDto'
+        LastMessageRead:
+          type: integer
+          format: uint64
+
+    MessageDto:
+      type: object
+      required:
+        - MessageNumber
+        - ChatId
+        - Text
+        - CreatedAt
+        - IsDeleted
+        - Version
+        - Type
+      properties:
+        MessageNumber:
+          type: integer
+          format: uint64
+        ChatId:
+          type: string
+          format: uuid
+        SenderId:
+          type: string
+          format: uuid
+          nullable: true
+        Text:
+          type: string
+        CreatedAt:
+          type: string
+          format: date-time
+        EditedAt:
+          type: string
+          format: date-time
+          nullable: true
+        IsDeleted:
+          type: boolean
+        Version:
+          type: integer
+          format: uint64
+        Type:
+          $ref: '#/components/schemas/MessageType'
+        ReplyToMessageNumber:
+          type: integer
+          format: uint64
+          nullable: true
+        ForwardedFromUserId:
+          type: string
+          format: uuid
+          nullable: true
+
+    FullChatDto:
+      type: object
+      required:
+        - Chat
+        - Participants
+      properties:
+        Chat:
+          $ref: '#/components/schemas/ChatDto'
+        Participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatUserDto'
+
+    MessageType:
+      type: integer
+      enum:
+        - 0  # Regular
+        - 1  # Reply
+        - 2  # Forward
+        - 3  # System
+      x-enum-names:
+        - Regular
+        - Reply
+        - Forward
+        - System
+
+    ChatType:
+      type: integer
+      enum:
+        - 0  # Group
+        - 1  # Private
+      x-enum-names:
+        - Group
+        - Private
