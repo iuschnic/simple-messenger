@@ -28,36 +28,33 @@ components:
           format: uuid
         uniqueName:
           type: string
-        displayName:
+        displayedName:
           type: string
-        avatarFilePath:
-          type: string
-          nullable: true
     
     ContactDto:
       type: object
       properties:
-        user:
+        contactUser:
           $ref: '#/components/schemas/UserDto'
         contactName:
           type: string
-          description: Custom name given by user to this contact
-          nullable: true  # если пользователь не задал свое имя
 
     ChatDto:
       type: object
       properties:
-        chatId:
+        id:
           type: string
           format: uuid
         name:
           type: string
+          nullable: true
         type:
           type: string
           enum: [private, group]
-        ownerId:
+        ownerUserId:
           type: string
           format: uuid
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -67,7 +64,7 @@ components:
         lastMessageNum:
           type: integer
           format: int64
-        members:
+        participants:
           type: array
           items:
             $ref: '#/components/schemas/UserDto'
@@ -75,7 +72,7 @@ components:
     MessageDto:
       type: object
       properties:
-        messageNumber:
+        messageNum:
           type: integer
           format: int64
         chatId:
@@ -84,6 +81,7 @@ components:
         senderId:
           type: string
           format: uuid
+          nullable: true
         text:
           type: string
         createdAt:
@@ -101,7 +99,7 @@ components:
         type:
           type: string
           enum: [regular, reply, forward, system]
-        replyToMessageNumber:
+        replyToMessageNum:
           type: integer
           format: int64
           nullable: true
@@ -109,6 +107,80 @@ components:
           type: string
           format: uuid
           nullable: true
+    
+    ChatMetaDto:
+      type: object
+      required:
+        - type
+        - createdAt
+        - version
+        - lastMessageNum
+      properties:
+        name:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [group, private]
+        ownerUserId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int64
+        lastMessageNum:
+          type: integer
+          format: int64
+
+    ChatParticipantInfoDto:
+      type: object
+      required:
+        - userId
+        - uniqueName
+        - displayedName
+        - lastMessageRead
+      properties:
+        userId:
+          type: string
+          format: uuid
+        uniqueName:
+          type: string
+        displayedName:
+          type: string
+        lastMessageRead:
+          type: integer
+          format: int64
+        
+    ChatSyncDto:
+      type: object
+      required:
+        - chatId
+        - status
+      properties:
+        chatId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [synced, new, deleted]
+        chatMeta:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ChatMetaDto'
+        messages:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/MessageDto'
+        participants:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ChatParticipantInfoDto'
 
     RegisterRequest:
       type: object
@@ -136,12 +208,11 @@ components:
       type: object
       required: [userContactId, contactName]
       properties:
-        contactId:
+        userContactId:
           type: string
           format: uuid
         contactName:
           type: string
-          nullable: true
     
     CreateChatRequest:
       oneOf:
@@ -160,7 +231,6 @@ components:
       properties:
         chatType:
           type: string
-          description: Chat type
           enum: [private, group]
           
     CreatePrivateChatRequest:
@@ -234,12 +304,12 @@ components:
         - type: object
           required:
             - text
-            - replyToMessageId
+            - replyToMessageNum
           properties:
             text:
               type: string
               minLength: 1
-            replyToMessageId:
+            replyToMessageNum:
               type: integer
               format: int64
           additionalProperties: false
@@ -308,30 +378,20 @@ components:
     SyncChatResponse:
       type: object
       required:
-        - messages
-        - lastVersion
+        - chat
       properties:
-        chatId:
-          type: string
-          format: uuid
-        messages:
-          type: array
-          items:
-            $ref: '#/components/schemas/MessageDto'
-        lastVersion:
-          type: integer
-          format: int64
+        chat:
+          $ref: '#/components/schemas/ChatSyncDto'
           
     SyncChatsResponse:
       type: object
       required:
-        - messages
-        - lastVersion
+        - chats
       properties:
-        sync_chats:
+        chats:
           type: array
           items:
-            $ref: '#/components/schemas/SyncChatResponse'
+            $ref: '#/components/schemas/ChatSyncDto'
 
 paths:
 
@@ -449,6 +509,10 @@ paths:
       responses:
         "201":
           description: Contact added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDto'
         "404":
           description: User not found
         "409":
@@ -483,13 +547,18 @@ paths:
     post:
       summary: Create chat
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateChatRequest'
       responses:
         "201":
-          description: Chat created
+          description: Chat created, returning mini-sync messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
 
   /chats/{chatId}:
     get:
@@ -586,7 +655,7 @@ paths:
             format: uuid
       responses:
         "204":
-          description: Successfully left chat
+          description: Success
         "403":
           description: Not enough permissions
         "404":
@@ -602,17 +671,12 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: fromMessageNumber
+        - name: fromMessageNum
           in: query
           schema:
             type: integer
             format: int64
         - name: limit
-          in: query
-          schema:
-            type: integer
-            format: int64
-        - name: clientVersion
           in: query
           schema:
             type: integer
@@ -698,6 +762,7 @@ paths:
             type: integer
             format: int64
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -721,12 +786,13 @@ paths:
             type: string
             format: uuid
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ReadMessagesRequest'
       responses:
-        "201":
+        "200":
           description: Messages marked as read
         "403":
           description: User not in chat
@@ -737,6 +803,7 @@ paths:
     post:
       summary: Sync chats
       requestBody:
+        required: true
         content:
           application/json:
             schema:

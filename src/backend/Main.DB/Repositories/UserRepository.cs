@@ -1,0 +1,91 @@
+﻿using Main.BL.Models;
+using Main.Application.OutPorts;
+using Main.DB.Converters;
+using Main.DB.Context;
+using Microsoft.EntityFrameworkCore;
+
+namespace Main.DB.Repositories;
+
+public class UserRepository : IUserRepository
+{
+    private readonly MainDbContext _context;
+
+    public UserRepository(MainDbContext context)
+    {
+        _context = context;
+    }
+    public async Task<User?> GetByIdAsync(Guid id)
+    {
+        var userDb = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == id);
+        return userDb?.ToDomain();
+    }
+    public async Task<User?> GetByUniqueNameAsync(string uniqueName)
+    {
+        var userDb = await _context.Users
+            .FirstOrDefaultAsync(u => u.UniqueName == uniqueName);
+        return userDb?.ToDomain();
+    }
+    public async Task<IEnumerable<User>> GetByIdsAsync(List<Guid> userIds)
+    {
+        var usersDb = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToListAsync();
+        return usersDb.Select(u => u.ToDomain());
+    }
+    public async Task<IEnumerable<User>> SearchAsync(
+        string substr,
+        int maxUsers)
+    {
+        var query = _context.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(substr))
+        {
+            query = query.Where(u =>
+                u.UniqueName.Contains(substr) ||
+                u.DisplayedName.Contains(substr));
+        }
+        var usersDb = await query
+            .OrderBy(u => u.DisplayedName)
+            .Take(maxUsers)
+            .ToListAsync();
+        return usersDb.Select(u => u.ToDomain());
+    }
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        return await _context.Users.AnyAsync(u => u.Id == id);
+    }
+    public async Task<bool> ExistsByUniqueNameAsync(string uniqueName)
+    {
+        return await _context.Users.AnyAsync(u => u.UniqueName == uniqueName);
+    }
+    public async Task<bool> CreateAsync(User user)
+    {
+        var existDb = await _context.Users.FindAsync(user.UniqueName);
+        if (await _context.Users.AnyAsync(u => u.UniqueName == user.UniqueName || u.Id == user.Id))
+            return false;
+        var userDb = user.ToDb();
+        await _context.Users.AddAsync(userDb);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    public async Task<bool> UpdateDisplayedNameAsync(Guid id, string newDisplayedName)
+    {
+        var userDb = await _context.Users.FindAsync(id);
+        if (userDb == null)
+            return false;
+        if (string.IsNullOrWhiteSpace(newDisplayedName))
+            return false;
+        userDb.DisplayedName = newDisplayedName;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        var userDb = await _context.Users.FindAsync(id);
+        if (userDb == null)
+            return false;
+        _context.Users.Remove(userDb);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+}

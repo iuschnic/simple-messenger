@@ -1,0 +1,46 @@
+﻿using Main.Application.Dtos;
+namespace Main.Application.InPorts;
+public interface IMessageService
+{
+    Task<IEnumerable<MessageDto>> GetOlderMessagesAsync(
+        Guid chatId,
+        ulong fromMessageNumber,
+        int limit,
+        Guid currentUserId);
+    Task<IEnumerable<MessageDto>> GetNewerMessagesAsync(
+        Guid chatId,
+        ulong fromMessageNumber,
+        int limit,
+        Guid currentUserId);
+    Task<IEnumerable<MessageDto>> GetLastMessagesAsync(
+        Guid chatId,
+        int limit,
+        Guid currentUserId);
+    Task CreateRegularMessageAsync(
+        Guid chatId,
+        Guid currentUserId,
+        string text);
+    Task CreateReplyMessageAsync(
+        Guid chatId,
+        Guid currentUserId,
+        string text,
+        ulong replyToMessageNumber);
+    Task CreateForwardMessageAsync(
+        Guid targetChatId,
+        Guid sourceChatId,
+        ulong sourceMessageNumber,
+        Guid currentUserId);
+    Task DeleteMessageAsync(
+        Guid chatId,
+        ulong messageNumber,
+        Guid currentUserId);
+    Task EditMessageAsync(
+        Guid chatId,
+        ulong messageNumber,
+        string newText,
+        Guid currentUserId);
+    Task MarkMessagesAsReadAsync(
+        Guid chatId,
+        ulong lastMessageRead,
+        Guid currentUserId);
+}
