@@ -17,11 +17,11 @@ public class DbInitializer
         await db.OpenAsync();
 
         var sql = @"
-        DELETE FROM ChatsUsers;
-        DELETE FROM Messages;
-        DELETE FROM Chats;
-        DELETE FROM Users;
-        DELETE FROM CurrentUser;
+        DROP TABLE IF EXISTS ChatsUsers;
+        DROP TABLE IF EXISTS Messages;
+        DROP TABLE IF EXISTS Chats;
+        DROP TABLE IF EXISTS Users;
+        DROP TABLE IF EXISTS CurrentUser;
     ";
 
         await db.ExecuteAsync(sql);
