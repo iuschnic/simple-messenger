@@ -44,7 +44,7 @@ public static class DtoMapper
         EditedAt = d.EditedAt,
         Deleted = d.Deleted,
         Version = d.Version,
-        Type = d.Type
+        Type = (MessageType)d.Type
     };
 
     public static SyncChatResult ToSync(SyncChatResponseDto d) => new()

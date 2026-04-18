@@ -1,5 +1,12 @@
 ﻿namespace BL.Models;
 
+public enum MessageType
+{
+    Regular,
+    Reply,
+    Forward,
+    System
+}
 public class Message
 {
     public long MessageNumber { get; set; }
@@ -10,5 +17,5 @@ public class Message
     public DateTime? EditedAt { get; set; }
     public bool Deleted { get; set; }
     public long Version { get; set; }
-    public string Type { get; set; }
+    public MessageType Type { get; set; }
 }

@@ -118,7 +118,7 @@ public class UiScenario
             Text = "Hi",
             CreatedAt = DateTime.UtcNow,
             Version = 3,
-            Type = "regular"
+            Type = MessageType.Regular
         });
         //получить список сообщений из чата 11
         var messages = _bl.GetChatMessages(chat.Id);

@@ -184,7 +184,7 @@ public class FakeHttpClient : IHttpClient
             Text = text,
             CreatedAt = DateTime.UtcNow,
             Version = _version++,
-            Type = "regular"
+            Type = MessageType.Regular
         };
 
         _messages[msg.MessageNumber] = msg;

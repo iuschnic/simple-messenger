@@ -9,8 +9,9 @@ namespace BL.Contracts
         event Action<Message> MessageUpdated;
         event Action<long> MessageDeleted;
         event Action<Guid, Guid> UserLeftChat;  // Событие для выхода пользователя из чата
-        event Action<Guid> ChatCreated;   // Событие для создания нового чата с текущимс пользователем
-
+        event Action<Chat> ChatCreated;   // Событие для создания нового чата с текущимс пользователем
+            
+        public Task ConnectToHub(string token);
         // Методы
         // void SendMessage(Message message);
         // void SimulateMessageDeleted(long messageId);

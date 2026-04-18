@@ -69,7 +69,7 @@ public class DbInitializer
             EditedAt TEXT,
             Deleted INTEGER,
             Version INTEGER,
-            Type TEXT,
+            Type INTEGER,
             ReplyToMessageNumber INTEGER,
             ForwardedFromUserId TEXT,
             FOREIGN KEY (ChatId) REFERENCES Chats(Id),

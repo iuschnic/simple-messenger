@@ -11,7 +11,7 @@ public class MessageDto
     public DateTime? EditedAt { get; set; }
     public bool Deleted { get; set; }
     public long Version { get; set; }
-    public string Type { get; set; }
+    public int Type { get; set; }
     public long? ReplyToMessageNumber { get; set; }
     public Guid? ForwardedFromUserId { get; set; }
 }

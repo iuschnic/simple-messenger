@@ -104,19 +104,18 @@ public class MessengerService : IMessengerService
         Events.RaiseUserLeftChat(chatId, userId);  // Оповещаем UI
     }
 
-    private void OnChatCreated(Guid chatId)
+    private void OnChatCreated(Chat chat)
     {
-        Chat chat = _http.GetChat(chatId);
         _db.Chats.Save(chat);
         foreach (var p in chat.Members)
         {
             var user = GetUserById(p.Id);
-            if (user == null) 
+            if (user is null) 
                 user = _db.Users.Save(p);
             _db.Chats.AddUserToChat(chat.Id, user.Id);
         }
         
-        Events.RaiseChatCreated(chatId);  // Оповещаем UI
+        Events.RaiseChatCreated(chat);  // Оповещаем UI
     }
     
     // ================= AUTH =================
@@ -164,7 +163,9 @@ public class MessengerService : IMessengerService
             throw new Exception($"Incorrect username or password");
         }
         
-        _http.Login(u, p);
+        var token =_http.Login(u, p);
+        
+        _rt.ConnectToHub(token);  
         
         var user = _http.GetMe();
         
@@ -209,7 +210,7 @@ public class MessengerService : IMessengerService
         return b;
     }
 
-    public User GetUserById(Guid id)
+    public User? GetUserById(Guid id)
         => _db.Users.Find(id);
 
     public User UpdateContactName(Guid id, string contact)

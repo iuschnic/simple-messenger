@@ -11,7 +11,7 @@ namespace Messenger.Tests.Sandbox.Mocks
         public event Action<Message>? MessageUpdated;
         public event Action<long>? MessageDeleted;
         public event Action<Guid, Guid>? UserLeftChat;  // Событие для выхода пользователя из чата
-        public event Action<Guid>? ChatCreated;   // Событие для создания нового чата с текущим пользователем
+        public event Action<Chat>? ChatCreated;   // Событие для создания нового чата с текущим пользователем
 
         // Методы для тестирования
 
@@ -40,10 +40,15 @@ namespace Messenger.Tests.Sandbox.Mocks
             UserLeftChat?.Invoke(chatId, userId);
         }
 
-        public void NotifyChatCreated(Guid chatId)
+        public void NotifyChatCreated(Chat chatId)
         {
             // Симулируем создание нового чата
             ChatCreated?.Invoke(chatId);
+        }
+
+        public Task ConnectToHub(string token)
+        {
+            return Task.CompletedTask;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace BL.Events
         public event Action<Guid, Guid> UserLeftChat;
         
         // Событие для создания нового чата
-        public event Action<Guid> ChatCreated;
+        public event Action<Chat> ChatCreated;
 
         // Вызов события для получения нового сообщения
         public void RaiseMessageReceived(Message message) => MessageReceived?.Invoke(message);
@@ -21,6 +21,6 @@ namespace BL.Events
         public void RaiseUserLeftChat(Guid chatId, Guid userId) => UserLeftChat?.Invoke(chatId, userId);
 
         // Вызов события для создания нового чата
-        public void RaiseChatCreated(Guid chat) => ChatCreated?.Invoke(chat);
+        public void RaiseChatCreated(Chat chat) => ChatCreated?.Invoke(chat);
     }
 }
