@@ -11,19 +11,28 @@ public class DbInitializer
         _factory = factory;
     }
 
+    public async Task Reset()
+    {
+        using var db = _factory.Create();
+        await db.OpenAsync();
+
+        var sql = @"
+        DELETE FROM ChatsUsers;
+        DELETE FROM Messages;
+        DELETE FROM Chats;
+        DELETE FROM Users;
+        DELETE FROM CurrentUser;
+    ";
+
+        await db.ExecuteAsync(sql);
+    }
+    
     public async Task Init()
     {
         using var db = _factory.Create();
         await db.OpenAsync();
 
         var sql = @"
-        DROP TABLE IF EXISTS ChatsUsers;
-        DROP TABLE IF EXISTS Messages;
-        DROP TABLE IF EXISTS Chats;
-        DROP TABLE IF EXISTS Users;
-        DROP TABLE IF EXISTS CurrentUser;
-
-
         CREATE TABLE IF NOT EXISTS Users (
             Id TEXT PRIMARY KEY,
             UniqueName TEXT UNIQUE,
