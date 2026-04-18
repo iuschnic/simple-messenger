@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RT", "RT\RT.csproj", "{3BFD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "UI\UI.csproj", "{45D9DA58-10AF-4945-8A05-473E8E5CC39A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB.Tests", "DB.Tests\DB.Tests.csproj", "{955477D5-B452-4E18-BCA0-8B9D598C17C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messenger.Tests.Sandbox", "Messenger.Tests.Sandbox\Messenger.Tests.Sandbox.csproj", "{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +40,13 @@ Global
 		{45D9DA58-10AF-4945-8A05-473E8E5CC39A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45D9DA58-10AF-4945-8A05-473E8E5CC39A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45D9DA58-10AF-4945-8A05-473E8E5CC39A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{955477D5-B452-4E18-BCA0-8B9D598C17C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{955477D5-B452-4E18-BCA0-8B9D598C17C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{955477D5-B452-4E18-BCA0-8B9D598C17C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{955477D5-B452-4E18-BCA0-8B9D598C17C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
