@@ -29,6 +29,7 @@ class Program
         var factory = new DbConnectionFactory(dbPath);
 
         var init = new DbInitializer(factory);
+        init.Reset().GetAwaiter().GetResult();
         init.Init().GetAwaiter().GetResult();
 
         var repoHub = new RepositoryHub(
@@ -43,6 +44,20 @@ class Program
         var rt = new FakeRealtimeClient();
 
         var bl = new MessengerService(http, rt, repoHub);
+        bl.Events.MessageReceived += m =>
+        {
+            Console.WriteLine($"[EVENT] New message: [{m.MessageNumber}] {m.Text}");
+        };
+
+        bl.Events.UserLeftChat += (chatId, userId) =>
+        {
+            Console.WriteLine($"[EVENT] User {userId} left chat {chatId}");
+        };
+
+        bl.Events.ChatCreated += chatId =>
+        {
+            Console.WriteLine($"[EVENT] Chat created: {chatId}");
+        };
 
         var scenario = new UiScenario(bl, http, repoHub);
         scenario.Run();
