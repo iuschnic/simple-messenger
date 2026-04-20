@@ -5,7 +5,7 @@ namespace Main.Application.Mappers;
 
 public static class ChatSyncMapper
 {
-    public static ChatSyncDto ToDto(
+    public static ChatSyncDto ToChatSyncDto(
         this Chat domain,
         ChatSyncStatus status,
         List<ChatParticipantInfoDto>? participants = null,

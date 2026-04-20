@@ -75,7 +75,7 @@ public class SyncService: BaseService, ISyncService
         }
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
-        return chat.ToDto(ChatSyncStatus.Synced, participants.ToList(), updatedMessages.ToList());
+        return chat.ToChatSyncDto(ChatSyncStatus.Synced, participants.ToList(), updatedMessages.ToList());
     }
 
     private async Task<ChatSyncDto> SyncExistingChatAsync(
@@ -86,7 +86,7 @@ public class SyncService: BaseService, ISyncService
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var updatedMessages = await _messageRepo.GetMessagesAfterVersionAsync(chatId, clientVersion);
 
-        return chat.ToDto(ChatSyncStatus.Synced, [.. participants], [.. updatedMessages]);
+        return chat.ToChatSyncDto(ChatSyncStatus.Synced, [.. participants], [.. updatedMessages]);
     }
     private async Task<ChatSyncDto> SyncNewChatAsync(Guid chatId)
     {
@@ -94,6 +94,6 @@ public class SyncService: BaseService, ISyncService
         var participants = await _chatUserRepo.GetChatParticipantsInfosAsync(chatId);
         var lastMessages = await _messageRepo.GetLastMessagesAsync(chatId, 50);
 
-        return chat.ToDto(ChatSyncStatus.New, [.. participants], [.. lastMessages]);
+        return chat.ToChatSyncDto(ChatSyncStatus.New, [.. participants], [.. lastMessages]);
     }
 }
