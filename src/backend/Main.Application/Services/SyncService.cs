@@ -2,6 +2,7 @@
 using Main.Application.InPorts;
 using Main.Application.OutPorts;
 using Main.Application.Mappers;
+using Main.Application.Enums;
 
 namespace Main.Application.Services;
 

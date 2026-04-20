@@ -30,7 +30,7 @@ public class ChatSyncDto
     // Мета-информация о чате
     public ChatMetaDto? ChatMeta { get; init; }
     // Список новых/удаленных/измененных сообщений
-    public List<Message>? Messages { get; init; }
+    public List<MessageDto>? Messages { get; init; }
     // Список участников чата, включая информацию о последних прочитанных сообщениях
     public List<ChatParticipantInfoDto>? Participants { get; init; }
 }

@@ -8,7 +8,7 @@ public static class ChatSyncMapper
     public static ChatSyncDto ToDto(
         this Chat domain,
         ChatSyncStatus status,
-        List<ChatParticipantInfo>? participants = null,
+        List<ChatParticipantInfoDto>? participants = null,
         List<Message>? messages = null)
     {
         return new ChatSyncDto
@@ -24,7 +24,7 @@ public static class ChatSyncMapper
                 Version = domain.Version,
                 LastMessageNum = domain.LastMessageNum
             },
-            Messages = status == ChatSyncStatus.Deleted ? null : messages,
+            Messages = status == ChatSyncStatus.Deleted ? null : [.. messages.Select(m => m.ToDto())],
             Participants = status == ChatSyncStatus.Deleted ? null : participants
         };
     }
