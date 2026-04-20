@@ -70,9 +70,9 @@ public class ChatRepository : IChatRepository
 
         db.Execute(@"
             INSERT OR REPLACE INTO Chats
-            (Id, OwnerId, Name, CreatedAt, UpdatedAt, Version, Type, LastMessageNum)
+            (Id, OwnerId, Name, CreatedAt, Version, Type, LastMessageNum)
             VALUES
-            (@Id, @OwnerId, @Name, @CreatedAt, @UpdatedAt, @Version, @Type, @LastMessageNum)
+            (@Id, @OwnerId, @Name, @CreatedAt, @Version, @Type, @LastMessageNum)
         ", chat);
 
         return chat;
@@ -106,7 +106,7 @@ public class ChatRepository : IChatRepository
         db.Execute("DELETE FROM Chats WHERE Id = @id", new { id });
     }
     
-    public Chat UpdateLastMessageNum(Guid chatId, long lastMessageNum)
+    public Chat UpdateLastMessageNum(Guid chatId, ulong lastMessageNum)
     {
         using var db = _factory.Create();
 
@@ -119,7 +119,7 @@ public class ChatRepository : IChatRepository
         return Find(chatId);
     }
     
-    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, long lastReadMessageNum)
+    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum)
     {
         using var db = _factory.Create();
 

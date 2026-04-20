@@ -34,7 +34,7 @@ public class MessengerService : IMessengerService
 
         var version = chat?.Version ?? 0;
 
-        var sync = _http.SyncChats(new List<(Guid, long)>
+        var sync = _http.SyncChats(new List<(Guid, ulong)>
         {
             (chatId, version)
         }).First();
@@ -252,8 +252,6 @@ public class MessengerService : IMessengerService
             Id = chat_http.Id,
             OwnerId = chat_http.OwnerId,
             Name =chat_http.Name,
-            CreatedAt = chat_http.CreatedAt,
-            UpdatedAt = chat_http.UpdatedAt,
             Version = chat_http.Version,
             Type = chat_http.Type,
             LastMessageNum = chat_http.LastMessageNum,
@@ -281,7 +279,6 @@ public class MessengerService : IMessengerService
             OwnerId = chat_http.OwnerId,
             Name =chat_http.Name,
             CreatedAt = chat_http.CreatedAt,
-            UpdatedAt = chat_http.UpdatedAt,
             Version = chat_http.Version,
             Type = chat_http.Type,
             LastMessageNum = chat_http.LastMessageNum,

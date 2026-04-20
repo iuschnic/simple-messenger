@@ -21,16 +21,16 @@ public interface IHttpClient
     public Chat CreateGroupChat(string name, List<Guid> memberIds);
     Chat CreatePrivateChat(Guid withUserId);
     public Chat GetChat(Guid chatId);
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, long version)> chats);
+    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats);
 
     public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId);
 
     // ================= MESSAGES =================
-    SyncChatResult SendMessage(Guid chatId, string text, long clientVersion);
+    SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion);
 
-    SyncChatResult EditMessage(Guid chatId, long messageNum, string newText, long clientVersion);
+    SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion);
 
-    SyncChatResult DeleteMessage(Guid chatId, long messageNum, long clientVersion);
+    SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion);
 
-    List<Message> GetMessages(Guid chatId, long? fromMessageNumber = null, int? limit = null);
+    List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null);
 }

@@ -53,7 +53,6 @@ public class DbInitializer
             OwnerId TEXT,
             Name TEXT,
             CreatedAt TEXT,
-            UpdatedAt TEXT,
             Version INTEGER,
             Type TEXT,
             LastMessageNum INTEGER,

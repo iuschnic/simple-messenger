@@ -6,13 +6,13 @@ namespace Messenger.Tests.Sandbox.Mocks;
 
 public class FakeHttpClient : IHttpClient
 {
-    private readonly Dictionary<long, Message> _messages = new();
+    private readonly Dictionary<ulong, Message> _messages = new();
     private readonly Dictionary<Guid, Chat> _chats = new();
     private readonly Dictionary<Guid, User> _users = new();
     private readonly Dictionary<Guid, CurrentUser> _currentuser = new();
 
-    private long _msgCounter = 1;
-    private long _version = 1;
+    private ulong _msgCounter = 1;
+    private ulong _version = 1;
     
 
     // ================= AUTH =================
@@ -92,9 +92,8 @@ public class FakeHttpClient : IHttpClient
             OwnerId = GetMe().Id,
             Name = name,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
             Version = 1,
-            Type = "group",
+            Type = ChatType.Group,
             LastMessageNum = 0
         };;
     }
@@ -109,9 +108,8 @@ public class FakeHttpClient : IHttpClient
             OwnerId = GetMe().Id,
             Name = GetUser(Guid.Parse(withUserId)).UniqueName,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
             Version = 1,
-            Type = "private",
+            Type = ChatType.Private,
             LastMessageNum = 0
         };;
     }
@@ -148,7 +146,7 @@ public class FakeHttpClient : IHttpClient
             Name = name,
             OwnerId = memberIds.FirstOrDefault(),
             CreatedAt = DateTime.UtcNow,
-            Type = "group",
+            Type = ChatType.Group,
             Version = _version++
         };
 
@@ -164,7 +162,7 @@ public class FakeHttpClient : IHttpClient
             Name = "private",
             OwnerId = withUserId,
             CreatedAt = DateTime.UtcNow,
-            Type = "private",
+            Type = ChatType.Private,
             Version = _version++
         };
 
@@ -174,7 +172,7 @@ public class FakeHttpClient : IHttpClient
 
     // ================= MESSAGES =================
 
-    public SyncChatResult SendMessage(Guid chatId, string text, long clientVersion)
+    public SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion)
     {
         var msg = new Message
         {
@@ -196,7 +194,7 @@ public class FakeHttpClient : IHttpClient
         };
     }
 
-    public SyncChatResult EditMessage(Guid chatId, long messageNum, string newText, long clientVersion)
+    public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
     {
         if (_messages.TryGetValue(messageNum, out var msg))
         {
@@ -212,7 +210,7 @@ public class FakeHttpClient : IHttpClient
         };
     }
 
-    public SyncChatResult DeleteMessage(Guid chatId, long messageNum, long clientVersion)
+    public SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
     {
         if (_messages.TryGetValue(messageNum, out var msg))
         {
@@ -235,7 +233,7 @@ public class FakeHttpClient : IHttpClient
         };
     }
 
-    public List<Message> GetMessages(Guid chatId, long? fromMessageNumber = null, int? limit = null)
+    public List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
     {
         IEnumerable<Message> query = _messages.Values
             .Where(m => m.ChatId == chatId)
@@ -258,7 +256,7 @@ public class FakeHttpClient : IHttpClient
             Name = "private",
             OwnerId = new Guid(),
             CreatedAt = DateTime.UtcNow,
-            Type = "private",
+            Type = ChatType.Private,
             Version = _version++
         };
 
@@ -266,7 +264,7 @@ public class FakeHttpClient : IHttpClient
         return chat;
     }
     
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, long version)> chats)
+    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
     {
         return new List<SyncChatResult>
         {

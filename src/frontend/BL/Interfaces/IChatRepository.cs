@@ -17,6 +17,6 @@ public interface IChatRepository
     Chat UpdateVersion(Guid chatId, long version);
 
     void Delete(Guid id);
-    public Chat UpdateLastMessageNum(Guid chatId, long lastMessageNum);
-    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, long lastReadMessageNum);
+    public Chat UpdateLastMessageNum(Guid chatId, ulong lastMessageNum);
+    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum);
 }

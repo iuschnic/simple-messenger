@@ -27,7 +27,7 @@ public static class DtoMapper
         OwnerId = d.OwnerId,
         CreatedAt = d.CreatedAt,
         Version = d.Version,
-        Type = d.Type,
+        Type = (ChatType)d.Type,
         LastMessageNum = d.LastMessageNum,
         Members = d.Members?
             .Select(ToUser)

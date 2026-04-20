@@ -122,7 +122,7 @@ public class HttpClientImpl : IHttpClient
         return GetChats().First();
     }
     
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, long version)> chats)
+    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
     {
         var req = new
         {
@@ -158,7 +158,7 @@ public class HttpClientImpl : IHttpClient
     
     // ================= MESSAGES =================
 
-    public SyncChatResult SendMessage(Guid chatId, string text, long clientVersion)
+    public SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion)
     {
         var res = _http.PostAsJsonAsync(
             $"chats/{chatId}/messages",
@@ -176,7 +176,7 @@ public class HttpClientImpl : IHttpClient
         );
     }
 
-    public SyncChatResult EditMessage(Guid chatId, long messageNum, string newText, long clientVersion)
+    public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
     {
         var res = _http.PatchAsJsonAsync(
             $"chats/{chatId}/messages/{messageNum}",
@@ -193,7 +193,7 @@ public class HttpClientImpl : IHttpClient
         );
     }
 
-    public SyncChatResult DeleteMessage(Guid chatId, long messageNum, long clientVersion)
+    public SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
     {
         var res = _http.DeleteAsync(
             $"chats/{chatId}/messages/{messageNum}?clientVersion={clientVersion}"
@@ -206,7 +206,7 @@ public class HttpClientImpl : IHttpClient
         );
     }
 
-    public List<Message> GetMessages(Guid chatId, long? fromMessageNumber = null, int? limit = null)
+    public List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
     {
         var url = $"chats/{chatId}/messages?";
 

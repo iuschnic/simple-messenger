@@ -4,5 +4,5 @@ public class SyncChatResult
 {
     public Guid ChatId { get; set; }
     public List<Message> Messages { get; set; }
-    public long LastVersion { get; set; }
+    public ulong LastVersion { get; set; }
 }

@@ -14,7 +14,7 @@ public class MessageRepository : IMessageRepository
         _factory = factory;
     }
 
-    public Message Find(long id)
+    public Message Find(ulong id)
     {
         using var db = _factory.Create();
 
@@ -48,7 +48,7 @@ public class MessageRepository : IMessageRepository
         SELECT last_insert_rowid();
     ", message);
 
-        message.MessageNumber = id;
+        message.MessageNumber = (ulong)id;
 
         return message;
     }
@@ -64,7 +64,7 @@ public class MessageRepository : IMessageRepository
             WHERE MessageNumber = @id
         ", new { id, editedAt, newText });
 
-        return Find(id);
+        return Find((ulong)id);
     }
 
     public void Delete(long id)
