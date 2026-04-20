@@ -548,6 +548,33 @@ paths:
                 $ref: '#/components/schemas/UserDto'
         "404":
           description: User not found
+    patch:
+      summary: Update displayed name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newDisplayedName
+              properties:
+                newDisplayedName:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Displayed name updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        "400":
+          description: Invalid request data
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
 
   /users/me/contacts:
     get:
