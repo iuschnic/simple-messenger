@@ -3,6 +3,7 @@ using Main.BL.Models;
 using Main.Application.Dtos;
 using Main.Application.OutPorts;
 using Main.Application.InPorts;
+using Main.Application.Mappers;
 
 namespace Main.Application.Services;
 
@@ -32,9 +33,10 @@ public class ContactService: BaseService, IContactService
             throw new ConflictException("Contact already exists");
         if (!await _contactRepo.TryAddAsync(ownerUserId, new Contact(contactUserId, contactName)))
             throw new TechnicalException("Failed to add contact");
+
         return new ContactWithUserDto
         {
-            ContactUser = contactUser,
+            ContactUser = contactUser.ToDto(),
             ContactName = contactName
         };
     }
@@ -42,15 +44,13 @@ public class ContactService: BaseService, IContactService
     {
         await EnsureUserExists(ownerUserId);
         var contactUser = await GetUserOrThrow(contactUserId);
+        var contact = await GetContactOrThrow(ownerUserId, contactUserId);
+
         if (!await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
             throw new ConflictException("Contact doesnt exist");
         if (!await _contactRepo.TryUpdateNameAsync(ownerUserId, contactUserId, newContactName))
             throw new TechnicalException("Failed to update contact");
-        return new ContactWithUserDto
-        {
-            ContactUser = contactUser,
-            ContactName = newContactName
-        };
+        return contact.ToDto(contactUser);
     }
     public async Task RemoveContactAsync(Guid ownerUserId, Guid contactUserId)
     {
@@ -60,6 +60,11 @@ public class ContactService: BaseService, IContactService
             throw new ConflictException("Contact doesnt exist");
         if (!await _contactRepo.TryRemoveAsync(ownerUserId, contactUserId))
             throw new TechnicalException("Failed to remove contact");
+    }
+    private async Task<Contact> GetContactOrThrow(Guid ownerUserId, Guid contactUserId)
+    {
+        return await _contactRepo.GetAsync(ownerUserId, contactUserId)
+            ?? throw new NotFoundException(nameof(Contact), ownerUserId.ToString() + " " + contactUserId.ToString());
     }
 }
 

@@ -12,7 +12,7 @@ public static class ContactWithUserMapper
                 $"does not match User.Id ({user.Id})");
         return new ContactWithUserDto
         {
-            ContactUser = user,
+            ContactUser = user.ToDto(),
             ContactName = domain.ContactName
         };
     }

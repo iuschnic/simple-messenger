@@ -1,4 +1,4 @@
-﻿using Main.Application.Converters;
+﻿using Main.Application.Mappers;
 using Main.Application.Dtos;
 using Main.Application.OutPorts;
 using Main.BL.Models;
@@ -39,7 +39,7 @@ public class ContactRepository : IContactRepository
             .ToListAsync();
         return contactsDb.Select(c => new ContactWithUserDto
         {
-            ContactUser = c.ContactUser.ToDomain(),
+            ContactUser = c.ContactUser.ToDomain().ToDto(),
             ContactName = c.ContactName
         });
     }
