@@ -6,7 +6,7 @@ namespace Main.Application.Dtos;
 public class ChatMetaDto
 {
     public string? Name { get; init; }
-    public ChatType Type { get; init; }
+    public ChatTypeApp Type { get; init; }
     public Guid? OwnerUserId { get; init; }
     public DateTime CreatedAt { get; init; }
     public ulong Version { get; init; }

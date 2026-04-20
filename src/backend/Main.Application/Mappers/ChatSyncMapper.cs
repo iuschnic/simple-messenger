@@ -18,7 +18,7 @@ public static class ChatSyncMapper
             ChatMeta = status == ChatSyncStatus.Deleted ? null : new ChatMetaDto
             {
                 Name = domain.Name,
-                Type = domain.Type,
+                Type = (ChatTypeApp) domain.Type,
                 OwnerUserId = domain.OwnerUserId,
                 CreatedAt = domain.CreatedAt,
                 Version = domain.Version,

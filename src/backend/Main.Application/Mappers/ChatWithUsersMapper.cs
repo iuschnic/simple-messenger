@@ -1,4 +1,5 @@
 ﻿using Main.Application.Dtos;
+using Main.Application.Enums;
 using Main.BL.Models;
 
 namespace Main.Application.Mappers;
@@ -22,7 +23,7 @@ public static class ChatWithUsersMapper
         {
             Id = domain.Id,
             Name = domain.Name,
-            Type = domain.Type,
+            Type = (ChatTypeApp) domain.Type,
             OwnerUserId = domain.OwnerUserId,
             CreatedAt = domain.CreatedAt,
             Version = domain.Version,
