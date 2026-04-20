@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Realtime.BL.InputPorts;
 using Realtime.BL.OutputPorts;
 using IGroupManager = Realtime.BL.InputPorts.IGroupManager;
 using ILogger = Serilog.ILogger;
@@ -8,7 +9,7 @@ using ILogger = Serilog.ILogger;
 namespace Realtime.API.Utils;
 
 public class RealtimeHub(IConnectionManager connectionManager,
-    IGroupManager groupManager, HttpChatReceiver chatReceiver, ILogger logger) : Hub
+    IGroupManager groupManager, IHttpChatReceiver chatReceiver, ILogger logger) : Hub
 {
     [Authorize]
     public override async Task OnConnectedAsync()

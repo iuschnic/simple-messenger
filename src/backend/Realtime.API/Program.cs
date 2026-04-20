@@ -75,7 +75,7 @@ builder.Services.AddSingleton<IConsumer<Null, byte[]>>(sp =>
 builder.Services.AddSingleton<IMessageHandler, MessageHandler>();
 builder.Services.AddSingleton<IConnectionsRepository, ConnectionRepository>();
 builder.Services.AddSingleton<IGroupManager, GroupManager>();
-builder.Services.AddSingleton<HttpChatReceiver>();
+builder.Services.AddSingleton<IHttpChatReceiver, HttpChatReceiver>();
 builder.Services.AddSingleton<IConnectionManager, ConnectionManager>();
 
 builder.Services.AddHostedService<KafkaMessageConsumer>();

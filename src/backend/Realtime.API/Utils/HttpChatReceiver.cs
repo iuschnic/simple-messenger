@@ -1,6 +1,8 @@
-﻿namespace Realtime.API.Utils;
+﻿using Realtime.BL.InputPorts;
 
-public class HttpChatReceiver(IConfiguration configuration)
+namespace Realtime.API.Utils;
+
+public class HttpChatReceiver(IConfiguration configuration) : IHttpChatReceiver
 {
     private readonly HttpClient _httpClient = new();
     private readonly string _mainServiceChatsUrl = configuration["MainServiceChatsUrl"] 
