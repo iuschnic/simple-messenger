@@ -20,8 +20,57 @@ components:
 
   schemas:
 
+    ChatType:
+      type: integer
+      enum:
+        - 0
+        - 1
+      x-enum-names:
+        - Group
+        - Private
+      description: |
+        0 - Group
+        1 - Private
+    
+    MessageType:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+      x-enum-names:
+        - Regular
+        - Reply
+        - Forward
+        - System
+      description: |
+        0 - Regular
+        1 - Reply
+        2 - Forward
+        3 - System
+    
+    SyncType:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+      x-enum-names:
+        - Synced
+        - New
+        - Deleted
+      description: |
+        0 - Synced
+        1 - New
+        2 - Deleted
+
     UserDto:
       type: object
+      required:
+        - id
+        - uniqueName
+        - displayedName
       properties:
         id:
           type: string
@@ -33,6 +82,9 @@ components:
     
     ContactDto:
       type: object
+      required:
+        - contactUser
+        - contactName
       properties:
         contactUser:
           $ref: '#/components/schemas/UserDto'
@@ -41,6 +93,13 @@ components:
 
     ChatDto:
       type: object
+      required:
+        - id
+        - type
+        - createdAt
+        - version
+        - lastMessageNum
+        - participants
       properties:
         id:
           type: string
@@ -49,8 +108,7 @@ components:
           type: string
           nullable: true
         type:
-          type: string
-          enum: [private, group]
+          $ref: '#/components/schemas/ChatType'
         ownerUserId:
           type: string
           format: uuid
@@ -71,6 +129,14 @@ components:
 
     MessageDto:
       type: object
+      required:
+        - messageNum
+        - chatId
+        - text
+        - createdAt
+        - deleted
+        - version
+        - type
       properties:
         messageNum:
           type: integer
@@ -97,8 +163,7 @@ components:
           type: integer
           format: int64
         type:
-          type: string
-          enum: [regular, reply, forward, system]
+          $ref: '#/components/schemas/MessageType'
         replyToMessageNum:
           type: integer
           format: int64
@@ -120,8 +185,7 @@ components:
           type: string
           nullable: true
         type:
-          type: string
-          enum: [group, private]
+          $ref: '#/components/schemas/ChatType'
         ownerUserId:
           type: string
           format: uuid
@@ -165,8 +229,7 @@ components:
           type: string
           format: uuid
         status:
-          type: string
-          enum: [synced, new, deleted]
+          $ref: '#/components/schemas/SyncType'
         chatMeta:
           nullable: true
           allOf:
@@ -230,8 +293,7 @@ components:
         - chatType
       properties:
         chatType:
-          type: string
-          enum: [private, group]
+          $ref: '#/components/schemas/ChatType'
           
     CreatePrivateChatRequest:
       allOf:
@@ -279,9 +341,7 @@ components:
         - clientVersion
       properties:
         messageType:
-          type: string
-          description: Message type
-          enum: [send, reply, forward]
+          $ref: '#/components/schemas/MessageType'
         clientVersion:
           type: integer
           format: int64
@@ -350,6 +410,8 @@ components:
 
     SyncChatsRequest:
       type: object
+      required:
+        - chats
       properties:
         chats:
           type: array
@@ -365,6 +427,8 @@ components:
                 format: int64
     
     LoginResponse:
+      required:
+        - token
       type: object
       properties:
         token:
