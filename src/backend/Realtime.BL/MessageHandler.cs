@@ -38,8 +38,18 @@ public class MessageHandler(IConnectionsRepository repository,
 
     private async Task MessageReceivedOrUpdated(EventType eventType, string dataJson)
     {
-        var message = JsonConvert.DeserializeObject<MessageDto>(dataJson);
-                
+        MessageDto? message;
+        
+        try
+        {
+            message = JsonConvert.DeserializeObject<MessageDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to deserialize message");
+            throw new FailedToDeserializeMessageException();
+        }
+        
         if (message is null)
             throw new FailedToDeserializeMessageException();
                 
@@ -48,7 +58,17 @@ public class MessageHandler(IConnectionsRepository repository,
 
     private async Task UserChanged(string dataJson)
     {
-        var user = JsonConvert.DeserializeObject<UserDto>(dataJson);
+        UserDto? user;
+
+        try
+        {
+            user = JsonConvert.DeserializeObject<UserDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to deserialize message");
+            throw new FailedToDeserializeMessageException();
+        }
                 
         if (user is null)
             throw new FailedToDeserializeMessageException();
@@ -58,7 +78,17 @@ public class MessageHandler(IConnectionsRepository repository,
 
     private async Task MessageReadOrUserJoinedOrLeft(EventType eventType, string dataJson)
     {
-        var chatUser = JsonConvert.DeserializeObject<ChatUserDto>(dataJson);
+        ChatUserDto? chatUser;
+
+        try
+        {
+            chatUser = JsonConvert.DeserializeObject<ChatUserDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to deserialize message");
+            throw new FailedToDeserializeMessageException();
+        }
                 
         if (chatUser is null)
             throw new FailedToDeserializeMessageException();
@@ -75,7 +105,17 @@ public class MessageHandler(IConnectionsRepository repository,
 
     private async Task ChatUpdated(string dataJson)
     {
-        var chat = JsonConvert.DeserializeObject<ChatDto>(dataJson);
+        ChatDto? chat;
+
+        try
+        {
+            chat = JsonConvert.DeserializeObject<ChatDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to deserialize message");
+            throw new FailedToDeserializeMessageException();
+        }
                 
         if (chat is null)
             throw new FailedToDeserializeMessageException();
@@ -85,7 +125,17 @@ public class MessageHandler(IConnectionsRepository repository,
 
     private async Task ChatDeleted(string dataJson)
     {
-        var chat = JsonConvert.DeserializeObject<FullChatDto>(dataJson);
+        FullChatDto? chat;
+
+        try
+        {
+            chat = JsonConvert.DeserializeObject<FullChatDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to deserialize message");
+            throw new FailedToDeserializeMessageException();
+        }
         
         if (chat is null)
             throw new FailedToDeserializeMessageException();
@@ -101,7 +151,17 @@ public class MessageHandler(IConnectionsRepository repository,
     
     private async Task ChatCreated(string dataJson)
     {
-        var chat = JsonConvert.DeserializeObject<FullChatDto>(dataJson);
+        FullChatDto? chat;
+
+        try
+        {
+            chat = JsonConvert.DeserializeObject<FullChatDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to deserialize message");
+            throw new FailedToDeserializeMessageException();
+        }
                 
         if (chat is null)
             throw new FailedToDeserializeMessageException();
