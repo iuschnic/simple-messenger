@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Realtime.BL.InputPorts;
 using IGroupManager = Realtime.BL.InputPorts.IGroupManager;
 
 namespace Realtime.API.Utils;
 
-public class GroupManager(IHubContext<RealtimeHub> hubContext, HttpChatReceiver chatReceiver) : IGroupManager
+public class GroupManager(IHubContext<RealtimeHub> hubContext, IHttpChatReceiver chatReceiver) : IGroupManager
 {
     public async Task SendToGroupAsync(string groupName, string eventType, string messageJson) => 
         await hubContext.Clients.Group(groupName).SendAsync(eventType, messageJson);
