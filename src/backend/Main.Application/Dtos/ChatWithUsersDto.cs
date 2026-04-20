@@ -1,5 +1,4 @@
 ﻿using Main.BL.Enums;
-using Main.BL.Models;
 
 namespace Main.Application.Dtos;
 
@@ -12,5 +11,5 @@ public class ChatWithUsersDto
     public DateTime CreatedAt { get; init; }
     public ulong Version { get; init; }
     public ulong LastMessageNum { get; init; }
-    public IReadOnlyList<User> Participants { get; init; }
+    public IReadOnlyList<UserDto> Participants { get; init; }
 }

@@ -5,7 +5,7 @@ namespace Main.Application.Mappers;
 
 public static class ChatWithUsersMapper
 {
-    public static ChatWithUsersDto ToDto(this Chat domain, List<User> users)
+    public static ChatWithUsersDto ToChatWithUsersDto(this Chat domain, List<User> users)
     {
         var userMap = users.ToDictionary(u => u.Id);
         var missingUserIds = domain.Participants
@@ -28,7 +28,7 @@ public static class ChatWithUsersMapper
             Version = domain.Version,
             LastMessageNum = domain.LastMessageNum,
             Participants = domain.Participants
-                .Select(p => userMap[p.UserId])
+                .Select(p => userMap[p.UserId].ToDto())
                 .ToList()
                 .AsReadOnly()
         };

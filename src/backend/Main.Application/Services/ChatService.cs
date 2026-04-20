@@ -1,6 +1,7 @@
 ﻿using Main.Application.Dtos;
 using Main.Application.InPorts;
 using Main.Application.OutPorts;
+using Main.Application.Mappers;
 using Main.BL.Exceptions;
 using Main.BL.Models;
 using Main.BL.Enums;
@@ -25,19 +26,8 @@ public class ChatService: BaseService, IChatService
             .ToList();
         var users = await _userRepo.GetByIdsAsync(userIds);
         var userMap = users.ToDictionary(u => u.Id);
-        return chats.Select(chat => new ChatWithUsersDto
-        {
-            Id = chat.Id,
-            Name = chat.Name,
-            Type = chat.Type,
-            OwnerUserId = chat.OwnerUserId,
-            CreatedAt = chat.CreatedAt,
-            Version = chat.Version,
-            LastMessageNum = chat.LastMessageNum,
-            Participants = chat.Participants
-                .Select(p => userMap[p.UserId])
-                .ToList()
-        });
+        return chats.Select(c => c.ToChatWithUsersDto(
+            [.. c.Participants.Select(p => userMap[p.UserId])]));
     }
 
     public async Task<ChatWithUsersDto> GetChatByIdAsync(Guid chatId, Guid currentUserId)
@@ -46,18 +36,7 @@ public class ChatService: BaseService, IChatService
         var chat = await GetChatOrThrow(chatId);
         var userIds = chat.Participants.Select(p => p.UserId).ToList();
         var users = await _userRepo.GetByIdsAsync(userIds);
-        var userMap = users.ToDictionary(u => u.Id);
-        return new ChatWithUsersDto
-        {
-            Id = chat.Id,
-            Name = chat.Name,
-            Type = chat.Type,
-            OwnerUserId = chat.OwnerUserId,
-            CreatedAt = chat.CreatedAt,
-            Version = chat.Version,
-            LastMessageNum = chat.LastMessageNum,
-            Participants = users.ToList()
-        };
+        return chat.ToChatWithUsersDto([.. users]);
     }
     public async Task<Guid> CreatePrivateChatAsync(Guid otherUserId, Guid currentUserId)
     {
