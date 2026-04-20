@@ -515,6 +515,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SearchUsersResponse'
+        "401":
+          description: Unauthorized
 
   /users/{id}:
     get:
@@ -533,6 +535,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDto'
+        "401":
+          description: Unauthorized
         "404":
           description: User not found
   
@@ -546,8 +550,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDto'
-        "404":
-          description: User not found
+        "401":
+          description: Unauthorized
     patch:
       summary: Update displayed name
       requestBody:
@@ -573,8 +577,6 @@ paths:
           description: Invalid request data
         "401":
           description: Unauthorized
-        "404":
-          description: User not found
 
   /users/me/contacts:
     get:
@@ -588,6 +590,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ContactDto'
+        "401":
+          description: Unauthorized
 
     post:
       summary: Add contact
@@ -604,8 +608,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactDto'
+        "401":
+          description: Unauthorized
         "404":
-          description: User not found
+          description: ContactUser not found
         "409":
           description: Contact already exists
 
@@ -656,6 +662,10 @@ paths:
       responses:
         "204":
           description: Contact removed
+        "401":
+          description: Unauthorized
+        "404":
+          description: Contact not found
           
   /chats:
     get:
@@ -669,6 +679,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ChatDto'
+        "401":
+          description: Unauthorized
     post:
       summary: Create chat
       requestBody:
@@ -684,6 +696,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "401":
+          description: Unauthorized
 
   /chats/{chatId}:
     get:
@@ -702,6 +716,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatDto'
+        "401":
+          description: Unauthorized
         "404":
           description: Chat not found
 
@@ -733,6 +749,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "401":
+          description: Unauthorized
         "403":
           description: Not enough permissions
         "404":
@@ -763,6 +781,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "401":
+          description: Unauthorized
         "403":
           description: Not enough permissions
         "404":
@@ -781,6 +801,8 @@ paths:
       responses:
         "204":
           description: Success
+        "401":
+          description: Unauthorized
         "403":
           description: Not enough permissions
         "404":
@@ -815,6 +837,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MessageDto'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Chat not found
     post:
       summary: Create message (send / reply / forward)
       parameters:
@@ -837,10 +863,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "401":
+          description: Unauthorized
         "403":
           description: User not in chat
         "404":
-          description: Chat or message not found
+          description: Chat not found
                 
   /chats/{chatId}/messages/{messageNum}:
     delete:
@@ -871,6 +899,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Chat not found
     patch:
       summary: Edit message
       parameters:
@@ -899,6 +931,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Chat not found
 
   /chats/{chatId}/messages/read:
     post:
@@ -919,10 +955,12 @@ paths:
       responses:
         "200":
           description: Messages marked as read
+        "401":
+          description: Unauthorized
         "403":
           description: User not in chat
         "404":
-          description: Chat or message not found
+          description: Chat not found
 
   /chats/sync:
     post:
@@ -940,3 +978,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatsResponse'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Chat not found
