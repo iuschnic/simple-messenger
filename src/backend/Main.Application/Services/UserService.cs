@@ -30,6 +30,14 @@ public class UserService : BaseService, IUserService
             throw new TechnicalException("Failed to create user");
         return user.ToDto();
     }
+    public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
+    {
+        var user = await GetUserOrThrow(currentUserId);
+        if (!await _userRepo.UpdateDisplayedNameAsync(currentUserId, newDisplayedName))
+            throw new TechnicalException("Failed to update user displayed name");
+        user = User.Create(user.Id, user.UniqueName, newDisplayedName);
+        return user.ToDto();
+    }
     public async Task<UserDto> GetMyProfileAsync(Guid currentUserId)
     {
         var user = await GetUserOrThrow(currentUserId);
