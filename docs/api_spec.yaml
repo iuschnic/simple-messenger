@@ -474,6 +474,8 @@ paths:
           description: Account created
         "409":
           description: UniqueName already exists
+        "500":
+          description: Server error
 
   /auth/login:
     post:
@@ -494,6 +496,8 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         "401":
           description: Invalid credentials
+        "500":
+          description: Server error
 
   /users:
     get:
@@ -517,6 +521,8 @@ paths:
                 $ref: '#/components/schemas/SearchUsersResponse'
         "401":
           description: Unauthorized
+        "500":
+          description: Server error
 
   /users/{id}:
     get:
@@ -539,6 +545,8 @@ paths:
           description: Unauthorized
         "404":
           description: User not found
+        "500":
+          description: Server error
   
   /users/me:
     get:
@@ -552,6 +560,8 @@ paths:
                 $ref: '#/components/schemas/UserDto'
         "401":
           description: Unauthorized
+        "500":
+          description: Server error
     patch:
       summary: Update displayed name
       requestBody:
@@ -577,6 +587,8 @@ paths:
           description: Invalid request data
         "401":
           description: Unauthorized
+        "500":
+          description: Server error
 
   /users/me/contacts:
     get:
@@ -592,6 +604,8 @@ paths:
                   $ref: '#/components/schemas/ContactDto'
         "401":
           description: Unauthorized
+        "500":
+          description: Server error
 
     post:
       summary: Add contact
@@ -614,6 +628,8 @@ paths:
           description: ContactUser not found
         "409":
           description: Contact already exists
+        "500":
+          description: Server error
 
   /users/me/contacts/{contactId}:
     patch:
@@ -650,6 +666,8 @@ paths:
           description: Unauthorized
         "404":
           description: Contact not found
+        "500":
+          description: Server error
     delete:
       summary: Remove contact
       parameters:
@@ -666,6 +684,8 @@ paths:
           description: Unauthorized
         "404":
           description: Contact not found
+        "500":
+          description: Server error
           
   /chats:
     get:
@@ -681,6 +701,8 @@ paths:
                   $ref: '#/components/schemas/ChatDto'
         "401":
           description: Unauthorized
+        "500":
+          description: Server error
     post:
       summary: Create chat
       requestBody:
@@ -698,6 +720,8 @@ paths:
                 $ref: '#/components/schemas/SyncChatResponse'
         "401":
           description: Unauthorized
+        "500":
+          description: Server error
 
   /chats/{chatId}:
     get:
@@ -720,6 +744,8 @@ paths:
           description: Unauthorized
         "404":
           description: Chat not found
+        "500":
+          description: Server error
 
   /chats/{chatId}/members:
     post:
@@ -757,6 +783,8 @@ paths:
           description: Chat or user not found
         "409":
           description: User already in chat
+        "500":
+          description: Server error
   
   /chats/{chatId}/members/{userId}:
     delete:
@@ -787,6 +815,8 @@ paths:
           description: Not enough permissions
         "404":
           description: Chat or user not found
+        "500":
+          description: Server error
           
   /chats/{chatId}/members/me:
     delete:
@@ -807,6 +837,8 @@ paths:
           description: Not enough permissions
         "404":
           description: Chat or user not found
+        "500":
+          description: Server error
 
   /chats/{chatId}/messages:
     get:
@@ -841,6 +873,8 @@ paths:
           description: Unauthorized
         "404":
           description: Chat not found
+        "500":
+          description: Server error
     post:
       summary: Create message (send / reply / forward)
       parameters:
@@ -869,6 +903,8 @@ paths:
           description: User not in chat
         "404":
           description: Chat not found
+        "500":
+          description: Server error
                 
   /chats/{chatId}/messages/{messageNum}:
     delete:
@@ -903,6 +939,8 @@ paths:
           description: Unauthorized
         "404":
           description: Chat not found
+        "500":
+          description: Server error
     patch:
       summary: Edit message
       parameters:
@@ -935,6 +973,8 @@ paths:
           description: Unauthorized
         "404":
           description: Chat not found
+        "500":
+          description: Server error
 
   /chats/{chatId}/messages/read:
     post:
@@ -961,6 +1001,8 @@ paths:
           description: User not in chat
         "404":
           description: Chat not found
+        "500":
+          description: Server error
 
   /chats/sync:
     post:
@@ -982,3 +1024,5 @@ paths:
           description: Unauthorized
         "404":
           description: Chat not found
+        "500":
+          description: Server error
