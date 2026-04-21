@@ -7,7 +7,7 @@ namespace BL.UnitTest;
 
 public class MessengerServiceTests
 {
-    private MessengerService CreateService(out FakeRepositoryHub db, out FakeRealtimeClient rt, out FakeHttpClient http)
+    private static MessengerService CreateService(out FakeRepositoryHub db, out FakeRealtimeClient rt, out FakeHttpClient http)
     {
         http = new FakeHttpClient();
         rt = new FakeRealtimeClient();
@@ -215,7 +215,7 @@ public class MessengerServiceTests
     // ================= REALTIME =================
 
     [Fact]
-    public void OnMessageReceived_ShouldSaveMessage()
+    public void OnMessageReceived_ShouldSaveMessage_AndRaiseEvent()
     {
         var bl = CreateService(out var db, out var rt, out _);
 
@@ -227,6 +227,10 @@ public class MessengerServiceTests
             Version = 1
         });
 
+        Message? received = null;
+
+        bl.Events.MessageReceived += m => received = m;
+        
         rt.SendMessage(new Message
         {
             MessageNumber = 1,
@@ -236,12 +240,14 @@ public class MessengerServiceTests
         });
 
         var messages = db.Messages.FindChatMessages(chatId);
-
+        
         Assert.Single(messages);
+        Assert.NotNull(received);                 
+        Assert.Equal("hi", received.Text);
     }
 
     [Fact]
-    public void OnMessageReceived_ShouldIgnoreDuplicate()
+    public void OnMessageReceived_ShouldIgnoreDuplicate_AndNotRaiseEvent()
     {
         var bl = CreateService(out var db, out var rt, out _);
 
@@ -255,6 +261,9 @@ public class MessengerServiceTests
             ChatId = chatId
         });
 
+        var called = false;
+        bl.Events.MessageReceived += _ => called = true;
+
         rt.SendMessage(new Message
         {
             MessageNumber = 1,
@@ -264,6 +273,7 @@ public class MessengerServiceTests
         var messages = db.Messages.FindChatMessages(chatId);
 
         Assert.Single(messages);
+        Assert.False(called);
     }
 
     [Fact]
@@ -278,23 +288,38 @@ public class MessengerServiceTests
             Id = chatId,
             Version = 1
         });
-        
-        http.SendMessage(chatId, "server msg", 0);
+
+        // кладём "серверное" сообщение
+        var sync = http.SendMessage(chatId, "server msg", 0);
+        var expectedVersion = sync.LastVersion;
+
+        bool eventCalled = false;
+        bl.Events.MessageReceived += _ => eventCalled = true;
         
         rt.SendMessage(new Message
         {
-            MessageNumber = 5,
+            MessageNumber = 999,
             ChatId = chatId,
             Version = 5
         });
 
         var messages = db.Messages.FindChatMessages(chatId);
+        var chat = db.Chats.Find(chatId);
+        
 
-        Assert.NotEmpty(messages);
+        // 1. сообщение пришло НЕ из RT (а из sync)
+        Assert.Single(messages);
+        Assert.Equal("server msg", messages[0].Text);
+
+        // 2. версия обновилась через Sync
+        Assert.Equal(expectedVersion, chat.Version);
+
+        // 3. событие НЕ вызвалось
+        Assert.False(eventCalled);
     }
 
     [Fact]
-    public void OnUserLeftChat_ShouldRemoveUser()
+    public void OnUserLeftChat_ShouldRemoveUser_AndRaiseEvent()
     {
         var bl = CreateService(out var db, out var rt, out _);
 
@@ -305,15 +330,19 @@ public class MessengerServiceTests
         db.Users.Save(new User { Id = userId });
         db.Chats.AddUserToChat(chatId, userId);
 
+        bool eventCalled = false;
+        bl.Events.UserLeftChat += (_, _) => eventCalled = true;
+
         rt.NotifyUserLeftChat(chatId, userId);
 
         var users = db.Chats.FindChatUsers(chatId);
 
         Assert.DoesNotContain(users, u => u.Id == userId);
+        Assert.True(eventCalled);
     }
 
     [Fact]
-    public void OnChatCreated_ShouldSaveChat()
+    public void OnChatCreated_ShouldSaveChat_AndRaiseEvent()
     {
         var bl = CreateService(out var db, out var rt, out _);
 
@@ -323,8 +352,12 @@ public class MessengerServiceTests
             Members = new List<User>()
         };
 
+        bool called = false;
+        bl.Events.ChatCreated += _ => called = true;
+
         rt.NotifyChatCreated(chat);
 
         Assert.NotNull(db.Chats.Find(chat.Id));
+        Assert.True(called);
     }
 }
