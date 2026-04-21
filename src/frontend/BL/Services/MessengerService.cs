@@ -46,7 +46,7 @@ public class MessengerService : IMessengerService
         }
         catch (Exception ex)
         {
-            throw new DatabaseException($"DB error: {ex.Message}");
+            throw new DatabaseException($"Ошибка базы данных: {ex.Message}");
         }
     }
 
@@ -66,10 +66,10 @@ public class MessengerService : IMessengerService
         }
         catch (Exception ex)
         {
-            throw new DatabaseException($"DB error: {ex.Message}");
+            throw new DatabaseException($"Ошибка базы данных: {ex.Message}");
         }
     }
-
+    
     // ================= INTERNAL =================
 
     private void SyncFullChat(Guid chatId)

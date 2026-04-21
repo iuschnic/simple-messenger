@@ -372,7 +372,7 @@ public class MessengerServiceTests
 
         http.ExceptionToThrow = new ApiException(400, "bad");
 
-        var ex = Assert.Throws<AppException>(() =>
+        var ex = Assert.Throws<ValidationException>(() =>
             bl.RegisterUser("a", "b", "c", "d"));
 
         Assert.Equal("bad", ex.Message);
@@ -391,10 +391,10 @@ public class MessengerServiceTests
 
         http.ExceptionToThrow = new ApiException(401, "unauthorized");
 
-        var ex = Assert.Throws<AppException>(() =>
+        var ex = Assert.Throws<AuthException>(() =>
             bl.Login("alice", "123"));
 
-        Assert.Equal("unauthorized", ex.Message);
+        Assert.Equal("Требуется авторизация", ex.Message);
     }
 
     [Fact]
@@ -404,7 +404,7 @@ public class MessengerServiceTests
 
         http.ExceptionToThrow = new ApiException(404, "not found");
 
-        var ex = Assert.Throws<AppException>(() =>
+        var ex = Assert.Throws<NotFoundAppException>(() =>
             bl.GetUserByNameWithServer("bob"));
 
         Assert.Equal("not found", ex.Message);
@@ -417,7 +417,7 @@ public class MessengerServiceTests
 
         http.ExceptionToThrow = new ApiException(409, "conflict");
 
-        var ex = Assert.Throws<AppException>(() =>
+        var ex = Assert.Throws<ValidationException>(() =>
             bl.CreateGroupChat("test", Guid.NewGuid(), new List<Guid>())
         );
 
@@ -440,7 +440,7 @@ public class MessengerServiceTests
         var ex = Assert.Throws<AppException>(() =>
             bl.SendMessage(chat.Id, Guid.NewGuid(), "hi"));
 
-        Assert.Equal("server", ex.Message);
+        Assert.Equal("Ошибка сервера (500): server", ex.Message);
     }
 
     [Fact]
@@ -450,12 +450,11 @@ public class MessengerServiceTests
 
         http.ExceptionToThrow = new ApiException(403, "forbidden");
 
-        var ex = Assert.Throws<AppException>(() =>
+        var ex = Assert.Throws<AuthException>(() =>
             bl.LeaveChat(Guid.NewGuid(), Guid.NewGuid()));
 
-        Assert.Equal("forbidden", ex.Message);
+        Assert.Equal("Недостаточно прав", ex.Message);
     }
-    
     // ================= DB ERRORS =================
 
     [Fact]
