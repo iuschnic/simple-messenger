@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB.Tests", "DB.Tests\DB.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messenger.Tests.Sandbox", "Messenger.Tests.Sandbox\Messenger.Tests.Sandbox.csproj", "{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BL.UnitTest", "BL.UnitTest\BL.UnitTest.csproj", "{9CEED1B6-671D-4DCA-AD2D-329D3A00AA86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB4686A3-ADD5-48A7-A3D4-BECBEAEA6A8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CEED1B6-671D-4DCA-AD2D-329D3A00AA86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CEED1B6-671D-4DCA-AD2D-329D3A00AA86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CEED1B6-671D-4DCA-AD2D-329D3A00AA86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CEED1B6-671D-4DCA-AD2D-329D3A00AA86}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
