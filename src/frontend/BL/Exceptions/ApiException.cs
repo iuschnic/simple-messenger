@@ -65,3 +65,8 @@ public class NotFoundAppException : AppException
 {
     public NotFoundAppException(string message) : base(message) { }
 }
+
+public class DatabaseException : AppException
+{
+    public DatabaseException(string message) : base(message) { }
+}
