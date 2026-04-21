@@ -23,6 +23,10 @@ public class UserService : BaseService, IUserService
     }
     public async Task<UserDto> CreateUserAsync(string uniqueName, string displayedName)
     {
+        if (string.IsNullOrWhiteSpace(displayedName))
+            throw new ArgumentException("Invalid displayed name");
+        if (string.IsNullOrWhiteSpace(uniqueName))
+            throw new ArgumentException("Invalid unique name");
         if (await _userRepo.ExistsByUniqueNameAsync(uniqueName))
             throw new RuleViolationException("User with the same unique name already exists");
         var user = User.CreateNew(uniqueName, displayedName);
@@ -32,6 +36,8 @@ public class UserService : BaseService, IUserService
     }
     public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
     {
+        if (string.IsNullOrWhiteSpace(newDisplayedName))
+            throw new ArgumentException("Invalid displayed name");
         var user = await GetCurrentUserOrUnauthorized(currentUserId);
         if (!await _userRepo.UpdateDisplayedNameAsync(currentUserId, newDisplayedName))
             throw new TechnicalException("Failed to update user displayed name");
@@ -45,6 +51,10 @@ public class UserService : BaseService, IUserService
     }
     public async Task<IEnumerable<UserDto>> SearchUsersAsync(string substr, int maxUsers, Guid currentUserId)
     {
+        if (string.IsNullOrWhiteSpace(substr))
+            throw new ArgumentException("Invalid displayed name");
+        if (maxUsers <= 0)
+            throw new ArgumentException("Invalid maxUsers");
         await EnsureCurrentUserAuthorized(currentUserId);
         var users = await _userRepo.SearchAsync(substr, maxUsers);
         return users.Where(u => u.Id != currentUserId).Select(u => u.ToDto());

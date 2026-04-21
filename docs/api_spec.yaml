@@ -521,6 +521,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SearchUsersResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "500":
@@ -624,6 +626,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContactDto'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "404":
@@ -720,6 +724,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "500":
@@ -971,6 +977,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "404":

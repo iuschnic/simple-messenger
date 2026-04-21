@@ -1,9 +1,9 @@
 ﻿using Main.Application.Dtos;
-using Main.Application.InPorts;
-using Main.Application.OutPorts;
 using Main.Application.Exceptions;
-using Main.BL.Models;
+using Main.Application.InPorts;
 using Main.Application.Mappers;
+using Main.Application.OutPorts;
+using Main.BL.Models;
 
 namespace Main.Application.Services;
 
@@ -131,6 +131,8 @@ public class MessageService: BaseService, IMessageService
         string newText,
         Guid currentUserId)
     {
+        if (string.IsNullOrEmpty(newText))
+            throw new ArgumentException("Message text should not be null/whitespace");
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         var message = await GetMessageOrThrow(chatId, messageNumber);

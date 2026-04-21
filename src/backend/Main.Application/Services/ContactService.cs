@@ -1,9 +1,10 @@
-﻿using Main.Application.Exceptions;
-using Main.BL.Models;
-using Main.Application.Dtos;
-using Main.Application.OutPorts;
+﻿using Main.Application.Dtos;
+using Main.Application.Exceptions;
 using Main.Application.InPorts;
 using Main.Application.Mappers;
+using Main.Application.OutPorts;
+using Main.BL.Models;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Main.Application.Services;
 
@@ -27,6 +28,8 @@ public class ContactService: BaseService, IContactService
     }
     public async Task<ContactWithUserDto> AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
     {
+        if (string.IsNullOrEmpty(contactName))
+            throw new ArgumentException("contactName should not be null/whitespace");
         await EnsureCurrentUserAuthorized(ownerUserId);
         var contactUser = await GetUserOrNotFound(contactUserId);
         if (await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
@@ -42,6 +45,8 @@ public class ContactService: BaseService, IContactService
     }
     public async Task<ContactWithUserDto> ChangeContactNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName)
     {
+        if (string.IsNullOrEmpty(newContactName))
+            throw new ArgumentException("newContactName should not be null/whitespace");
         await EnsureCurrentUserAuthorized(ownerUserId);
         var contactUser = await GetUserOrNotFound(contactUserId);
         var contact = await GetContactOrThrow(ownerUserId, contactUserId);

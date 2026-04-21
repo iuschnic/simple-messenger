@@ -1,10 +1,11 @@
 ﻿using Main.Application.Dtos;
-using Main.Application.InPorts;
-using Main.Application.OutPorts;
-using Main.Application.Mappers;
 using Main.Application.Exceptions;
-using Main.BL.Models;
+using Main.Application.InPorts;
+using Main.Application.Mappers;
+using Main.Application.OutPorts;
 using Main.BL.Enums;
+using Main.BL.Models;
+using System.Xml.Linq;
 
 namespace Main.Application.Services;
 
@@ -58,6 +59,8 @@ public class ChatService: BaseService, IChatService
 
     public async Task<Guid> CreateGroupChatAsync(string name, List<Guid> memberIds, Guid currentUserId)
     {
+        if (string.IsNullOrEmpty(name))
+            throw new ArgumentException("chat name should not be null/whitespace");
         await EnsureCurrentUserAuthorized(currentUserId);
         var allUserIds = memberIds
             .Append(currentUserId)
@@ -100,6 +103,8 @@ public class ChatService: BaseService, IChatService
     }
     public async Task UpdateChatNameAsync(Guid chatId, string newName, Guid currentUserId)
     {
+        if (string.IsNullOrEmpty(newName))
+            throw new ArgumentException("chat name should not be null/whitespace");
         var user = await GetCurrentUserOrUnauthorized(currentUserId);
         var chat = await GetChatOrThrow(chatId);
         EnsureGroupChat(chat);
