@@ -505,10 +505,12 @@ paths:
       parameters:
         - name: substr
           in: query
+          required: true
           schema:
             type: string
         - name: maxUsers
           in: query
+          required: true
           schema:
             type: integer
             format: int64
@@ -852,11 +854,13 @@ paths:
             format: uuid
         - name: fromMessageNum
           in: query
+          required: true
           schema:
             type: integer
             format: int64
         - name: limit
           in: query
+          required: true
           schema:
             type: integer
             format: int64
