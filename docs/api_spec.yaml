@@ -513,7 +513,7 @@ paths:
           required: true
           schema:
             type: integer
-            format: int64
+            format: int32
       responses:
         "200":
           description: Users found
@@ -854,16 +854,14 @@ paths:
             format: uuid
         - name: fromMessageNum
           in: query
-          required: true
           schema:
             type: integer
             format: int64
         - name: limit
           in: query
-          required: true
           schema:
             type: integer
-            format: int64
+            format: int32
       responses:
         "200":
           description: Messages retrieved
