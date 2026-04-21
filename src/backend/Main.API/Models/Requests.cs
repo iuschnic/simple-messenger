@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Main.API.JsonConverters;
 using Main.Application.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Main.API.Models;
 
@@ -11,6 +13,7 @@ public class AddContactRequest
     public string ContactName { get; set; } = string.Empty;
 }
 
+[JsonConverter(typeof(CreateChatRequestConverter))]
 public abstract class BaseCreateChatRequest
 {
     [Required]
@@ -31,6 +34,7 @@ public class CreateGroupChatRequest : BaseCreateChatRequest
     public string ChatName { get; set; } = string.Empty;
 }
 
+[JsonConverter(typeof(CreateMessageRequestConverter))]
 public abstract class BaseCreateMessageRequest
 {
     [Required]
