@@ -42,7 +42,8 @@ public class MessengerServiceTests
             PasswordHash = "123"
         });
 
-        Assert.Throws<Exception>(() => bl.Login("alice", "wrong"));
+        var ex = Assert.Throws<AuthException>(() => bl.Login("alice", "wrong"));
+        Assert.Equal("Неверный логин или пароль", ex.Message);
     }
 
     [Fact]
@@ -453,5 +454,73 @@ public class MessengerServiceTests
             bl.LeaveChat(Guid.NewGuid(), Guid.NewGuid()));
 
         Assert.Equal("forbidden", ex.Message);
+    }
+    
+    // ================= DB ERRORS =================
+
+    [Fact]
+    public void RegisterUser_ShouldThrowDatabaseException_WhenDbFails()
+    {
+        var bl = CreateService(out var db, out _, out _);
+
+        db.ExceptionToThrow = new Exception("db fail");
+
+        Assert.Throws<DatabaseException>(() =>
+            bl.RegisterUser("a", "b", "c", "d"));
+    }
+
+    [Fact]
+    public void Login_ShouldThrowDatabaseException_WhenDbFails()
+    {
+        var bl = CreateService(out var db, out _, out _);
+
+        db.ExceptionToThrow = new Exception("db fail");
+
+        Assert.Throws<DatabaseException>(() =>
+            bl.Login("a", "b"));
+    }
+
+    [Fact]
+    public void GetUserByNameWithServer_ShouldThrowDatabaseException_WhenDbFails()
+    {
+        var bl = CreateService(out var db, out _, out _);
+
+        db.ExceptionToThrow = new Exception("db fail");
+
+        Assert.Throws<DatabaseException>(() =>
+            bl.GetUserByNameWithServer("bob"));
+    }
+
+    [Fact]
+    public void CreateGroupChat_ShouldThrowDatabaseException_WhenDbFails()
+    {
+        var bl = CreateService(out var db, out _, out _);
+
+        db.ExceptionToThrow = new Exception("db fail");
+
+        Assert.Throws<DatabaseException>(() =>
+            bl.CreateGroupChat("test", Guid.NewGuid(), new List<Guid>()));
+    }
+
+    [Fact]
+    public void SendMessage_ShouldThrowDatabaseException_WhenDbFails()
+    {
+        var bl = CreateService(out var db, out _, out _);
+
+        db.ExceptionToThrow = new Exception("db fail");
+
+        Assert.Throws<DatabaseException>(() =>
+            bl.SendMessage(Guid.NewGuid(), Guid.NewGuid(), "hi"));
+    }
+
+    [Fact]
+    public void LeaveChat_ShouldThrowDatabaseException_WhenDbFails()
+    {
+        var bl = CreateService(out var db, out _, out _);
+
+        db.ExceptionToThrow = new Exception("db fail");
+
+        Assert.Throws<DatabaseException>(() =>
+            bl.LeaveChat(Guid.NewGuid(), Guid.NewGuid()));
     }
 }

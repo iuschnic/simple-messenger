@@ -7,15 +7,33 @@ public class FakeCurrentUserRepository : ICurrentUserRepository
 {
     private CurrentUser _user;
 
+    public Exception? ExceptionToThrow { get; set; }
+
+    private void MaybeThrow()
+    {
+        if (ExceptionToThrow != null)
+            throw ExceptionToThrow;
+    }
+
     public CurrentUser Save(CurrentUser user)
     {
+        MaybeThrow();
+
         _user = user;
         return user;
     }
 
     public CurrentUser? Get()
-        => _user;
+    {
+        MaybeThrow();
+
+        return _user;
+    }
 
     public void Clear()
-        => _user = null;
+    {
+        MaybeThrow();
+
+        _user = null;
+    }
 }

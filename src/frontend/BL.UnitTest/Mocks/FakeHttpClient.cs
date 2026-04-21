@@ -12,13 +12,19 @@ public class FakeHttpClient : IHttpClient
 
     private ulong _msgCounter = 1;
     private ulong _version = 1;
-    
+
     public Exception? ExceptionToThrow { get; set; }
+
+    // ================= ERROR CORE =================
 
     private void MaybeThrow()
     {
         if (ExceptionToThrow != null)
-            throw ExceptionToThrow;
+        {
+            var ex = ExceptionToThrow;
+            ExceptionToThrow = null;
+            throw ex;
+        }
     }
 
     private T Wrap<T>(Func<T> func)
@@ -214,7 +220,9 @@ public class FakeHttpClient : IHttpClient
     public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
         => Wrap(() =>
         {
-            if (_messages.TryGetValue(messageNum, out var msg))
+            _messages.TryGetValue(messageNum, out var msg);
+
+            if (msg != null)
             {
                 msg.Text = newText;
                 msg.EditedAt = DateTime.UtcNow;

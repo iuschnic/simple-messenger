@@ -7,8 +7,18 @@ public class FakeAuthRepository : IAuthRepository
 {
     private readonly Dictionary<Guid, User> _users = new();
 
+    public Exception? ExceptionToThrow { get; set; }
+
+    private void MaybeThrow()
+    {
+        if (ExceptionToThrow != null)
+            throw ExceptionToThrow;
+    }
+
     public User Register(string uniqueName, string passwordHash, string email)
     {
+        MaybeThrow();
+
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -21,8 +31,17 @@ public class FakeAuthRepository : IAuthRepository
     }
 
     public User Authenticate(string uniqueName, string passwordHash)
-        => _users.Values.FirstOrDefault(u => u.UniqueName == uniqueName);
+    {
+        MaybeThrow();
+
+        return _users.Values
+            .FirstOrDefault(u => u.UniqueName == uniqueName);
+    }
 
     public User Get(Guid id)
-        => _users.TryGetValue(id, out var u) ? u : null;
+    {
+        MaybeThrow();
+
+        return _users.TryGetValue(id, out var u) ? u : null;
+    }
 }
