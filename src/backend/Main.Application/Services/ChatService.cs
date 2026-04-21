@@ -17,7 +17,7 @@ public class ChatService: BaseService, IChatService
         IMessageRepository messageRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
     public async Task<IEnumerable<ChatWithUsersDto>> GetChatsAsync(Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         var chats = await _chatRepo.GetUserChatsAsync(currentUserId);
         var userIds = chats
             .SelectMany(c => c.Participants)
@@ -32,7 +32,7 @@ public class ChatService: BaseService, IChatService
 
     public async Task<ChatWithUsersDto> GetChatByIdAsync(Guid chatId, Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         var chat = await GetChatOrThrow(chatId);
         var userIds = chat.Participants.Select(p => p.UserId).ToList();
         var users = await _userRepo.GetByIdsAsync(userIds);
@@ -42,7 +42,7 @@ public class ChatService: BaseService, IChatService
     {
         if (currentUserId == otherUserId)
             throw new RuleViolationException("Cannot create private chat with yourself");
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureUserExists(otherUserId);
 
         if (await _chatRepo.ExistsPrivateBetweenUsersAsync(currentUserId, otherUserId))
@@ -58,6 +58,7 @@ public class ChatService: BaseService, IChatService
 
     public async Task<Guid> CreateGroupChatAsync(string name, List<Guid> memberIds, Guid currentUserId)
     {
+        await EnsureCurrentUserAuthorized(currentUserId);
         var allUserIds = memberIds
             .Append(currentUserId)
             .Distinct()
@@ -99,7 +100,7 @@ public class ChatService: BaseService, IChatService
     }
     public async Task UpdateChatNameAsync(Guid chatId, string newName, Guid currentUserId)
     {
-        var user = await GetUserOrThrow(currentUserId);
+        var user = await GetCurrentUserOrUnauthorized(currentUserId);
         var chat = await GetChatOrThrow(chatId);
         EnsureGroupChat(chat);
         EnsureOwner(chat, currentUserId);
@@ -114,8 +115,8 @@ public class ChatService: BaseService, IChatService
     }
     public async Task AddMemberAsync(Guid chatId, Guid userIdToAdd, Guid currentUserId)
     {
-        var currentUser = await GetUserOrThrow(currentUserId);
-        var toAddUser = await GetUserOrThrow(userIdToAdd);
+        var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);
+        var toAddUser = await GetUserOrNotFound(userIdToAdd);
         var chat = await GetChatOrThrow(chatId);
         EnsureGroupChat(chat);
         await EnsureParticipant(chatId, currentUserId);
@@ -134,8 +135,8 @@ public class ChatService: BaseService, IChatService
     }
     public async Task RemoveMemberAsync(Guid chatId, Guid userIdToRemove, Guid currentUserId)
     {
-        var currentUser = await GetUserOrThrow(currentUserId);
-        var toRemoveUser = await GetUserOrThrow(userIdToRemove);
+        var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);
+        var toRemoveUser = await GetUserOrNotFound(userIdToRemove);
         var chat = await GetChatOrThrow(chatId);
         EnsureGroupChat(chat);
         await EnsureParticipant(chatId, currentUserId);
@@ -159,7 +160,7 @@ public class ChatService: BaseService, IChatService
     }
     public async Task LeaveChatAsync(Guid chatId, Guid currentUserId)
     {
-        var currentUser = await GetUserOrThrow(currentUserId);
+        var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);
         var chat = await GetChatOrThrow(chatId);
         EnsureGroupChat(chat);
         await EnsureParticipant(chatId, currentUserId);

@@ -23,7 +23,7 @@ public class MessageService: BaseService, IMessageService
         if (limit <= 0)
             throw new ArgumentException("limit must be positive");
         limit = Math.Min(limit, 200);
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         var messages = await _messageRepo.GetOlderMessagesAsync(chatId, fromMessageNumber, limit);
@@ -38,7 +38,7 @@ public class MessageService: BaseService, IMessageService
         if (limit <= 0)
             throw new ArgumentException("limit must be positive");
         limit = Math.Min(limit, 200);
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         var messages = await _messageRepo.GetNewerMessagesAsync(chatId, fromMessageNumber, limit);
@@ -52,7 +52,7 @@ public class MessageService: BaseService, IMessageService
         if (limit <= 0)
             throw new ArgumentException("limit must be positive");
         limit = Math.Min(limit, 200);
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         var messages = await _messageRepo.GetLastMessagesAsync(chatId, limit);
@@ -65,7 +65,7 @@ public class MessageService: BaseService, IMessageService
     {
         if (string.IsNullOrEmpty(text))
             throw new ArgumentException("Message text should not be null/whitespace");
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         if (!await _messageRepo.TryCreateAsync(Message.CreateRegular(chatId, currentUserId, text)))
@@ -80,7 +80,7 @@ public class MessageService: BaseService, IMessageService
     {
         if (string.IsNullOrEmpty(text))
             throw new ArgumentException("Message text should not be null/whitespace");
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         await EnsureMessageExists(chatId, replyToMessageNumber);
@@ -98,7 +98,7 @@ public class MessageService: BaseService, IMessageService
         ulong sourceMessageNumber,
         Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(targetChatId);
         await EnsureChatExists(sourceChatId);
         await EnsureParticipant(targetChatId, currentUserId);
@@ -117,7 +117,7 @@ public class MessageService: BaseService, IMessageService
         ulong messageNumber,
         Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         var message = await GetMessageOrThrow(chatId, messageNumber);
         if (message.Deleted)
@@ -131,7 +131,7 @@ public class MessageService: BaseService, IMessageService
         string newText,
         Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         var message = await GetMessageOrThrow(chatId, messageNumber);
         if (message.Deleted)
@@ -144,7 +144,7 @@ public class MessageService: BaseService, IMessageService
         ulong lastMessageRead,
         Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         if (!await _chatUserRepo.TryUpdateLastMessageReadAsync(chatId, currentUserId, lastMessageRead))
             throw new TechnicalException("Failed to mark messages read");

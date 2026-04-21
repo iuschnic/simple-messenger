@@ -17,7 +17,7 @@ public class SyncService: BaseService, ISyncService
         List<(Guid ChatId, ulong ClientVersion)> clientChats,
         Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         var serverChats = await _chatRepo.GetUserChatsAsync(currentUserId);
         var serverChatIds = serverChats.Select(c => c.Id).ToHashSet();
 
@@ -60,7 +60,7 @@ public class SyncService: BaseService, ISyncService
         ulong clientVersion,
         Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         var chat = await _chatRepo.GetByIdAsync(chatId);
         if (chat == null || !await _chatUserRepo.IsParticipantAsync(chatId, currentUserId))
         {

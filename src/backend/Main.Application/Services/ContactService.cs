@@ -27,8 +27,8 @@ public class ContactService: BaseService, IContactService
     }
     public async Task<ContactWithUserDto> AddContactAsync(Guid ownerUserId, Guid contactUserId, string contactName)
     {
-        await EnsureUserExists(ownerUserId);
-        var contactUser = await GetUserOrThrow(contactUserId);
+        await EnsureCurrentUserAuthorized(ownerUserId);
+        var contactUser = await GetUserOrNotFound(contactUserId);
         if (await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
             throw new ConflictException("Contact already exists");
         if (!await _contactRepo.TryAddAsync(ownerUserId, new Contact(contactUserId, contactName)))
@@ -42,8 +42,8 @@ public class ContactService: BaseService, IContactService
     }
     public async Task<ContactWithUserDto> ChangeContactNameAsync(Guid ownerUserId, Guid contactUserId, string newContactName)
     {
-        await EnsureUserExists(ownerUserId);
-        var contactUser = await GetUserOrThrow(contactUserId);
+        await EnsureCurrentUserAuthorized(ownerUserId);
+        var contactUser = await GetUserOrNotFound(contactUserId);
         var contact = await GetContactOrThrow(ownerUserId, contactUserId);
 
         if (!await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
@@ -54,7 +54,7 @@ public class ContactService: BaseService, IContactService
     }
     public async Task RemoveContactAsync(Guid ownerUserId, Guid contactUserId)
     {
-        await EnsureUserExists(ownerUserId);
+        await EnsureCurrentUserAuthorized(ownerUserId);
         await EnsureUserExists(contactUserId);
         if (!await _contactRepo.ExistsAsync(ownerUserId, contactUserId))
             throw new ConflictException("Contact doesnt exist");

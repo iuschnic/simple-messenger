@@ -17,8 +17,8 @@ public class UserService : BaseService, IUserService
 
     public async Task<UserDto> GetUserByIdAsync(Guid userId, Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
-        var user = await GetUserOrThrow(userId);
+        await EnsureCurrentUserAuthorized(currentUserId);
+        var user = await GetUserOrNotFound(userId);
         return user.ToDto();
     }
     public async Task<UserDto> CreateUserAsync(string uniqueName, string displayedName)
@@ -32,7 +32,7 @@ public class UserService : BaseService, IUserService
     }
     public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
     {
-        var user = await GetUserOrThrow(currentUserId);
+        var user = await GetCurrentUserOrUnauthorized(currentUserId);
         if (!await _userRepo.UpdateDisplayedNameAsync(currentUserId, newDisplayedName))
             throw new TechnicalException("Failed to update user displayed name");
         user = User.Create(user.Id, user.UniqueName, newDisplayedName);
@@ -40,12 +40,12 @@ public class UserService : BaseService, IUserService
     }
     public async Task<UserDto> GetMyProfileAsync(Guid currentUserId)
     {
-        var user = await GetUserOrThrow(currentUserId);
+        var user = await GetCurrentUserOrUnauthorized(currentUserId);
         return user.ToDto();
     }
     public async Task<IEnumerable<UserDto>> SearchUsersAsync(string substr, int maxUsers, Guid currentUserId)
     {
-        await EnsureUserExists(currentUserId);
+        await EnsureCurrentUserAuthorized(currentUserId);
         var users = await _userRepo.SearchAsync(substr, maxUsers);
         return users.Where(u => u.Id != currentUserId).Select(u => u.ToDto());
     }

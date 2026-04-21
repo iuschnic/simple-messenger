@@ -26,6 +26,11 @@ public abstract class BaseService
         if (!await _userRepo.ExistsAsync(userId))
             throw new NotFoundException(nameof(User), userId);
     }
+    protected async Task EnsureCurrentUserAuthorized(Guid userId)
+    {
+        if (!await _userRepo.ExistsAsync(userId))
+            throw new UnauthorizedException("Current user session is invalid");
+    }
     protected async Task EnsureChatExists(Guid chatId)
     {
         if (!await _chatRepo.ExistsAsync(chatId))
@@ -66,9 +71,15 @@ public abstract class BaseService
         return await _chatRepo.GetByIdAsync(chatId)
             ?? throw new NotFoundException(nameof(Chat), chatId);
     }
-    protected async Task<User> GetUserOrThrow(Guid userId)
+    protected async Task<User> GetUserOrNotFound(Guid userId)
     {
         return await _userRepo.GetByIdAsync(userId)
             ?? throw new NotFoundException(nameof(User), userId);
     }
+    protected async Task<User> GetCurrentUserOrUnauthorized(Guid userId)
+    {
+        return await _userRepo.GetByIdAsync(userId)
+            ?? throw new UnauthorizedException(nameof(User), userId);
+    }
+
 }
