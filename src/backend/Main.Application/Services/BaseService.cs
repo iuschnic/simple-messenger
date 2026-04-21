@@ -29,7 +29,7 @@ public abstract class BaseService
     protected async Task EnsureCurrentUserAuthorized(Guid userId)
     {
         if (!await _userRepo.ExistsAsync(userId))
-            throw new UnauthorizedException("Current user session is invalid");
+            throw new UnauthorizedException(nameof(User), userId);
     }
     protected async Task EnsureChatExists(Guid chatId)
     {
@@ -44,22 +44,22 @@ public abstract class BaseService
     protected async Task EnsureParticipant(Guid chatId, Guid userId)
     {
         if (!await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ForbiddenException("User is not a participant of this chat");
+            throw new ForbiddenException($"User {userId} is not a participant of chat {chatId}");
     }
     protected async Task EnsureNotParticipant(Guid chatId, Guid userId)
     {
         if (await _chatUserRepo.IsParticipantAsync(chatId, userId))
-            throw new ConflictException("User is already a participant");
+            throw new ConflictException($"User {userId} is already a participant of chat {chatId}");
     }
     protected void EnsureOwner(Chat chat, Guid userId)
     {
         if (chat.OwnerUserId != userId)
-            throw new ForbiddenException("Only chat owner can perform this action");
+            throw new ForbiddenException("User {userId} is not an owner of chat {chatId} so can not perform this action");
     }
     protected void EnsureNotOwner(Chat chat, Guid userId)
     {
         if (chat.OwnerUserId == userId)
-            throw new ForbiddenException("Chat owner can not perform this action");
+            throw new ForbiddenException("User {userId} as an owner of chat {chatId} can not perform this action");
     }
     protected async Task<Message> GetMessageOrThrow(Guid chatId, ulong messageNum)
     {
