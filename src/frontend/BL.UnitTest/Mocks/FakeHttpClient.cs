@@ -1,281 +1,270 @@
 ﻿namespace BL.UnitTest.Mocks;
 
-using System.Net;
 using BL.Contracts;
 using BL.Models;
+using BL.Exceptions;
 
 public class FakeHttpClient : IHttpClient
 {
     private readonly Dictionary<ulong, Message> _messages = new();
     private readonly Dictionary<Guid, Chat> _chats = new();
     private readonly Dictionary<Guid, User> _users = new();
-    private readonly Dictionary<Guid, CurrentUser> _currentuser = new();
 
     private ulong _msgCounter = 1;
     private ulong _version = 1;
     
+    public Exception? ExceptionToThrow { get; set; }
+
+    private void MaybeThrow()
+    {
+        if (ExceptionToThrow != null)
+            throw ExceptionToThrow;
+    }
+
+    private T Wrap<T>(Func<T> func)
+    {
+        MaybeThrow();
+        return func();
+    }
+
+    private void Wrap(Action action)
+    {
+        MaybeThrow();
+        action();
+    }
 
     // ================= AUTH =================
 
     public void Register(string uniqueName, string password, string email, string displayName)
-    {
-        
-        var user = new User
+        => Wrap(() =>
         {
-            Id = Guid.NewGuid(),
-            UniqueName = uniqueName,
-            DisplayName = displayName
-        };
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                UniqueName = uniqueName,
+                DisplayName = displayName
+            };
 
-        _users[user.Id] = user;
-        
-    }
+            _users[user.Id] = user;
+        });
 
     public string Login(string uniqueName, string password)
-    {
-        return "fake-token";
-    }
+        => Wrap(() => "fake-token");
 
     private static readonly Guid TestUserId =
         Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     public User GetMe()
-    {
-        return new User
+        => Wrap(() => new User
         {
             Id = TestUserId,
             UniqueName = "alice",
             DisplayName = "yxye"
-        };
-    }
+        });
 
     // ================= USERS =================
 
     public User GetUser(Guid id)
-        => _users.TryGetValue(id, out var user)
-            ? user
-            : new User { Id = id, UniqueName = "unknown" };
-    
+        => Wrap(() =>
+            _users.TryGetValue(id, out var user)
+                ? user
+                : new User { Id = id, UniqueName = "unknown" });
+
     public User GetUserByName(string uniqueName)
-    {
-        return new User
+        => Wrap(() => new User
         {
             Id = Guid.NewGuid(),
             UniqueName = uniqueName,
             DisplayName = "name"
-        };
-    }
-    
-    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId)
-    {
-        return new SyncChatResult
-        {
-            ChatId = Guid.NewGuid(),
-            Messages = new List<Message>(),
-            LastVersion = 0
-        };
-    }
+        });
 
-    private static readonly Guid TestChatId =
-        Guid.Parse("11111111-1111-1111-1111-111111111111");
-    public Chat CreateGroupChat(string name, List<string> memberIds)
-    {
-        return new Chat
-        {
-            Id = TestChatId,
-            OwnerId = GetMe().Id,
-            Name = name,
-            CreatedAt = DateTime.UtcNow,
-            Version = 1,
-            Type = ChatType.Group,
-            LastMessageNum = 0
-        };;
-    }
-    
-    private static readonly Guid TestPrivateChatId =
-        Guid.Parse("11111111-1111-1111-1111-111111111111");
-    public Chat CreatePrivateChat(String withUserId)
-    {
-        return new Chat
-        {
-            Id = TestPrivateChatId,
-            OwnerId = GetMe().Id,
-            Name = GetUser(Guid.Parse(withUserId)).UniqueName,
-            CreatedAt = DateTime.UtcNow,
-            Version = 1,
-            Type = ChatType.Private,
-            LastMessageNum = 0
-        };;
-    }
-    
-    
     public CurrentUser UpdateMeDisplayName(string displayName)
-    {
-        return null;
-    }
+        => Wrap(() => new CurrentUser
+        {
+            Id = TestUserId,
+            DisplayedName = displayName
+        });
 
     public User UpdateContactName(Guid id, string contactName)
-    {
-        return null;
-    }
+        => Wrap(() => new User
+        {
+            Id = id,
+            ContactName = contactName
+        });
 
     public List<User> SearchUsers(string substr, int maxUsers)
-    {
-        return _users.Values
-            .Where(u => u.UniqueName.Contains(substr ?? "", StringComparison.OrdinalIgnoreCase))
-            .Take(maxUsers)
-            .ToList();
-    }
+        => Wrap(() =>
+            _users.Values
+                .Where(u => u.UniqueName.Contains(substr ?? "", StringComparison.OrdinalIgnoreCase))
+                .Take(maxUsers)
+                .ToList());
 
     // ================= CHATS =================
 
     public List<Chat> GetChats()
-        => _chats.Values.ToList();
+        => Wrap(() => _chats.Values.ToList());
 
     public Chat CreateGroupChat(string name, List<Guid> memberIds)
-    {
-        var chat = new Chat
+        => Wrap(() =>
         {
-            Id = Guid.NewGuid(),
-            Name = name,
-            OwnerId = memberIds.FirstOrDefault(),
-            CreatedAt = DateTime.UtcNow,
-            Type = ChatType.Group,
-            Version = _version++
-        };
+            var chat = new Chat
+            {
+                Id = Guid.NewGuid(),
+                Name = name,
+                OwnerId = memberIds.FirstOrDefault(),
+                CreatedAt = DateTime.UtcNow,
+                Type = ChatType.Group,
+                Version = _version++
+            };
 
-        _chats[chat.Id] = chat;
-        return chat;
-    }
+            _chats[chat.Id] = chat;
+            return chat;
+        });
 
     public Chat CreatePrivateChat(Guid withUserId)
-    {
-        var chat = new Chat
+        => Wrap(() =>
         {
-            Id = Guid.NewGuid(),
-            Name = "private",
-            OwnerId = withUserId,
-            CreatedAt = DateTime.UtcNow,
-            Type = ChatType.Private,
-            Version = _version++
-        };
+            var chat = new Chat
+            {
+                Id = Guid.NewGuid(),
+                Name = "private",
+                OwnerId = withUserId,
+                CreatedAt = DateTime.UtcNow,
+                Type = ChatType.Private,
+                Version = _version++
+            };
 
-        _chats[chat.Id] = chat;
-        return chat;
-    }
+            _chats[chat.Id] = chat;
+            return chat;
+        });
+
+    public Chat GetChat(Guid chatId)
+        => Wrap(() =>
+        {
+            if (_chats.TryGetValue(chatId, out var chat))
+                return chat;
+
+            var newChat = new Chat
+            {
+                Id = chatId,
+                Name = "chat",
+                CreatedAt = DateTime.UtcNow,
+                Version = _version++
+            };
+
+            _chats[chatId] = newChat;
+            return newChat;
+        });
+
+    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId)
+        => Wrap(() => new SyncChatResult
+        {
+            ChatId = chatId,
+            Messages = new List<Message>(),
+            LastVersion = _version++
+        });
+
+    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
+        => Wrap(() =>
+        {
+            var chatId = chats.First().chatId;
+
+            var msgs = _messages.Values
+                .Where(m => m.ChatId == chatId)
+                .ToList();
+
+            return new List<SyncChatResult>
+            {
+                new SyncChatResult
+                {
+                    ChatId = chatId,
+                    Messages = msgs,
+                    LastVersion = _version
+                }
+            };
+        });
 
     // ================= MESSAGES =================
 
     public SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion)
-    {
-        var newVersion = ++_version;
-
-        var msg = new Message
+        => Wrap(() =>
         {
-            MessageNumber = _msgCounter++,
-            ChatId = chatId,
-            SenderId = GetMe().Id,
-            Text = text,
-            CreatedAt = DateTime.UtcNow,
-            Version = newVersion,
-            Type = MessageType.Regular
-        };
+            var newVersion = ++_version;
 
-        _messages[msg.MessageNumber] = msg;
+            var msg = new Message
+            {
+                MessageNumber = _msgCounter++,
+                ChatId = chatId,
+                SenderId = TestUserId,
+                Text = text,
+                CreatedAt = DateTime.UtcNow,
+                Version = newVersion,
+                Type = MessageType.Regular
+            };
 
-        return new SyncChatResult
-        {
-            Messages = new List<Message> { msg },
-            LastVersion = newVersion
-        };
-    }
-
-    public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
-    {
-        if (_messages.TryGetValue(messageNum, out var msg))
-        {
-            msg.Text = newText;
-            msg.EditedAt = DateTime.UtcNow;
-            msg.Version = _version++;
-        }
-
-        return new SyncChatResult
-        {
-            Messages = new List<Message> { msg },
-            LastVersion = _version
-        };
-    }
-
-    public SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
-    {
-        if (_messages.TryGetValue(messageNum, out var msg))
-        {
-            _messages.Remove(messageNum);
-
-            msg.Deleted = true;
-            msg.Version = _version++;
+            _messages[msg.MessageNumber] = msg;
 
             return new SyncChatResult
             {
                 Messages = new List<Message> { msg },
+                LastVersion = newVersion
+            };
+        });
+
+    public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
+        => Wrap(() =>
+        {
+            if (_messages.TryGetValue(messageNum, out var msg))
+            {
+                msg.Text = newText;
+                msg.EditedAt = DateTime.UtcNow;
+                msg.Version = _version++;
+            }
+
+            return new SyncChatResult
+            {
+                Messages = msg != null ? new List<Message> { msg } : new List<Message>(),
                 LastVersion = _version
             };
-        }
+        });
 
-        return new SyncChatResult
+    public SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
+        => Wrap(() =>
         {
-            Messages = new List<Message>(),
-            LastVersion = _version
-        };
-    }
+            if (_messages.TryGetValue(messageNum, out var msg))
+            {
+                _messages.Remove(messageNum);
+
+                msg.Deleted = true;
+                msg.Version = _version++;
+
+                return new SyncChatResult
+                {
+                    Messages = new List<Message> { msg },
+                    LastVersion = _version
+                };
+            }
+
+            return new SyncChatResult
+            {
+                Messages = new List<Message>(),
+                LastVersion = _version
+            };
+        });
 
     public List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
-    {
-        IEnumerable<Message> query = _messages.Values
-            .Where(m => m.ChatId == chatId)
-            .OrderBy(m => m.MessageNumber);
-
-        if (fromMessageNumber != null)
-            query = query.Where(m => m.MessageNumber >= fromMessageNumber.Value);
-
-        if (limit != null)
-            query = query.Take(limit.Value);
-
-        return query.ToList();
-    }
-    
-    public Chat GetChat(Guid chatId)
-    {
-        var chat = new Chat
+        => Wrap(() =>
         {
-            Id = Guid.NewGuid(),
-            Name = "private",
-            OwnerId = new Guid(),
-            CreatedAt = DateTime.UtcNow,
-            Type = ChatType.Private,
-            Version = _version++
-        };
+            IEnumerable<Message> query = _messages.Values
+                .Where(m => m.ChatId == chatId)
+                .OrderBy(m => m.MessageNumber);
 
-        _chats[chat.Id] = chat;
-        return chat;
-    }
-    
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
-    {
-        var chatId = chats.First().chatId;
+            if (fromMessageNumber != null)
+                query = query.Where(m => m.MessageNumber >= fromMessageNumber.Value);
 
-        var msgs = _messages.Values
-            .Where(m => m.ChatId == chatId)
-            .ToList();
+            if (limit != null)
+                query = query.Take(limit.Value);
 
-        return new List<SyncChatResult>
-        {
-            new SyncChatResult
-            {
-                ChatId = chatId,
-                Messages = msgs,
-                LastVersion = _version
-            }
-        };
-    }
+            return query.ToList();
+        });
 }

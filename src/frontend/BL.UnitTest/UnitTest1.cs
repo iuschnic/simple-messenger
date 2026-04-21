@@ -1,4 +1,5 @@
-﻿using BL.Models;
+﻿using BL.Exceptions;
+using BL.Models;
 using BL.Services;
 using BL.UnitTest.Mocks;
 using Xunit;
@@ -359,5 +360,98 @@ public class MessengerServiceTests
 
         Assert.NotNull(db.Chats.Find(chat.Id));
         Assert.True(called);
+    }
+    
+    // ================= ERRORS =================
+
+    [Fact]
+    public void RegisterUser_ShouldMapApiException()
+    {
+        var bl = CreateService(out _, out _, out var http);
+
+        http.ExceptionToThrow = new ApiException(400, "bad");
+
+        var ex = Assert.Throws<AppException>(() =>
+            bl.RegisterUser("a", "b", "c", "d"));
+
+        Assert.Equal("bad", ex.Message);
+    }
+
+    [Fact]
+    public void Login_ShouldMapApiException()
+    {
+        var bl = CreateService(out var db, out _, out var http);
+
+        db.CurrentUser.Save(new CurrentUser
+        {
+            UniqueName = "alice",
+            PasswordHash = "123"
+        });
+
+        http.ExceptionToThrow = new ApiException(401, "unauthorized");
+
+        var ex = Assert.Throws<AppException>(() =>
+            bl.Login("alice", "123"));
+
+        Assert.Equal("unauthorized", ex.Message);
+    }
+
+    [Fact]
+    public void GetUserByNameWithServer_ShouldMapApiException()
+    {
+        var bl = CreateService(out _, out _, out var http);
+
+        http.ExceptionToThrow = new ApiException(404, "not found");
+
+        var ex = Assert.Throws<AppException>(() =>
+            bl.GetUserByNameWithServer("bob"));
+
+        Assert.Equal("not found", ex.Message);
+    }
+
+    [Fact]
+    public void CreateGroupChat_ShouldMapApiException()
+    {
+        var bl = CreateService(out _, out _, out var http);
+
+        http.ExceptionToThrow = new ApiException(409, "conflict");
+
+        var ex = Assert.Throws<AppException>(() =>
+            bl.CreateGroupChat("test", Guid.NewGuid(), new List<Guid>())
+        );
+
+        Assert.Equal("conflict", ex.Message);
+    }
+
+    [Fact]
+    public void SendMessage_ShouldMapApiException()
+    {
+        var bl = CreateService(out var db, out _, out var http);
+
+        var chat = db.Chats.Save(new Chat
+        {
+            Id = Guid.NewGuid(),
+            Version = 1
+        });
+
+        http.ExceptionToThrow = new ApiException(500, "server");
+
+        var ex = Assert.Throws<AppException>(() =>
+            bl.SendMessage(chat.Id, Guid.NewGuid(), "hi"));
+
+        Assert.Equal("server", ex.Message);
+    }
+
+    [Fact]
+    public void LeaveChat_ShouldMapApiException()
+    {
+        var bl = CreateService(out _, out _, out var http);
+
+        http.ExceptionToThrow = new ApiException(403, "forbidden");
+
+        var ex = Assert.Throws<AppException>(() =>
+            bl.LeaveChat(Guid.NewGuid(), Guid.NewGuid()));
+
+        Assert.Equal("forbidden", ex.Message);
     }
 }
