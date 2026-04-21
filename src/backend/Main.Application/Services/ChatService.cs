@@ -2,7 +2,7 @@
 using Main.Application.InPorts;
 using Main.Application.OutPorts;
 using Main.Application.Mappers;
-using Main.BL.Exceptions;
+using Main.Application.Exceptions;
 using Main.BL.Models;
 using Main.BL.Enums;
 

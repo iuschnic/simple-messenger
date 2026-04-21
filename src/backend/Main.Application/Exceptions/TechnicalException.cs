@@ -1,4 +1,4 @@
-﻿namespace Main.BL.Exceptions;
+﻿namespace Main.Application.Exceptions;
 
 public class TechnicalException : AppException
 {

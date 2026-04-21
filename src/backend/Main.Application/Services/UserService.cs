@@ -1,7 +1,7 @@
 ﻿using Main.Application.InPorts;
 using Main.BL.Models;
 using Main.Application.OutPorts;
-using Main.BL.Exceptions;
+using Main.Application.Exceptions;
 using Main.Application.Dtos;
 using Main.Application.Mappers;
 
