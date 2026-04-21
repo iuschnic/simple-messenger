@@ -275,7 +275,7 @@ public class HttpClientImpl : IHttpClient
             "users/me",
             new
             {
-                displayName
+                newDisplayedName = displayName
             }
         ).Result;
 
@@ -290,10 +290,10 @@ public class HttpClientImpl : IHttpClient
     public User UpdateContactName(Guid id, string contactName)
     {
         var res = _http.PatchAsJsonAsync(
-            "users/{id}",
+            $"users/me/contacts/{id}",
             new
             {
-                id
+                newContactName = contactName
             }
         ).Result;
 
