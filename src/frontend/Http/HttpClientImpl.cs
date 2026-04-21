@@ -1,9 +1,11 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using BL.Contracts;
 using BL.Models;
 using Http.Dto;
 using Http.Mapping;
+using BL.Exceptions;
 
 namespace Http;
 
@@ -18,26 +20,61 @@ public class HttpClientImpl : IHttpClient
         _http.BaseAddress = new Uri(baseUrl);
     }
 
+    // ================= ERROR HANDLER =================
+
+    private void HandleErrors(HttpResponseMessage res)
+    {
+        if (res.IsSuccessStatusCode)
+            return;
+
+        var message = res.Content.ReadAsStringAsync().Result;
+
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.BadRequest:
+                throw new BadRequestException(message);
+
+            case HttpStatusCode.Unauthorized:
+                throw new UnauthorizedException();
+
+            case HttpStatusCode.Forbidden:
+                throw new ForbiddenException(message);
+
+            case HttpStatusCode.NotFound:
+                throw new NotFoundException(message);
+
+            case HttpStatusCode.Conflict:
+                throw new ConflictException(message);
+
+            default:
+                if ((int)res.StatusCode >= 500)
+                    throw new ServerException((int)res.StatusCode, message);
+
+                throw new ApiException((int)res.StatusCode, message);
+        }
+    }
+
     // ================= AUTH =================
 
-    public HttpResponseMessage Register(string uniqueName, string password, string email, string displayName)
+    public void Register(string uniqueName, string password, string email, string displayName)
     {
-        var req = new
+        var res = _http.PostAsJsonAsync("auth/register", new
         {
             uniqueName,
             password,
             email,
             displayedName = displayName
-        };
+        }).Result;
 
-        return _http.PostAsJsonAsync("auth/register", req).Result;
+        HandleErrors(res);
     }
+
     public string Login(string uniqueName, string password)
     {
         var res = _http.PostAsJsonAsync("auth/login",
             new { uniqueName, password }).Result;
 
-        res.EnsureSuccessStatusCode();
+        HandleErrors(res);
 
         var dto = res.Content.ReadFromJsonAsync<LoginResponseDto>().Result;
 
@@ -52,20 +89,32 @@ public class HttpClientImpl : IHttpClient
     public User GetMe()
     {
         var res = _http.GetAsync("users/me").Result;
-        res.EnsureSuccessStatusCode();
+
+        HandleErrors(res);
 
         return DtoMapper.ToUser(
             res.Content.ReadFromJsonAsync<UserDto>().Result
         );
     }
 
-
     // ================= USERS =================
 
     public User GetUser(Guid id)
     {
         var res = _http.GetAsync($"users/{id}").Result;
-        res.EnsureSuccessStatusCode();
+
+        HandleErrors(res);
+
+        return DtoMapper.ToUser(
+            res.Content.ReadFromJsonAsync<UserDto>().Result
+        );
+    }
+
+    public User GetUserByName(string uniqueName)
+    {
+        var res = _http.GetAsync($"users/{uniqueName}").Result;
+
+        HandleErrors(res);
 
         return DtoMapper.ToUser(
             res.Content.ReadFromJsonAsync<UserDto>().Result
@@ -75,11 +124,38 @@ public class HttpClientImpl : IHttpClient
     public List<User> SearchUsers(string substr, int maxUsers)
     {
         var res = _http.GetAsync($"users?substr={substr}&maxUsers={maxUsers}").Result;
-        res.EnsureSuccessStatusCode();
 
-        return res.Content.ReadFromJsonAsync<List<UserDto>>().Result
+        HandleErrors(res);
+
+        return res.Content.ReadFromJsonAsync<List<UserDto>>().Result!
             .Select(DtoMapper.ToUser)
             .ToList();
+    }
+
+    public CurrentUser UpdateMeDisplayName(string displayName)
+    {
+        var res = _http.PatchAsJsonAsync("users/me",
+            new { newDisplayedName = displayName }).Result;
+
+        HandleErrors(res);
+
+        return DtoMapper.ToCurrentUser(
+            res.Content.ReadFromJsonAsync<CurrentUserDto>().Result
+        );
+    }
+
+    public User UpdateContactName(Guid id, string contactName)
+    {
+        var res = _http.PatchAsJsonAsync(
+            $"users/me/contacts/{id}",
+            new { newContactName = contactName }
+        ).Result;
+
+        HandleErrors(res);
+        
+        return DtoMapper.ToUser(
+            res.Content.ReadFromJsonAsync<UserDto>().Result
+        );
     }
 
     // ================= CHATS =================
@@ -87,9 +163,10 @@ public class HttpClientImpl : IHttpClient
     public List<Chat> GetChats()
     {
         var res = _http.GetAsync("chats").Result;
-        res.EnsureSuccessStatusCode();
 
-        return res.Content.ReadFromJsonAsync<List<ChatDto>>().Result
+        HandleErrors(res);
+
+        return res.Content.ReadFromJsonAsync<List<ChatDto>>().Result!
             .Select(DtoMapper.ToChat)
             .ToList();
     }
@@ -98,14 +175,13 @@ public class HttpClientImpl : IHttpClient
     {
         var res = _http.PostAsJsonAsync("chats", new
         {
-            chatType = "group",
+            chatType = 0,
             chatName = name,
             memberIds
         }).Result;
 
-        res.EnsureSuccessStatusCode();
-
-        // FIX: нормальный вариант — переспрос чата
+        HandleErrors(res);
+        
         return GetChats().First(c => c.Name == name);
     }
 
@@ -113,49 +189,55 @@ public class HttpClientImpl : IHttpClient
     {
         var res = _http.PostAsJsonAsync("chats", new
         {
-            chatType = "private",
+            chatType = 1,
             withUserId
         }).Result;
 
-        res.EnsureSuccessStatusCode();
+        HandleErrors(res);
 
         return GetChats().First();
     }
-    
+
+    public Chat GetChat(Guid chatId)
+    {
+        var res = _http.GetAsync($"chats/{chatId}").Result;
+
+        HandleErrors(res);
+
+        var dto = res.Content.ReadFromJsonAsync<ChatDto>().Result;
+
+        return DtoMapper.ToChat(dto);
+    }
+
     public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
     {
-        var req = new
+        var res = _http.PostAsJsonAsync("chats/sync", new
         {
             chats = chats.Select(c => new
             {
                 chatId = c.chatId,
                 clientVersion = c.version
             })
-        };
+        }).Result;
 
-        var res = _http.PostAsJsonAsync("chats/sync", req).Result;
-        res.EnsureSuccessStatusCode();
+        HandleErrors(res);
 
         var dto = res.Content.ReadFromJsonAsync<SyncChatsResponseDto>().Result;
 
         return dto.SyncChats.Select(DtoMapper.ToSync).ToList();
     }
 
-    
-    public Chat GetChat(Guid chatId)
+    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId)
     {
-        var res = _http.GetAsync($"chats/{chatId}").Result;
+        var res = _http.DeleteAsync($"chats/{chatId}/members/{userId}").Result;
 
-        if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
-            throw new Exception("Chat not found");
+        HandleErrors(res);
 
-        res.EnsureSuccessStatusCode();
-
-        var dto = res.Content.ReadFromJsonAsync<ChatDto>().Result;
-
-        return DtoMapper.ToChat(dto);
+        return DtoMapper.ToSync(
+            res.Content.ReadFromJsonAsync<SyncChatResponseDto>().Result
+        );
     }
-    
+
     // ================= MESSAGES =================
 
     public SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion)
@@ -164,12 +246,12 @@ public class HttpClientImpl : IHttpClient
             $"chats/{chatId}/messages",
             new
             {
-                messageType = "send",
+                messageType = 0,
                 clientVersion,
                 text
             }).Result;
 
-        res.EnsureSuccessStatusCode();
+        HandleErrors(res);
 
         return DtoMapper.ToSync(
             res.Content.ReadFromJsonAsync<SyncChatResponseDto>().Result
@@ -180,13 +262,9 @@ public class HttpClientImpl : IHttpClient
     {
         var res = _http.PatchAsJsonAsync(
             $"chats/{chatId}/messages/{messageNum}",
-            new
-            {
-                newText,
-                clientVersion
-            }).Result;
+            new { newText, clientVersion }).Result;
 
-        res.EnsureSuccessStatusCode();
+        HandleErrors(res);
 
         return DtoMapper.ToSync(
             res.Content.ReadFromJsonAsync<SyncChatResponseDto>().Result
@@ -199,7 +277,7 @@ public class HttpClientImpl : IHttpClient
             $"chats/{chatId}/messages/{messageNum}?clientVersion={clientVersion}"
         ).Result;
 
-        res.EnsureSuccessStatusCode();
+        HandleErrors(res);
 
         return DtoMapper.ToSync(
             res.Content.ReadFromJsonAsync<SyncChatResponseDto>().Result
@@ -211,97 +289,17 @@ public class HttpClientImpl : IHttpClient
         var url = $"chats/{chatId}/messages?";
 
         if (fromMessageNumber != null)
-            url += $"fromMessageNumber={fromMessageNumber}&";
+            url += $"fromMessageNum={fromMessageNumber}&";
 
         if (limit != null)
             url += $"limit={limit}";
 
         var res = _http.GetAsync(url).Result;
-        res.EnsureSuccessStatusCode();
 
-        return res.Content.ReadFromJsonAsync<List<MessageDto>>().Result
+        HandleErrors(res);
+
+        return res.Content.ReadFromJsonAsync<List<MessageDto>>().Result!
             .Select(DtoMapper.ToMessage)
             .ToList();
-    }
-    
-    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId)
-    {
-        var res = _http.DeleteAsync(
-            $"chats/{chatId}/members/{userId}"
-        ).Result;
-
-        res.EnsureSuccessStatusCode();
-
-        return DtoMapper.ToSync(
-            res.Content.ReadFromJsonAsync<SyncChatResponseDto>().Result
-        );
-    }
-    
-    public List<Message> GetMessages(Guid chatId, long? fromMessageNumber = null, int? limit = null, long? clientVersion = null)
-    {
-        var url = $"chats/{chatId}/messages?";
-
-        if (fromMessageNumber != null)
-            url += $"fromMessageNumber={fromMessageNumber}&";
-
-        if (limit != null)
-            url += $"limit={limit}&";
-
-        if (clientVersion != null)
-            url += $"clientVersion={clientVersion}";
-
-        var res = _http.GetAsync(url).Result;
-        res.EnsureSuccessStatusCode();
-
-        return res.Content.ReadFromJsonAsync<List<MessageDto>>().Result
-            .Select(DtoMapper.ToMessage)
-            .ToList();
-    }
-    
-    //добавила
-    public User GetUserByName(string uniqueName)
-    {
-        var res = _http.GetAsync($"users/{uniqueName}").Result;
-        res.EnsureSuccessStatusCode();
-
-        return DtoMapper.ToUser(
-            res.Content.ReadFromJsonAsync<UserDto>().Result
-        );
-    }
-    
-    public CurrentUser UpdateMeDisplayName(string displayName)
-    {
-        var res = _http.PatchAsJsonAsync(
-            "users/me",
-            new
-            {
-                newDisplayedName = displayName
-            }
-        ).Result;
-
-        res.EnsureSuccessStatusCode();
-
-        return DtoMapper.ToCurrentUser(
-            res.Content.ReadFromJsonAsync<CurrentUserDto>().Result
-        );
-    }
-    
-    //поправть хз как на сервере
-    public User UpdateContactName(Guid id, string contactName)
-    {
-        var res = _http.PatchAsJsonAsync(
-            $"users/me/contacts/{id}",
-            new
-            {
-                newContactName = contactName
-            }
-        ).Result;
-
-        res.EnsureSuccessStatusCode();
-
-        return DtoMapper.ToUser(
-            res.Content.ReadFromJsonAsync<UserDto>().Result
-        );
     }
 }
-

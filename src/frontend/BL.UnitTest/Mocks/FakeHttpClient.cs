@@ -17,14 +17,9 @@ public class FakeHttpClient : IHttpClient
 
     // ================= AUTH =================
 
-    public HttpResponseMessage Register(string uniqueName, string password, string email, string displayName)
+    public void Register(string uniqueName, string password, string email, string displayName)
     {
-        // проверка дубля (как сервер)
-        if (_users.Values.Any(u => u.UniqueName == uniqueName))
-        {
-            return new HttpResponseMessage(HttpStatusCode.Conflict);
-        }
-
+        
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -33,8 +28,7 @@ public class FakeHttpClient : IHttpClient
         };
 
         _users[user.Id] = user;
-
-        return new HttpResponseMessage(HttpStatusCode.Created);
+        
     }
 
     public string Login(string uniqueName, string password)

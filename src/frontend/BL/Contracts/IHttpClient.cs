@@ -5,7 +5,7 @@ namespace BL.Contracts;
 public interface IHttpClient
 {
     // AUTH
-    HttpResponseMessage Register(string uniqueName, string password, string email, string displayedName);
+    void Register(string uniqueName, string password, string email, string displayedName);
     string Login(string uniqueName, string password);
     public User GetMe();
     User GetUserByName(string uniqueName);
