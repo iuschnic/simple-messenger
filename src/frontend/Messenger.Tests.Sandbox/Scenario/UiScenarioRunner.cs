@@ -11,12 +11,12 @@ namespace Messenger.Tests.Sandbox.Scenario;
 public class UiScenario
 {
 
-    private readonly MessengerService _bl;
+    private readonly IMessengerService _bl;
     private readonly IHttpClient _http;
     private readonly RepositoryHub _db;
     private CurrentUser currentUser;
 
-    public UiScenario(MessengerService bl, IHttpClient http, RepositoryHub db)
+    public UiScenario(IMessengerService bl, IHttpClient http, RepositoryHub db)
     {
         _bl = bl;
         _http = http;

@@ -31,4 +31,7 @@ public interface IMessengerService
     MessengerEvents Events { get; }
     public CurrentUser GetCurrentUser();
     public void UpdateLastReadMessageNum(Guid chatId, Guid userId);
+    public User GetUserByNameWithServer(string uniqueName);
+    public List<User> FindUsersWithContactName();
+
 }

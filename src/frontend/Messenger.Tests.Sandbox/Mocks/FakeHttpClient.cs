@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using BL.Contracts;
 using BL.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Messenger.Tests.Sandbox.Mocks;
 
@@ -13,6 +14,9 @@ public class FakeHttpClient : IHttpClient
 
     private ulong _msgCounter = 1;
     private ulong _version = 1;
+    
+    private readonly HttpClient _http;
+    private string? _token;
     
 
     // ================= AUTH =================

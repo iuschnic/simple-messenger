@@ -7,6 +7,7 @@ using BL.Models;
 using Http.Dto;
 using Http.Mapping;
 using BL.Exceptions;
+using Microsoft.Extensions.Configuration;
 
 namespace Http;
 
@@ -15,9 +16,13 @@ public class HttpClientImpl : IHttpClient
     private readonly HttpClient _http;
     private string? _token;
 
-    public HttpClientImpl(HttpClient http, string baseUrl)
+    public HttpClientImpl(HttpClient http, IConfiguration config)
     {
         _http = http;
+
+        var baseUrl = config["Backend:ApiBaseUrl"]
+                      ?? throw new Exception("ApiBaseUrl not configured");
+
         _http.BaseAddress = new Uri(baseUrl);
     }
 
