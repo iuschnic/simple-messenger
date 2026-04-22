@@ -28,11 +28,11 @@ public class HttpClientImpl : IHttpClient
 
     // ================= SAFE SEND =================
 
-    private HttpResponseMessage Send(Func<HttpResponseMessage> action)
+    private async Task<HttpResponseMessage> Send(Func<Task<HttpResponseMessage>> action)
     {
         try
         {
-            return action();
+            return await action();
         }
         catch (HttpRequestException ex)
         {
@@ -46,12 +46,12 @@ public class HttpClientImpl : IHttpClient
 
     // ================= ERROR HANDLER =================
 
-    private void HandleErrors(HttpResponseMessage res)
+    private async Task HandleErrors(HttpResponseMessage res)
     {
         if (res.IsSuccessStatusCode)
             return;
 
-        var raw = res.Content.ReadAsStringAsync().Result;
+        var raw = await res.Content.ReadAsStringAsync();
         string message = raw;
 
         try
@@ -62,7 +62,6 @@ public class HttpClientImpl : IHttpClient
         }
         catch
         {
-            // ignore, leave raw
         }
 
         switch (res.StatusCode)
@@ -90,11 +89,11 @@ public class HttpClientImpl : IHttpClient
         }
     }
 
-    private T Read<T>(HttpResponseMessage res)
+    private async Task<T> Read<T>(HttpResponseMessage res)
     {
         try
         {
-            var result = res.Content.ReadFromJsonAsync<T>().Result;
+            var result = await res.Content.ReadFromJsonAsync<T>();
 
             if (result == null)
                 throw new ApiException(0, "Empty response from server");
@@ -109,27 +108,27 @@ public class HttpClientImpl : IHttpClient
 
     // ================= AUTH =================
 
-    public void Register(string uniqueName, string password, string email, string displayName)
+    public async Task Register(string uniqueName, string password, string email, string displayName)
     {
-        var res = Send(() => _http.PostAsJsonAsync("auth/register", new
+        var res = await Send(() => _http.PostAsJsonAsync("auth/register", new
         {
             uniqueName,
             password,
             email,
             displayedName = displayName
-        }).Result);
+        }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
     }
 
-    public string Login(string uniqueName, string password)
+    public async Task<string> Login(string uniqueName, string password)
     {
-        var res = Send(() => _http.PostAsJsonAsync("auth/login",
-            new { uniqueName, password }).Result);
+        var res = await Send(() => _http.PostAsJsonAsync("auth/login",
+            new { uniqueName, password }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        var dto = Read<LoginResponseDto>(res);
+        var dto = await Read<LoginResponseDto>(res);
 
         _token = dto.Token;
 
@@ -139,29 +138,29 @@ public class HttpClientImpl : IHttpClient
         return _token!;
     }
 
-    public User GetMe()
+    public async Task<User> GetMe()
     {
-        var res = Send(() => _http.GetAsync("users/me").Result);
+        var res = await Send(() => _http.GetAsync("users/me"));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToUser(Read<UserDto>(res));
+        return DtoMapper.ToUser(await Read<UserDto>(res));
     }
 
     // ================= USERS =================
 
-    public User GetUser(Guid id)
+    public async Task<User> GetUser(Guid id)
     {
-        var res = Send(() => _http.GetAsync($"users/{id}").Result);
+        var res = await Send(() => _http.GetAsync($"users/{id}"));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToUser(Read<UserDto>(res));
+        return DtoMapper.ToUser(await Read<UserDto>(res));
     }
 
-    public User GetUserByName(string uniqueName)
+    public async Task<User> GetUserByName(string uniqueName)
     {
-        var users = SearchUsers(uniqueName, 1);
+        var users = await SearchUsers(uniqueName, 1);
 
         if (!users.Any())
             throw new NotFoundException("User not found");
@@ -169,160 +168,160 @@ public class HttpClientImpl : IHttpClient
         return users.First();
     }
 
-    public List<User> SearchUsers(string substr, int maxUsers)
+    public async Task<List<User>> SearchUsers(string substr, int maxUsers)
     {
-        var res = Send(() => _http.GetAsync($"users?substr={substr}&maxUsers={maxUsers}").Result);
+        var res = await Send(() => _http.GetAsync($"users?substr={substr}&maxUsers={maxUsers}"));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return Read<List<UserDto>>(res)
-            .Select(DtoMapper.ToUser)
-            .ToList();
+        var list = await Read<List<UserDto>>(res);
+
+        return list.Select(DtoMapper.ToUser).ToList();
     }
 
-    public CurrentUser UpdateMeDisplayName(string displayName)
+    public async Task<CurrentUser> UpdateMeDisplayName(string displayName)
     {
-        var res = Send(() => _http.PatchAsJsonAsync("users/me",
-            new { newDisplayedName = displayName }).Result);
+        var res = await Send(() => _http.PatchAsJsonAsync("users/me",
+            new { newDisplayedName = displayName }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToCurrentUser(Read<CurrentUserDto>(res));
+        return DtoMapper.ToCurrentUser(await Read<CurrentUserDto>(res));
     }
 
-    public User UpdateContactName(Guid id, string contactName)
+    public async Task<User> UpdateContactName(Guid id, string contactName)
     {
-        var res = Send(() => _http.PatchAsJsonAsync(
+        var res = await Send(() => _http.PatchAsJsonAsync(
             $"users/me/contacts/{id}",
             new { newContactName = contactName }
-        ).Result);
+        ));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToUser(Read<UserDto>(res));
+        return DtoMapper.ToUser(await Read<UserDto>(res));
     }
 
     // ================= CHATS =================
 
-    public List<Chat> GetChats()
+    public async Task<List<Chat>> GetChats()
     {
-        var res = Send(() => _http.GetAsync("chats").Result);
+        var res = await Send(() => _http.GetAsync("chats"));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return Read<List<ChatDto>>(res)
-            .Select(DtoMapper.ToChat)
-            .ToList();
+        var list = await Read<List<ChatDto>>(res);
+
+        return list.Select(DtoMapper.ToChat).ToList();
     }
 
-    public Chat CreateGroupChat(string name, List<Guid> memberIds)
+    public async Task<Chat> CreateGroupChat(string name, List<Guid> memberIds)
     {
-        var res = Send(() => _http.PostAsJsonAsync("chats", new
+        var res = await Send(() => _http.PostAsJsonAsync("chats", new
         {
             chatType = 0,
             chatName = name,
             memberIds
-        }).Result);
+        }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        var dto = Read<SyncChatResponseDto>(res);
+        await Read<SyncChatResponseDto>(res);
 
-        return GetChats().First(c => c.Name == name);
+        return (await GetChats()).First(c => c.Name == name);
     }
 
-    public Chat CreatePrivateChat(Guid withUserId)
+    public async Task<Chat> CreatePrivateChat(Guid withUserId)
     {
-        var res = Send(() => _http.PostAsJsonAsync("chats", new
+        var res = await Send(() => _http.PostAsJsonAsync("chats", new
         {
             chatType = 1,
             withUserId
-        }).Result);
+        }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        var dto = Read<SyncChatResponseDto>(res);
+        await Read<SyncChatResponseDto>(res);
 
-        return GetChats().First();
+        return (await GetChats()).First();
     }
 
-    public Chat GetChat(Guid chatId)
+    public async Task<Chat> GetChat(Guid chatId)
     {
-        var res = Send(() => _http.GetAsync($"chats/{chatId}").Result);
+        var res = await Send(() => _http.GetAsync($"chats/{chatId}"));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToChat(Read<ChatDto>(res));
+        return DtoMapper.ToChat(await Read<ChatDto>(res));
     }
 
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
+    public async Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats)
     {
-        var res = Send(() => _http.PostAsJsonAsync("chats/sync", new
+        var res = await Send(() => _http.PostAsJsonAsync("chats/sync", new
         {
             chats = chats.Select(c => new
             {
                 chatId = c.chatId,
                 clientVersion = c.version
             })
-        }).Result);
+        }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        var dto = Read<SyncChatsResponseDto>(res);
+        var dto = await Read<SyncChatsResponseDto>(res);
 
         return dto.SyncChats.Select(DtoMapper.ToSync).ToList();
     }
 
-    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId)
+    public async Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId)
     {
-        var res = Send(() => _http.DeleteAsync($"chats/{chatId}/members/{userId}").Result);
+        var res = await Send(() => _http.DeleteAsync($"chats/{chatId}/members/{userId}"));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToSync(Read<SyncChatResponseDto>(res));
+        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
     }
 
     // ================= MESSAGES =================
 
-    public SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion)
+    public async Task<SyncChatResult> SendMessage(Guid chatId, string text, ulong clientVersion)
     {
-        var res = Send(() => _http.PostAsJsonAsync(
+        var res = await Send(() => _http.PostAsJsonAsync(
             $"chats/{chatId}/messages",
             new
             {
                 messageType = 0,
                 clientVersion,
                 text
-            }).Result);
+            }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToSync(Read<SyncChatResponseDto>(res));
+        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
     }
 
-    public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
+    public async Task<SyncChatResult> EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
     {
-        var res = Send(() => _http.PatchAsJsonAsync(
+        var res = await Send(() => _http.PatchAsJsonAsync(
             $"chats/{chatId}/messages/{messageNum}",
-            new { newText, clientVersion }).Result);
+            new { newText, clientVersion }));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToSync(Read<SyncChatResponseDto>(res));
+        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
     }
 
-    public SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
+    public async Task<SyncChatResult> DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
     {
-        var res = Send(() => _http.DeleteAsync(
+        var res = await Send(() => _http.DeleteAsync(
             $"chats/{chatId}/messages/{messageNum}?clientVersion={clientVersion}"
-        ).Result);
+        ));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return DtoMapper.ToSync(Read<SyncChatResponseDto>(res));
+        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
     }
 
-    public List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
+    public async Task<List<Message>> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
     {
         var url = $"chats/{chatId}/messages?";
 
@@ -332,12 +331,12 @@ public class HttpClientImpl : IHttpClient
         if (limit != null)
             url += $"limit={limit}";
 
-        var res = Send(() => _http.GetAsync(url).Result);
+        var res = await Send(() => _http.GetAsync(url));
 
-        HandleErrors(res);
+        await HandleErrors(res);
 
-        return Read<List<MessageDto>>(res)
-            .Select(DtoMapper.ToMessage)
-            .ToList();
+        var list = await Read<List<MessageDto>>(res);
+
+        return list.Select(DtoMapper.ToMessage).ToList();
     }
 }

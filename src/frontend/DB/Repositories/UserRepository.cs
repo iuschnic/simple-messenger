@@ -15,10 +15,10 @@ public class UserRepository : IUserRepository
         _factory = factory;
     }
 
-    public User Find(Guid id)
+    public async Task<User> Find(Guid id)
     {
         using var db = _factory.Create();
-        return db.QueryFirstOrDefault<User>(
+        return await db.QueryFirstOrDefaultAsync<User>(
             "SELECT * FROM Users WHERE Id = @id",
             new { id });
     }

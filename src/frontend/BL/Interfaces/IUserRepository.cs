@@ -4,7 +4,7 @@ namespace BL.Interfaces;
 
 public interface IUserRepository
 {
-    User Find(Guid id);
+    Task<User> Find(Guid id);
     User FindByUniqueName(string uniqueName);
     public User? GetByUniqueName(string uniqueName);
 

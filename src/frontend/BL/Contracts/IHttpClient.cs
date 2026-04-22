@@ -4,33 +4,33 @@ namespace BL.Contracts;
 
 public interface IHttpClient
 {
-    // AUTH
-    void Register(string uniqueName, string password, string email, string displayedName);
-    string Login(string uniqueName, string password);
-    public User GetMe();
-    User GetUserByName(string uniqueName);
-    public CurrentUser UpdateMeDisplayName(string displayName);
-    public User UpdateContactName(Guid id, string contactName);
+    // ================= AUTH =================
+
+    Task Register(string uniqueName, string password, string email, string displayedName);
+    Task<string> Login(string uniqueName, string password);
+    Task<User> GetMe();
+    Task<User> GetUserByName(string uniqueName);
+    Task<CurrentUser> UpdateMeDisplayName(string displayName);
+    Task<User> UpdateContactName(Guid id, string contactName);
 
     // ================= USERS =================
-    User GetUser(Guid id);
-    List<User> SearchUsers(string substr, int maxUsers);
+
+    Task<User> GetUser(Guid id);
+    Task<List<User>> SearchUsers(string substr, int maxUsers);
 
     // ================= CHATS =================
-    List<Chat> GetChats();
-    public Chat CreateGroupChat(string name, List<Guid> memberIds);
-    Chat CreatePrivateChat(Guid withUserId);
-    public Chat GetChat(Guid chatId);
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats);
 
-    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId);
+    Task<List<Chat>> GetChats();
+    Task<Chat> CreateGroupChat(string name, List<Guid> memberIds);
+    Task<Chat> CreatePrivateChat(Guid withUserId);
+    Task<Chat> GetChat(Guid chatId);
+    Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats);
+    Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId);
 
     // ================= MESSAGES =================
-    SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion);
 
-    SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion);
-
-    SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion);
-
-    List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null);
+    Task<SyncChatResult> SendMessage(Guid chatId, string text, ulong clientVersion);
+    Task<SyncChatResult> EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion);
+    Task<SyncChatResult> DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion);
+    Task<List<Message>> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null);
 }
