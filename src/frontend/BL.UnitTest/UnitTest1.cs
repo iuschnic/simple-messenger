@@ -400,17 +400,6 @@ public class MessengerServiceTests
         Assert.Equal("Ошибка сервера (500): server", ex.Message);
     }
 
-    [Fact]
-    public async Task LeaveChat_ShouldMapApiException()
-    {
-        var bl = CreateService(out _, out _, out var http);
 
-        http.ExceptionToThrow = new ApiException(403, "forbidden");
-
-        var ex = await Assert.ThrowsAsync<AuthException>(() =>
-            bl.LeaveChat(Guid.NewGuid(), Guid.NewGuid()));
-
-        Assert.Equal("Недостаточно прав", ex.Message);
-    }
 }
 

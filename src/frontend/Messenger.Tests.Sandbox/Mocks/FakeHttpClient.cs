@@ -172,7 +172,7 @@ public class FakeHttpClient : IHttpClient
         return Task.FromResult(result);
     }
 
-    public Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId)
+    public Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong version)
     {
         return Task.FromResult(new SyncChatResult
         {

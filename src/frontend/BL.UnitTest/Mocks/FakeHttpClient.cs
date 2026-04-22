@@ -163,7 +163,7 @@ public class FakeHttpClient : IHttpClient
             return newChat;
         });
 
-    public Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId)
+    public Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong version)
         => Wrap(() => new SyncChatResult
         {
             ChatId = chatId,

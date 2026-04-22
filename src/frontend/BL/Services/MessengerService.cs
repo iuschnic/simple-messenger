@@ -36,6 +36,12 @@ public class MessengerService : IMessengerService
         {
             return await action();
         }
+        catch (HubConnectionExeption ex)
+        {
+            throw new HubConnectionExeption(
+                $"Ошибка соединения с хабом: {ex.Message}"
+            );
+        }
         catch (ApiException ex)
         {
             throw ExceptionMapper.Map(ex);
@@ -55,6 +61,12 @@ public class MessengerService : IMessengerService
         try
         {
             await action();
+        }
+        catch (HubConnectionExeption ex)
+        {
+            throw new HubConnectionExeption(
+                $"Ошибка соединения с хабом: {ex.Message}"
+            );
         }
         catch (ApiException ex)
         {

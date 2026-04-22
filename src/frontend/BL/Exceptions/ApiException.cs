@@ -66,7 +66,12 @@ public class NotFoundAppException : AppException
     public NotFoundAppException(string message) : base(message) { }
 }
 
-public class DatabaseException : AppException
+public class DatabaseException  :  Exception
 {
     public DatabaseException(string message) : base(message) { }
+}
+
+public class HubConnectionExeption :  Exception
+{
+    public HubConnectionExeption(string message) : base(message) { }
 }
