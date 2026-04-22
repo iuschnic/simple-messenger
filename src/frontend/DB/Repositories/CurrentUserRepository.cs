@@ -3,7 +3,6 @@ using Dapper;
 using DB.Database;
 using BL.Models;
 
-
 namespace DB.Repositories;
 
 public class CurrentUserRepository : ICurrentUserRepository
@@ -15,11 +14,11 @@ public class CurrentUserRepository : ICurrentUserRepository
         _factory = factory;
     }
 
-    public CurrentUser Save(CurrentUser user)
+    public async Task<CurrentUser?> Save(CurrentUser user)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             DELETE FROM CurrentUser;
 
             INSERT INTO CurrentUser (Id, UniqueName, Email, PasswordHash, DisplayedName)
@@ -30,23 +29,25 @@ public class CurrentUserRepository : ICurrentUserRepository
             user.UniqueName,
             user.Email,
             user.PasswordHash,
-            user. DisplayedName
+            user.DisplayedName
         });
-        return db.QueryFirstOrDefault<CurrentUser>(
+
+        return await db.QueryFirstOrDefaultAsync<CurrentUser>(
             "SELECT * FROM CurrentUser LIMIT 1");
     }
 
-    public CurrentUser? Get()
+    public async Task<CurrentUser?> Get()
     {
         using var db = _factory.Create();
 
-        return db.QueryFirstOrDefault<CurrentUser>(
+        return await db.QueryFirstOrDefaultAsync<CurrentUser>(
             "SELECT * FROM CurrentUser LIMIT 1");
     }
 
-    public void Clear()
+    public async Task Clear()
     {
         using var db = _factory.Create();
-        db.Execute("DELETE FROM CurrentUser");
+
+        await db.ExecuteAsync("DELETE FROM CurrentUser");
     }
 }

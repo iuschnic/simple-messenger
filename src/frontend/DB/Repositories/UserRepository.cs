@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using DB.Database;
 using BL.Models;
-
 using BL.Interfaces;
 
 namespace DB.Repositories;
@@ -15,52 +14,58 @@ public class UserRepository : IUserRepository
         _factory = factory;
     }
 
-    public async Task<User> Find(Guid id)
+    public async Task<User?> Find(Guid id)
     {
         using var db = _factory.Create();
+
         return await db.QueryFirstOrDefaultAsync<User>(
             "SELECT * FROM Users WHERE Id = @id",
             new { id });
     }
 
-    public User? FindByUniqueName(string uniqueName)
+    public async Task<User?> FindByUniqueName(string uniqueName)
     {
         using var db = _factory.Create();
 
-        return db.QueryFirstOrDefault<User>(
+        return await db.QueryFirstOrDefaultAsync<User>(
             "SELECT * FROM Users WHERE UniqueName = @uniqueName",
             new { uniqueName }
         );
     }
 
-    public User? GetByUniqueName(string uniqueName)
+    public async Task<User?> GetByUniqueName(string uniqueName)
     {
         using var db = _factory.Create();
 
-        return db.QueryFirstOrDefault<User>(
+        return await db.QueryFirstOrDefaultAsync<User>(
             "SELECT * FROM Users WHERE UniqueName = @uniqueName",
             new { uniqueName });
     }
 
-    public List<User> FindContacts(Guid ownerId)
+    public async Task<List<User>> FindContacts(Guid ownerId)
     {
         using var db = _factory.Create();
 
-        return db.Query<User>(@"
+        var result = await db.QueryAsync<User>(@"
             SELECT u.*
             FROM Users u
             JOIN Contacts c ON c.ContactId = u.Id
             WHERE c.OwnerId = @ownerId
-        ", new { ownerId }).ToList();
+        ", new { ownerId });
+
+        return result.ToList();
     }
 
-    public User SaveContact(Guid ownerId, string contactUniqueName)
+    public async Task<User?> SaveContact(Guid ownerId, string contactUniqueName)
     {
         using var db = _factory.Create();
 
-        var user = FindByUniqueName(contactUniqueName);
+        var user = await FindByUniqueName(contactUniqueName);
 
-        db.Execute(@"
+        if (user == null)
+            return null;
+
+        await db.ExecuteAsync(@"
             INSERT OR IGNORE INTO Contacts (OwnerId, ContactId)
             VALUES (@ownerId, @contactId)
         ", new { ownerId, contactId = user.Id });
@@ -68,11 +73,11 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public User Save(User user)
+    public async Task<User> Save(User user)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             INSERT OR REPLACE INTO Users (Id, UniqueName, DisplayName, ContactName)
             VALUES (@Id, @UniqueName, @DisplayName, @ContactName)
         ", user);
@@ -80,32 +85,37 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public User UpdateContactName(Guid userId, string contact)
+    public async Task<User?> UpdateContactName(Guid userId, string contact)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             UPDATE Users SET ContactName = @contact WHERE Id = @userId
         ", new { userId, contact });
 
-        return Find(userId);
+        return await Find(userId);
     }
 
-    public void Delete(Guid id)
-    {
-        using var db = _factory.Create();
-        db.Execute("DELETE FROM Users WHERE Id = @id", new { id });
-    }
-    
-    public List<User> FindUsersWithContactName()
+    public async Task Delete(Guid id)
     {
         using var db = _factory.Create();
 
-        return db.Query<User>(@"
-        SELECT *
-        FROM Users
-        WHERE ContactName IS NOT NULL
-          AND ContactName != ''
-    ").ToList();
+        await db.ExecuteAsync(
+            "DELETE FROM Users WHERE Id = @id",
+            new { id });
+    }
+
+    public async Task<List<User>> FindUsersWithContactName()
+    {
+        using var db = _factory.Create();
+
+        var result = await db.QueryAsync<User>(@"
+            SELECT *
+            FROM Users
+            WHERE ContactName IS NOT NULL
+              AND ContactName != ''
+        ");
+
+        return result.ToList();
     }
 }

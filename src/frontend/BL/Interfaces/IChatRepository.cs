@@ -4,19 +4,20 @@ namespace BL.Interfaces;
 
 public interface IChatRepository
 {
-    Chat Find(Guid id);
-    public List<Chat> GetAllChats();
+    Task<Chat?> Find(Guid id);
+    Task<List<Chat>> GetAllChats();
 
-    List<User> FindChatUsers(Guid chatId);
+    Task<List<User>> FindChatUsers(Guid chatId);
 
-    void AddUserToChat(Guid chatId, Guid userId);
-    void RemoveUserFromChat(Guid chatId, Guid userId);
+    Task AddUserToChat(Guid chatId, Guid userId);
+    Task RemoveUserFromChat(Guid chatId, Guid userId);
 
-    Chat Save(Chat chat);
-    Chat UpdateName(Guid chatId, string name);
-    Chat UpdateVersion(Guid chatId, long version);
+    Task<Chat> Save(Chat chat);
+    Task<Chat?> UpdateName(Guid chatId, string name);
+    Task<Chat?> UpdateVersion(Guid chatId, long version);
 
-    void Delete(Guid id);
-    public Chat UpdateLastMessageNum(Guid chatId, ulong lastMessageNum);
-    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum);
+    Task Delete(Guid id);
+
+    Task<Chat?> UpdateLastMessageNum(Guid chatId, ulong lastMessageNum);
+    Task UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum);
 }

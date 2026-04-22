@@ -3,7 +3,6 @@ using BL.Models;
 using Dapper;
 using DB.Database;
 
-
 namespace DB.Repositories;
 
 public class AuthRepository : IAuthRepository
@@ -15,7 +14,7 @@ public class AuthRepository : IAuthRepository
         _factory = factory;
     }
 
-    public User Register(string uniqueName, string passwordHash, string email)
+    public async Task<User> Register(string uniqueName, string passwordHash, string email)
     {
         using var db = _factory.Create();
 
@@ -26,7 +25,7 @@ public class AuthRepository : IAuthRepository
             DisplayName = uniqueName
         };
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             INSERT INTO Users (Id, UniqueName, DisplayName)
             VALUES (@Id, @UniqueName, @DisplayName)
         ", user);
@@ -34,20 +33,20 @@ public class AuthRepository : IAuthRepository
         return user;
     }
 
-    public User Authenticate(string uniqueName, string passwordHash)
+    public async Task<User?> Authenticate(string uniqueName, string passwordHash)
     {
         using var db = _factory.Create();
 
-        return db.QueryFirstOrDefault<User>(
+        return await db.QueryFirstOrDefaultAsync<User>(
             "SELECT * FROM Users WHERE UniqueName = @uniqueName",
             new { uniqueName });
     }
 
-    public User Get(Guid id)
+    public async Task<User?> Get(Guid id)
     {
         using var db = _factory.Create();
 
-        return db.QueryFirstOrDefault<User>(
+        return await db.QueryFirstOrDefaultAsync<User>(
             "SELECT * FROM Users WHERE Id = @id",
             new { id });
     }

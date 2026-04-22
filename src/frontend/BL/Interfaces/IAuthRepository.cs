@@ -4,7 +4,7 @@ namespace BL.Interfaces;
 
 public interface IAuthRepository
 {
-    User Register(string uniqueName, string passwordHash, string email);
-    User Authenticate(string uniqueName, string passwordHash);
-    User Get(Guid id);
+    Task<User> Register(string uniqueName, string passwordHash, string email);
+    Task<User?> Authenticate(string uniqueName, string passwordHash);
+    Task<User?> Get(Guid id);
 }

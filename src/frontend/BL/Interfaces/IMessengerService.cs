@@ -5,33 +5,32 @@ namespace BL.Interfaces;
 
 public interface IMessengerService
 {
-    CurrentUser RegisterUser(string uniqueName, string password, string email, string displayedName);
-    User Login(string u, string p);
+    Task<CurrentUser> RegisterUser(string uniqueName, string password, string email, string displayedName);
+    Task<User> Login(string u, string p);
 
-    User GetUserById(Guid userId);
-    public User UpdateContactName(Guid id, string contact);
-    
-    public User FindUsersByUniqueName(string uniqueName);
+    Task<User?> GetUserById(Guid userId);
+    Task<User> UpdateContactName(Guid id, string contact);
 
-    List<Chat> GetAllChats();
-    public Chat CreatePrivateChat(Guid creatorId, List<Guid> participants);
+    Task<User?> FindUsersByUniqueName(string uniqueName);
+    Task<User> GetUserByNameWithServer(string uniqueName);
 
-    List<User> GetChatParticipants(Guid chatId);
-    void AddUserToChat(Guid chatId, string uniqueName);
-    void LeaveChat(Guid chatId, Guid userId);
-    public Chat CreateGroupChat(string name, Guid creatorId, List<Guid> participants);
+    Task<List<User>> FindUsersWithContactName();
 
-    List<Message> GetChatMessages(Guid chatId);
-    public CurrentUser UpdateMeDisplayName(Guid id, string displayName);
+    Task<List<Chat>> GetAllChats();
+    Task<Chat> CreatePrivateChat(Guid creatorId, List<Guid> participants);
+    Task<Chat> CreateGroupChat(string name, Guid creatorId, List<Guid> participants);
 
-    Message SendMessage(Guid chatId, Guid senderId, string text);
-    // Message EditMessage(long messageId, string newText);
-    // void DeleteMessage(long messageId);
+    Task<List<User>> GetChatParticipants(Guid chatId);
+    Task AddUserToChat(Guid chatId, string uniqueName);
+    Task LeaveChat(Guid chatId, Guid userId);
+
+    Task<List<Message>> GetChatMessages(Guid chatId);
+    Task<Message> SendMessage(Guid chatId, Guid senderId, string text);
+
+    Task<CurrentUser> UpdateMeDisplayName(Guid id, string displayName);
+    Task<CurrentUser?> GetCurrentUser();
+
+    Task UpdateLastReadMessageNum(Guid chatId, Guid userId);
 
     MessengerEvents Events { get; }
-    public CurrentUser GetCurrentUser();
-    public void UpdateLastReadMessageNum(Guid chatId, Guid userId);
-    public User GetUserByNameWithServer(string uniqueName);
-    public List<User> FindUsersWithContactName();
-
 }

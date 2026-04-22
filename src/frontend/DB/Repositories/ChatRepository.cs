@@ -14,61 +14,66 @@ public class ChatRepository : IChatRepository
         _factory = factory;
     }
 
-    public Chat Find(Guid id)
+    public async Task<Chat?> Find(Guid id)
     {
         using var db = _factory.Create();
 
-        return db.QueryFirstOrDefault<Chat>(
+        return await db.QueryFirstOrDefaultAsync<Chat>(
             "SELECT * FROM Chats WHERE Id = @id",
             new { id });
     }
 
-    public List<Chat> GetAllChats()
+    public async Task<List<Chat>> GetAllChats()
     {
         using var db = _factory.Create();
-        return db.Query<Chat>(@"
-        SELECT *
-        FROM Chats
-    ").ToList();
+
+        var result = await db.QueryAsync<Chat>(@"
+            SELECT *
+            FROM Chats
+        ");
+
+        return result.ToList();
     }
 
-    public List<User> FindChatUsers(Guid chatId)
+    public async Task<List<User>> FindChatUsers(Guid chatId)
     {
         using var db = _factory.Create();
 
-        return db.Query<User>(@"
+        var result = await db.QueryAsync<User>(@"
             SELECT u.*
             FROM Users u
             JOIN ChatsUsers cu ON cu.UserId = u.Id
             WHERE cu.ChatId = @chatId
-        ", new { chatId }).ToList();
+        ", new { chatId });
+
+        return result.ToList();
     }
 
-    public void AddUserToChat(Guid chatId, Guid userId)
+    public async Task AddUserToChat(Guid chatId, Guid userId)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             INSERT OR IGNORE INTO ChatsUsers (ChatId, UserId, LastReadMessageNum)
             VALUES (@chatId, @userId, 0)
         ", new { chatId, userId });
     }
 
-    public void RemoveUserFromChat(Guid chatId, Guid userId)
+    public async Task RemoveUserFromChat(Guid chatId, Guid userId)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             DELETE FROM ChatsUsers
             WHERE ChatId = @chatId AND UserId = @userId
         ", new { chatId, userId });
     }
 
-    public Chat Save(Chat chat)
+    public async Task<Chat> Save(Chat chat)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             INSERT OR REPLACE INTO Chats
             (Id, OwnerId, Name, CreatedAt, Version, Type, LastMessageNum)
             VALUES
@@ -78,57 +83,58 @@ public class ChatRepository : IChatRepository
         return chat;
     }
 
-    public Chat UpdateName(Guid chatId, string name)
+    public async Task<Chat?> UpdateName(Guid chatId, string name)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             UPDATE Chats SET Name = @name WHERE Id = @chatId
         ", new { chatId, name });
 
-        return Find(chatId);
+        return await Find(chatId);
     }
 
-    public Chat UpdateVersion(Guid chatId, long version)
+    public async Task<Chat?> UpdateVersion(Guid chatId, long version)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
+        await db.ExecuteAsync(@"
             UPDATE Chats SET Version = @version WHERE Id = @chatId
         ", new { chatId, version });
 
-        return Find(chatId);
+        return await Find(chatId);
     }
 
-    public void Delete(Guid id)
-    {
-        using var db = _factory.Create();
-        db.Execute("DELETE FROM Chats WHERE Id = @id", new { id });
-    }
-    
-    public Chat UpdateLastMessageNum(Guid chatId, ulong lastMessageNum)
+    public async Task Delete(Guid id)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
-        UPDATE Chats 
-        SET LastMessageNum = @lastMessageNum 
-        WHERE Id = @chatId
-    ", new { chatId, lastMessageNum });
-
-        return Find(chatId);
+        await db.ExecuteAsync(
+            "DELETE FROM Chats WHERE Id = @id",
+            new { id });
     }
-    
-    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum)
+
+    public async Task<Chat?> UpdateLastMessageNum(Guid chatId, ulong lastMessageNum)
     {
         using var db = _factory.Create();
 
-        db.Execute(@"
-        UPDATE ChatsUsers
-        SET LastReadMessageNum = @lastReadMessageNum
-        WHERE ChatId = @chatId AND UserId = @userId
-    ", new { chatId, userId, lastReadMessageNum });
+        await db.ExecuteAsync(@"
+            UPDATE Chats 
+            SET LastMessageNum = @lastMessageNum 
+            WHERE Id = @chatId
+        ", new { chatId, lastMessageNum });
+
+        return await Find(chatId);
     }
-    
-    
+
+    public async Task UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum)
+    {
+        using var db = _factory.Create();
+
+        await db.ExecuteAsync(@"
+            UPDATE ChatsUsers
+            SET LastReadMessageNum = @lastReadMessageNum
+            WHERE ChatId = @chatId AND UserId = @userId
+        ", new { chatId, userId, lastReadMessageNum });
+    }
 }

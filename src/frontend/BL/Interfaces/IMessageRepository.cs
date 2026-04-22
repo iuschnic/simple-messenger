@@ -4,12 +4,12 @@ namespace BL.Interfaces;
 
 public interface IMessageRepository
 {
-    public Message Find(ulong id);
-    List<Message> FindChatMessages(Guid chatId);
+    Task<Message?> Find(ulong id);
+    Task<List<Message>> FindChatMessages(Guid chatId);
 
-    Message Save(Message message);
-    Message Edit(long id, DateTime editedAt, string newText);
+    Task<Message> Save(Message message);
+    Task<Message?> Edit(long id, DateTime editedAt, string newText);
 
-    void Delete(long id);
-    public long GetLastMessageNumber(Guid chatId);
+    Task Delete(long id);
+    Task<long> GetLastMessageNumber(Guid chatId);
 }

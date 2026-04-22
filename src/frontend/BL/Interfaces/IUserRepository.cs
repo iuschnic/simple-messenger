@@ -4,17 +4,17 @@ namespace BL.Interfaces;
 
 public interface IUserRepository
 {
-    Task<User> Find(Guid id);
-    User FindByUniqueName(string uniqueName);
-    public User? GetByUniqueName(string uniqueName);
+    Task<User?> Find(Guid id);
+    Task<User?> FindByUniqueName(string uniqueName);
+    Task<User?> GetByUniqueName(string uniqueName);
 
-    List<User> FindContacts(Guid ownerId);
+    Task<List<User>> FindContacts(Guid ownerId);
 
-    User Save(User user);
-    User SaveContact(Guid ownerId, string contactUniqueName);
+    Task<User> Save(User user);
+    Task<User?> SaveContact(Guid ownerId, string contactUniqueName);
 
-    public User UpdateContactName(Guid userId, string contact);
+    Task<User?> UpdateContactName(Guid userId, string contact);
 
-    void Delete(Guid id);
-    public List<User> FindUsersWithContactName();
+    Task Delete(Guid id);
+    Task<List<User>> FindUsersWithContactName();
 }
