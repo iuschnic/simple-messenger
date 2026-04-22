@@ -4,12 +4,11 @@ namespace BL.Contracts
 {
     public interface IRealtimeClient
     {
-        // События
-        event Action<Message> MessageReceived;
-        event Action<Message> MessageUpdated;
-        event Action<long> MessageDeleted;
-        event Action<Guid, Guid> UserLeftChat;  // Событие для выхода пользователя из чата
-        event Action<Chat> ChatCreated;   // Событие для создания нового чата с текущимс пользователем
+        event Func<Message, Task> MessageReceived;
+        event Func<Message, Task> MessageUpdated;
+        event Func<ulong, Task> MessageDeleted;
+        event Func<Guid, Guid, Task> UserLeftChat;  // Событие для выхода пользователя из чата
+        event Func<Chat, Task> ChatCreated;   // Событие для создания нового чата с текущимс пользователем
             
         public Task ConnectToHub(string token);
         // Методы

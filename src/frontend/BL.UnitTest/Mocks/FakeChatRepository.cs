@@ -16,26 +16,27 @@ public class FakeChatRepository : IChatRepository
             throw ExceptionToThrow;
     }
 
-    public Chat Find(Guid id)
+    public Task<Chat?> Find(Guid id)
     {
         MaybeThrow();
-        return _chats.TryGetValue(id, out var c) ? c : null;
+        _chats.TryGetValue(id, out var chat);
+        return Task.FromResult(chat);
     }
 
-    public List<Chat> GetAllChats()
+    public Task<List<Chat>> GetAllChats()
     {
         MaybeThrow();
-        return _chats.Values.ToList();
+        return Task.FromResult(_chats.Values.ToList());
     }
 
-    public Chat Save(Chat chat)
+    public Task<Chat> Save(Chat chat)
     {
         MaybeThrow();
         _chats[chat.Id] = chat;
-        return chat;
+        return Task.FromResult(chat);
     }
 
-    public void AddUserToChat(Guid chatId, Guid userId)
+    public Task AddUserToChat(Guid chatId, Guid userId)
     {
         MaybeThrow();
 
@@ -44,80 +45,88 @@ public class FakeChatRepository : IChatRepository
 
         if (!_chatUsers[chatId].Contains(userId))
             _chatUsers[chatId].Add(userId);
+
+        return Task.CompletedTask;
     }
 
-    public void RemoveUserFromChat(Guid chatId, Guid userId)
+    public Task RemoveUserFromChat(Guid chatId, Guid userId)
     {
         MaybeThrow();
 
         if (_chatUsers.ContainsKey(chatId))
             _chatUsers[chatId].Remove(userId);
+
+        return Task.CompletedTask;
     }
 
-    public List<User> FindChatUsers(Guid chatId)
+    public Task<List<User>> FindChatUsers(Guid chatId)
     {
         MaybeThrow();
 
         if (!_chatUsers.ContainsKey(chatId))
-            return new List<User>();
+            return Task.FromResult(new List<User>());
 
-        return _chatUsers[chatId]
+        var users = _chatUsers[chatId]
             .Select(id => new User { Id = id })
             .ToList();
+
+        return Task.FromResult(users);
     }
 
     // ================= EXTRA =================
 
-    public void Delete(Guid id)
+    public Task Delete(Guid id)
     {
         MaybeThrow();
 
         _chats.Remove(id);
         _chatUsers.Remove(id);
+
+        return Task.CompletedTask;
     }
 
-    public Chat UpdateName(Guid chatId, string name)
+    public Task<Chat?> UpdateName(Guid chatId, string name)
     {
         MaybeThrow();
 
         if (_chats.TryGetValue(chatId, out var chat))
         {
             chat.Name = name;
-            return chat;
+            return Task.FromResult<Chat?>(chat);
         }
 
-        return null;
+        return Task.FromResult<Chat?>(null);
     }
 
-    public Chat UpdateVersion(Guid chatId, long version)
+    public Task<Chat?> UpdateVersion(Guid chatId, long version)
     {
         MaybeThrow();
 
         if (_chats.TryGetValue(chatId, out var chat))
         {
             chat.Version = (ulong)version;
-            return chat;
+            return Task.FromResult<Chat?>(chat);
         }
 
-        return null;
+        return Task.FromResult<Chat?>(null);
     }
 
-    public Chat UpdateLastMessageNum(Guid chatId, ulong lastMessageNum)
+    public Task<Chat?> UpdateLastMessageNum(Guid chatId, ulong lastMessageNum)
     {
         MaybeThrow();
 
         if (_chats.TryGetValue(chatId, out var chat))
         {
             chat.LastMessageNum = lastMessageNum;
-            return chat;
+            return Task.FromResult<Chat?>(chat);
         }
 
-        return null;
+        return Task.FromResult<Chat?>(null);
     }
 
-    public void UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum)
+    public Task UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum)
     {
         MaybeThrow();
-        // можно оставить пустым
+        return Task.CompletedTask;
     }
 }

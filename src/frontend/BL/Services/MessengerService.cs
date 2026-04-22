@@ -59,7 +59,7 @@ public class MessengerService : IMessengerService
         }
     }
 
-    private async void OnMessageReceived(Message message)
+    private async Task OnMessageReceived(Message message)
     {
         try
         {
@@ -89,13 +89,13 @@ public class MessengerService : IMessengerService
         }
     }
 
-    private async void OnUserLeftChat(Guid chatId, Guid userId)
+    private async Task OnUserLeftChat(Guid chatId, Guid userId)
     {
         await _db.Chats.RemoveUserFromChat(chatId, userId);
         Events.RaiseUserLeftChat(chatId, userId);
     }
 
-    private async void OnChatCreated(Chat chat)
+    private async Task OnChatCreated(Chat chat)
     {
         await _db.Chats.Save(chat);
 

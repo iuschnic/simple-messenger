@@ -15,7 +15,7 @@ public class FakeAuthRepository : IAuthRepository
             throw ExceptionToThrow;
     }
 
-    public User Register(string uniqueName, string passwordHash, string email)
+    public async Task<User> Register(string uniqueName, string passwordHash, string email)
     {
         MaybeThrow();
 
@@ -27,21 +27,26 @@ public class FakeAuthRepository : IAuthRepository
         };
 
         _users[user.Id] = user;
-        return user;
+
+        return await Task.FromResult(user);
     }
 
-    public User Authenticate(string uniqueName, string passwordHash)
+    public async Task<User?> Authenticate(string uniqueName, string passwordHash)
     {
         MaybeThrow();
 
-        return _users.Values
+        var user = _users.Values
             .FirstOrDefault(u => u.UniqueName == uniqueName);
+
+        return await Task.FromResult(user);
     }
 
-    public User Get(Guid id)
+    public async Task<User?> Get(Guid id)
     {
         MaybeThrow();
 
-        return _users.TryGetValue(id, out var u) ? u : null;
+        _users.TryGetValue(id, out var user);
+
+        return await Task.FromResult(user);
     }
 }

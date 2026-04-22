@@ -14,23 +14,26 @@ public class FakeMessageRepository : IMessageRepository
             throw ExceptionToThrow;
     }
 
-    public Message Find(ulong id)
+    public Task<Message?> Find(ulong id)
     {
         MaybeThrow();
-        return _messages.TryGetValue(id, out var m) ? m : null;
+        _messages.TryGetValue(id, out var message);
+        return Task.FromResult(message);
     }
 
-    public List<Message> FindChatMessages(Guid chatId)
+    public Task<List<Message>> FindChatMessages(Guid chatId)
     {
         MaybeThrow();
 
-        return _messages.Values
+        var result = _messages.Values
             .Where(m => m.ChatId == chatId && !m.Deleted)
             .OrderBy(m => m.MessageNumber)
             .ToList();
+
+        return Task.FromResult(result);
     }
 
-    public Message Save(Message message)
+    public Task<Message> Save(Message message)
     {
         MaybeThrow();
 
@@ -38,10 +41,11 @@ public class FakeMessageRepository : IMessageRepository
             message.MessageNumber = _counter++;
 
         _messages[message.MessageNumber] = message;
-        return message;
+
+        return Task.FromResult(message);
     }
 
-    public Message Edit(long id, DateTime editedAt, string newText)
+    public Task<Message?> Edit(long id, DateTime editedAt, string newText)
     {
         MaybeThrow();
 
@@ -51,13 +55,13 @@ public class FakeMessageRepository : IMessageRepository
         {
             msg.Text = newText;
             msg.EditedAt = editedAt;
-            return msg;
+            return Task.FromResult<Message?>(msg);
         }
 
-        return null;
+        return Task.FromResult<Message?>(null);
     }
 
-    public void Delete(long id)
+    public Task Delete(long id)
     {
         MaybeThrow();
 
@@ -67,9 +71,11 @@ public class FakeMessageRepository : IMessageRepository
         {
             msg.Deleted = true;
         }
+
+        return Task.CompletedTask;
     }
 
-    public long GetLastMessageNumber(Guid chatId)
+    public Task<long> GetLastMessageNumber(Guid chatId)
     {
         MaybeThrow();
 
@@ -78,6 +84,8 @@ public class FakeMessageRepository : IMessageRepository
             .OrderByDescending(m => m.MessageNumber)
             .FirstOrDefault();
 
-        return last != null ? (long)last.MessageNumber : 0;
+        var result = last != null ? (long)last.MessageNumber : 0;
+
+        return Task.FromResult(result);
     }
 }

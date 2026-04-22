@@ -27,21 +27,22 @@ public class FakeHttpClient : IHttpClient
         }
     }
 
-    private T Wrap<T>(Func<T> func)
+    private Task<T> Wrap<T>(Func<T> func)
     {
         MaybeThrow();
-        return func();
+        return Task.FromResult(func());
     }
 
-    private void Wrap(Action action)
+    private Task Wrap(Action action)
     {
         MaybeThrow();
         action();
+        return Task.CompletedTask;
     }
 
     // ================= AUTH =================
 
-    public void Register(string uniqueName, string password, string email, string displayName)
+    public Task Register(string uniqueName, string password, string email, string displayName)
         => Wrap(() =>
         {
             var user = new User
@@ -54,13 +55,13 @@ public class FakeHttpClient : IHttpClient
             _users[user.Id] = user;
         });
 
-    public string Login(string uniqueName, string password)
+    public Task<string> Login(string uniqueName, string password)
         => Wrap(() => "fake-token");
 
     private static readonly Guid TestUserId =
         Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    public User GetMe()
+    public Task<User> GetMe()
         => Wrap(() => new User
         {
             Id = TestUserId,
@@ -70,13 +71,13 @@ public class FakeHttpClient : IHttpClient
 
     // ================= USERS =================
 
-    public User GetUser(Guid id)
+    public Task<User> GetUser(Guid id)
         => Wrap(() =>
             _users.TryGetValue(id, out var user)
                 ? user
                 : new User { Id = id, UniqueName = "unknown" });
 
-    public User GetUserByName(string uniqueName)
+    public Task<User> GetUserByName(string uniqueName)
         => Wrap(() => new User
         {
             Id = Guid.NewGuid(),
@@ -84,21 +85,21 @@ public class FakeHttpClient : IHttpClient
             DisplayName = "name"
         });
 
-    public CurrentUser UpdateMeDisplayName(string displayName)
+    public Task<CurrentUser> UpdateMeDisplayName(string displayName)
         => Wrap(() => new CurrentUser
         {
             Id = TestUserId,
             DisplayedName = displayName
         });
 
-    public User UpdateContactName(Guid id, string contactName)
+    public Task<User> UpdateContactName(Guid id, string contactName)
         => Wrap(() => new User
         {
             Id = id,
             ContactName = contactName
         });
 
-    public List<User> SearchUsers(string substr, int maxUsers)
+    public Task<List<User>> SearchUsers(string substr, int maxUsers)
         => Wrap(() =>
             _users.Values
                 .Where(u => u.UniqueName.Contains(substr ?? "", StringComparison.OrdinalIgnoreCase))
@@ -107,10 +108,10 @@ public class FakeHttpClient : IHttpClient
 
     // ================= CHATS =================
 
-    public List<Chat> GetChats()
+    public Task<List<Chat>> GetChats()
         => Wrap(() => _chats.Values.ToList());
 
-    public Chat CreateGroupChat(string name, List<Guid> memberIds)
+    public Task<Chat> CreateGroupChat(string name, List<Guid> memberIds)
         => Wrap(() =>
         {
             var chat = new Chat
@@ -127,7 +128,7 @@ public class FakeHttpClient : IHttpClient
             return chat;
         });
 
-    public Chat CreatePrivateChat(Guid withUserId)
+    public Task<Chat> CreatePrivateChat(Guid withUserId)
         => Wrap(() =>
         {
             var chat = new Chat
@@ -144,7 +145,7 @@ public class FakeHttpClient : IHttpClient
             return chat;
         });
 
-    public Chat GetChat(Guid chatId)
+    public Task<Chat> GetChat(Guid chatId)
         => Wrap(() =>
         {
             if (_chats.TryGetValue(chatId, out var chat))
@@ -162,7 +163,7 @@ public class FakeHttpClient : IHttpClient
             return newChat;
         });
 
-    public SyncChatResult RemoveUserFromChat(Guid chatId, Guid userId)
+    public Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId)
         => Wrap(() => new SyncChatResult
         {
             ChatId = chatId,
@@ -170,7 +171,7 @@ public class FakeHttpClient : IHttpClient
             LastVersion = _version++
         });
 
-    public List<SyncChatResult> SyncChats(List<(Guid chatId, ulong version)> chats)
+    public Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats)
         => Wrap(() =>
         {
             var chatId = chats.First().chatId;
@@ -192,7 +193,7 @@ public class FakeHttpClient : IHttpClient
 
     // ================= MESSAGES =================
 
-    public SyncChatResult SendMessage(Guid chatId, string text, ulong clientVersion)
+    public Task<SyncChatResult> SendMessage(Guid chatId, string text, ulong clientVersion)
         => Wrap(() =>
         {
             var newVersion = ++_version;
@@ -217,7 +218,7 @@ public class FakeHttpClient : IHttpClient
             };
         });
 
-    public SyncChatResult EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
+    public Task<SyncChatResult> EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
         => Wrap(() =>
         {
             _messages.TryGetValue(messageNum, out var msg);
@@ -236,7 +237,7 @@ public class FakeHttpClient : IHttpClient
             };
         });
 
-    public SyncChatResult DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
+    public Task<SyncChatResult> DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
         => Wrap(() =>
         {
             if (_messages.TryGetValue(messageNum, out var msg))
@@ -260,7 +261,7 @@ public class FakeHttpClient : IHttpClient
             };
         });
 
-    public List<Message> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
+    public Task<List<Message>> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
         => Wrap(() =>
         {
             IEnumerable<Message> query = _messages.Values

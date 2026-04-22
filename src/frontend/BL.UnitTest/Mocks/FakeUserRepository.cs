@@ -4,7 +4,6 @@ using BL.Models;
 public class FakeUserRepository : IUserRepository
 {
     private readonly Dictionary<Guid, User> _users = new();
-    
     private readonly Dictionary<Guid, List<Guid>> _contacts = new();
 
     public Exception? ExceptionToThrow { get; set; }
@@ -15,45 +14,48 @@ public class FakeUserRepository : IUserRepository
             throw ExceptionToThrow;
     }
 
-    public User Find(Guid id)
+    public Task<User?> Find(Guid id)
     {
         MaybeThrow();
-        return _users.TryGetValue(id, out var u) ? u : null;
+        _users.TryGetValue(id, out var user);
+        return Task.FromResult(user);
     }
 
-    public User? FindByUniqueName(string uniqueName)
+    public Task<User?> FindByUniqueName(string uniqueName)
     {
         MaybeThrow();
-        return _users.Values.FirstOrDefault(u => u.UniqueName == uniqueName);
+        var user = _users.Values.FirstOrDefault(u => u.UniqueName == uniqueName);
+        return Task.FromResult(user);
     }
 
-    public User? GetByUniqueName(string uniqueName)
+    public Task<User?> GetByUniqueName(string uniqueName)
     {
         MaybeThrow();
-        return _users.Values.FirstOrDefault(u => u.UniqueName == uniqueName);
+        var user = _users.Values.FirstOrDefault(u => u.UniqueName == uniqueName);
+        return Task.FromResult(user);
     }
 
-    public User Save(User user)
+    public Task<User> Save(User user)
     {
         MaybeThrow();
         _users[user.Id] = user;
-        return user;
+        return Task.FromResult(user);
     }
 
-    public User UpdateContactName(Guid userId, string contact)
+    public Task<User?> UpdateContactName(Guid userId, string contact)
     {
         MaybeThrow();
 
         if (_users.TryGetValue(userId, out var user))
         {
             user.ContactName = contact;
-            return user;
+            return Task.FromResult<User?>(user);
         }
 
-        return null;
+        return Task.FromResult<User?>(null);
     }
 
-    public void Delete(Guid id)
+    public Task Delete(Guid id)
     {
         MaybeThrow();
 
@@ -63,31 +65,35 @@ public class FakeUserRepository : IUserRepository
         {
             list.Remove(id);
         }
+
+        return Task.CompletedTask;
     }
 
     // ================= CONTACTS =================
 
-    public List<User> FindContacts(Guid ownerId)
+    public Task<List<User>> FindContacts(Guid ownerId)
     {
         MaybeThrow();
 
         if (!_contacts.ContainsKey(ownerId))
-            return new List<User>();
+            return Task.FromResult(new List<User>());
 
-        return _contacts[ownerId]
+        var result = _contacts[ownerId]
             .Where(id => _users.ContainsKey(id))
             .Select(id => _users[id])
             .ToList();
+
+        return Task.FromResult(result);
     }
 
-    public User SaveContact(Guid ownerId, string contactUniqueName)
+    public Task<User?> SaveContact(Guid ownerId, string contactUniqueName)
     {
         MaybeThrow();
 
-        var user = FindByUniqueName(contactUniqueName);
+        var user = _users.Values.FirstOrDefault(u => u.UniqueName == contactUniqueName);
 
         if (user == null)
-            return null;
+            return Task.FromResult<User?>(null);
 
         if (!_contacts.ContainsKey(ownerId))
             _contacts[ownerId] = new List<Guid>();
@@ -95,15 +101,17 @@ public class FakeUserRepository : IUserRepository
         if (!_contacts[ownerId].Contains(user.Id))
             _contacts[ownerId].Add(user.Id);
 
-        return user;
+        return Task.FromResult<User?>(user);
     }
 
-    public List<User> FindUsersWithContactName()
+    public Task<List<User>> FindUsersWithContactName()
     {
         MaybeThrow();
 
-        return _users.Values
+        var result = _users.Values
             .Where(u => !string.IsNullOrEmpty(u.ContactName))
             .ToList();
+
+        return Task.FromResult(result);
     }
 }

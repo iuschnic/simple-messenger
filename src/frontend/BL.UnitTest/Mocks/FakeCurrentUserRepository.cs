@@ -5,7 +5,7 @@ using BL.Models;
 
 public class FakeCurrentUserRepository : ICurrentUserRepository
 {
-    private CurrentUser _user;
+    private CurrentUser? _user;
 
     public Exception? ExceptionToThrow { get; set; }
 
@@ -15,25 +15,26 @@ public class FakeCurrentUserRepository : ICurrentUserRepository
             throw ExceptionToThrow;
     }
 
-    public CurrentUser Save(CurrentUser user)
+    public Task<CurrentUser> Save(CurrentUser user)
     {
         MaybeThrow();
 
         _user = user;
-        return user;
+        return Task.FromResult(user);
     }
 
-    public CurrentUser? Get()
+    public Task<CurrentUser?> Get()
     {
         MaybeThrow();
 
-        return _user;
+        return Task.FromResult(_user);
     }
 
-    public void Clear()
+    public Task Clear()
     {
         MaybeThrow();
 
         _user = null;
+        return Task.CompletedTask;
     }
 }

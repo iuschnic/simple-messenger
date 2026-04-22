@@ -8,11 +8,11 @@ namespace BL.UnitTest.Mocks
     public class FakeRealtimeClient : IRealtimeClient
     {
         // События
-        public event Action<Message>? MessageReceived;
-        public event Action<Message>? MessageUpdated;
-        public event Action<long>? MessageDeleted;
-        public event Action<Guid, Guid>? UserLeftChat;  // Событие для выхода пользователя из чата
-        public event Action<Chat>? ChatCreated;   // Событие для создания нового чата с текущим пользователем
+        public event Func<Message, Task>? MessageReceived;
+        public event Func<Message, Task>? MessageUpdated;
+        public event Func<ulong, Task>? MessageDeleted;
+        public event Func<Guid, Guid, Task>? UserLeftChat;  // Событие для выхода пользователя из чата
+        public event Func<Chat, Task>? ChatCreated;   // Событие для создания нового чата с текущим пользователем
 
         // Методы для тестирования
 
@@ -29,7 +29,7 @@ namespace BL.UnitTest.Mocks
             MessageUpdated?.Invoke(message);
         }
 
-        public void SimulateMessageDeleted(long messageId)
+        public void SimulateMessageDeleted(ulong messageId)
         {
             // Симулируем удаление сообщения
             MessageDeleted?.Invoke(messageId);
