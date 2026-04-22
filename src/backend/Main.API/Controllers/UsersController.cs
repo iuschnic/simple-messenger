@@ -105,12 +105,13 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ContactWithUserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ContactWithUserDto>> AddContact([FromBody] AddContactRequest request)
     {
         var result = await _contactService.AddContactAsync(User.GetUserId(), request.UserContactId, request.ContactName);
-        return CreatedAtAction(nameof(GetContacts), result);
+        return CreatedAtAction(nameof(AddContact), result);
     }
 
     /// <summary>
@@ -141,10 +142,8 @@ public class UsersController : ControllerBase
     /// <returns>No content</returns>
     [HttpDelete("me/contacts/{contactId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> RemoveContact(Guid contactId)
     {
