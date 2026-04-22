@@ -28,81 +28,110 @@ public class MessengerService : IMessengerService
         _rt.ChatCreated += OnChatCreated;
     }
 
-    // ================= INTERNAL =================
+    // ================= ERROR WRAPPER =================
 
-    private async Task SyncFullChat(Guid chatId)
+    private async Task<T> Execute<T>(Func<Task<T>> action)
     {
         try
         {
-            var chat = await _db.Chats.Find(chatId);
-            var version = chat?.Version ?? 0;
-
-            var sync = (await _http.SyncChats(new List<(Guid, ulong)> { (chatId, version) }))
-                .First();
-
-            foreach (var m in sync.Messages)
-                await _db.Messages.Save(m);
-
-            if (chat == null)
-                chat = new Chat { Id = chatId };
-
-            chat.Version = sync.LastVersion;
-
-            if (sync.Messages.Any())
-                chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
-
-            await _db.Chats.Save(chat);
+            return await action();
         }
         catch (ApiException ex)
         {
             throw ExceptionMapper.Map(ex);
         }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DatabaseException($"Ошибка базы данных: {ex.Message}");
+        }
+    }
+
+    private async Task Execute(Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (ApiException ex)
+        {
+            throw ExceptionMapper.Map(ex);
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DatabaseException($"Ошибка базы данных: {ex.Message}");
+        }
+    }
+
+    // ================= INTERNAL =================
+
+    private async Task SyncFullChat(Guid chatId)
+    {
+        var chat = await Execute(() => _db.Chats.Find(chatId));
+        var version = chat?.Version ?? 0;
+
+        var sync = (await Execute(() =>
+            _http.SyncChats(new List<(Guid, ulong)> { (chatId, version) })
+        )).First();
+
+        foreach (var m in sync.Messages)
+            await Execute(() => _db.Messages.Save(m));
+
+        if (chat == null)
+            chat = new Chat { Id = chatId };
+
+        chat.Version = sync.LastVersion;
+
+        if (sync.Messages.Any())
+            chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+
+        await Execute(() => _db.Chats.Save(chat));
     }
 
     private async Task OnMessageReceived(Message message)
     {
-        try
+        if (await Execute(() => _db.Messages.Find(message.MessageNumber)) != null)
+            return;
+
+        var chat = await Execute(() => _db.Chats.Find(message.ChatId));
+
+        if (chat == null || message.Version > chat.Version + 1)
         {
-            if (await _db.Messages.Find(message.MessageNumber) != null)
-                return;
-
-            var chat = await _db.Chats.Find(message.ChatId);
-
-            if (chat == null || message.Version > chat.Version + 1)
-            {
-                await SyncFullChat(message.ChatId);
-                return;
-            }
-
-            await _db.Messages.Save(message);
-
-            chat.LastMessageNum = message.MessageNumber;
-            chat.Version = message.Version;
-
-            await _db.Chats.Save(chat);
-
-            Events.RaiseMessageReceived(message);
+            await SyncFullChat(message.ChatId);
+            return;
         }
-        catch (Exception ex)
-        {
-            throw new DatabaseException($"Ошибка: {ex.Message}");
-        }
+
+        await Execute(() => _db.Messages.Save(message));
+
+        chat.LastMessageNum = message.MessageNumber;
+        chat.Version = message.Version;
+
+        await Execute(() => _db.Chats.Save(chat));
+
+        Events.RaiseMessageReceived(message);
     }
 
     private async Task OnUserLeftChat(Guid chatId, Guid userId)
     {
-        await _db.Chats.RemoveUserFromChat(chatId, userId);
+        await Execute(() => _db.Chats.RemoveUserFromChat(chatId, userId));
         Events.RaiseUserLeftChat(chatId, userId);
     }
 
     private async Task OnChatCreated(Chat chat)
     {
-        await _db.Chats.Save(chat);
+        await Execute(() => _db.Chats.Save(chat));
 
         foreach (var p in chat.Members)
         {
-            var user = await _db.Users.Find(p.Id) ?? await _db.Users.Save(p);
-            await _db.Chats.AddUserToChat(chat.Id, user.Id);
+            var user = await GetUserById(p.Id) ?? await Execute(() => _db.Users.Save(p));
+            await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
 
         Events.RaiseChatCreated(chat);
@@ -112,104 +141,104 @@ public class MessengerService : IMessengerService
 
     public async Task<CurrentUser> RegisterUser(string u, string p, string e, string d)
     {
-        await _http.Register(u, p, e, d);
+        await Execute(() => _http.Register(u, p, e, d));
 
-        return await _db.CurrentUser.Save(new CurrentUser
+        return await Execute(() => _db.CurrentUser.Save(new CurrentUser
         {
             Id = Guid.NewGuid(),
             UniqueName = u,
             Email = e,
             PasswordHash = p,
             DisplayedName = d
-        });
+        }));
     }
 
     public async Task<User> Login(string u, string p)
     {
-        var local = await _db.CurrentUser.Get();
+        var local = await Execute(() => _db.CurrentUser.Get());
 
         if (local == null || u != local.UniqueName || p != local.PasswordHash)
             throw new AuthException("Неверный логин или пароль");
 
-        var token = await _http.Login(u, p);
+        var token = await Execute(() => _http.Login(u, p));
 
         _rt.ConnectToHub(token);
 
-        var user = await _http.GetMe();
+        var user = await Execute(() => _http.GetMe());
 
-        return await _db.Users.Save(new User
+        return await Execute(() => _db.Users.Save(new User
         {
             Id = user.Id,
             UniqueName = user.UniqueName,
             DisplayName = user.DisplayName
-        });
+        }));
     }
 
     public async Task<CurrentUser> UpdateMeDisplayName(Guid id, string displayName)
     {
-        await _http.UpdateMeDisplayName(displayName);
+        await Execute(() => _http.UpdateMeDisplayName(displayName));
 
-        var user = await _db.CurrentUser.Get();
+        var user = await Execute(() => _db.CurrentUser.Get());
 
         if (user != null)
         {
             user.DisplayedName = displayName;
-            await _db.CurrentUser.Save(user);
+            await Execute(() => _db.CurrentUser.Save(user));
         }
 
         return user!;
     }
 
     public async Task<CurrentUser?> GetCurrentUser()
-        => await _db.CurrentUser.Get();
+        => await Execute(() => _db.CurrentUser.Get());
 
     // ================= USERS =================
 
     public async Task<User> GetUserByNameWithServer(string uniqueName)
     {
-        var user = await _db.Users.FindByUniqueName(uniqueName);
+        var user = await Execute(() => _db.Users.FindByUniqueName(uniqueName));
 
         if (user == null)
         {
-            user = await _http.GetUserByName(uniqueName);
-            await _db.Users.Save(user);
+            user = await Execute(() => _http.GetUserByName(uniqueName));
+            await Execute(() => _db.Users.Save(user));
         }
 
         return user;
     }
 
     public async Task<User?> GetUserById(Guid id)
-        => await _db.Users.Find(id);
+        => await Execute(() => _db.Users.Find(id));
 
     public async Task<User> UpdateContactName(Guid id, string contact)
     {
-        await _http.UpdateContactName(id, contact);
+        await Execute(() => _http.UpdateContactName(id, contact));
 
-        var user = await _db.Users.Find(id);
+        var user = await Execute(() => _db.Users.Find(id));
 
         if (user != null)
         {
             user.ContactName = contact;
-            await _db.Users.Save(user);
+            await Execute(() => _db.Users.Save(user));
         }
 
         return user!;
     }
 
     public async Task<List<User>> FindUsersWithContactName()
-        => await _db.Users.FindUsersWithContactName();
+        => await Execute(() => _db.Users.FindUsersWithContactName());
 
     public async Task<User?> FindUsersByUniqueName(string uniqueName)
-        => await _db.Users.FindByUniqueName(uniqueName);
+        => await Execute(() => _db.Users.FindByUniqueName(uniqueName));
 
     // ================= CHATS =================
 
     public async Task<List<Chat>> GetAllChats()
-        => await _db.Chats.GetAllChats();
+        => await Execute(() => _db.Chats.GetAllChats());
 
     public async Task<Chat> CreateGroupChat(string name, Guid creatorId, List<Guid> participants)
     {
-        var chatHttp = await _http.CreateGroupChat(name, participants);
+        var chatHttp = await Execute(() => _http.CreateGroupChat(name, participants));
 
         var chat = new Chat
         {
@@ -221,13 +250,13 @@ public class MessengerService : IMessengerService
             LastMessageNum = chatHttp.LastMessageNum,
         };
 
-        await _db.Chats.Save(chat);
+        await Execute(() => _db.Chats.Save(chat));
 
         foreach (var p in participants)
         {
-            var user = await _db.Users.Find(p);
+            var user = await GetUserById(p);
             if (user != null)
-                await _db.Chats.AddUserToChat(chat.Id, user.Id);
+                await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
 
         return chat;
@@ -235,7 +264,7 @@ public class MessengerService : IMessengerService
 
     public async Task<Chat> CreatePrivateChat(Guid creatorId, List<Guid> participants)
     {
-        var chatHttp = await _http.CreatePrivateChat(participants.Last());
+        var chatHttp = await Execute(() => _http.CreatePrivateChat(participants.Last()));
 
         var chat = new Chat
         {
@@ -248,46 +277,46 @@ public class MessengerService : IMessengerService
             LastMessageNum = chatHttp.LastMessageNum,
         };
 
-        await _db.Chats.Save(chat);
+        await Execute(() => _db.Chats.Save(chat));
 
         foreach (var p in participants)
         {
-            var user = await _db.Users.Find(p);
+            var user = await GetUserById(p);
             if (user != null)
-                await _db.Chats.AddUserToChat(chat.Id, user.Id);
+                await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
 
         return chat;
     }
 
     public async Task<List<User>> GetChatParticipants(Guid chatId)
-        => await _db.Chats.FindChatUsers(chatId);
+        => await Execute(() => _db.Chats.FindChatUsers(chatId));
 
     public async Task AddUserToChat(Guid chatId, string uniqueName)
     {
-        var user = await _db.Users.FindByUniqueName(uniqueName);
+        var user = await Execute(() => _db.Users.FindByUniqueName(uniqueName));
         if (user != null)
-            await _db.Chats.AddUserToChat(chatId, user.Id);
+            await Execute(() => _db.Chats.AddUserToChat(chatId, user.Id));
     }
 
     public async Task LeaveChat(Guid chatId, Guid userId)
     {
-        await _http.RemoveUserFromChat(chatId, userId);
-        await _db.Chats.RemoveUserFromChat(chatId, userId);
+        await Execute(() => _http.RemoveUserFromChat(chatId, userId));
+        await Execute(() => _db.Chats.RemoveUserFromChat(chatId, userId));
     }
 
     // ================= MESSAGES =================
 
     public async Task<List<Message>> GetChatMessages(Guid chatId)
     {
-        var list = await _db.Messages.FindChatMessages(chatId);
+        var list = await Execute(() => _db.Messages.FindChatMessages(chatId));
 
         if (list.Any())
         {
-            await _db.Chats.UpdateLastMessageNum(
+            await Execute(() => _db.Chats.UpdateLastMessageNum(
                 chatId,
                 list.Last().MessageNumber
-            );
+            ));
         }
 
         return list;
@@ -295,18 +324,18 @@ public class MessengerService : IMessengerService
 
     public async Task<Message> SendMessage(Guid chatId, Guid senderId, string text)
     {
-        var chat = await _db.Chats.Find(chatId)
+        var chat = await Execute(() => _db.Chats.Find(chatId))
                    ?? throw new NotFoundAppException("Chat not found");
 
-        var sync = await _http.SendMessage(chatId, text, chat.Version);
+        var sync = await Execute(() => _http.SendMessage(chatId, text, chat.Version));
 
         if (sync.Messages == null || sync.Messages.Count == 0)
             throw new AppException("No messages returned from server");
 
         foreach (var m in sync.Messages)
         {
-            if (await _db.Messages.Find(m.MessageNumber) == null)
-                await _db.Messages.Save(m);
+            if (await Execute(() => _db.Messages.Find(m.MessageNumber)) == null)
+                await Execute(() => _db.Messages.Save(m));
         }
 
         chat.Version = sync.LastVersion;
@@ -317,7 +346,7 @@ public class MessengerService : IMessengerService
 
         chat.LastMessageNum = lastMsg.MessageNumber;
 
-        await _db.Chats.Save(chat);
+        await Execute(() => _db.Chats.Save(chat));
 
         return lastMsg;
     }
@@ -328,11 +357,11 @@ public class MessengerService : IMessengerService
 
         if (messages.Any())
         {
-            await _db.Chats.UpdateLastReadMessageNum(
+            await Execute(() => _db.Chats.UpdateLastReadMessageNum(
                 chatId,
                 userId,
                 messages.Last().MessageNumber
-            );
+            ));
         }
     }
 }
