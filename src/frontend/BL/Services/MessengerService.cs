@@ -36,9 +36,9 @@ public class MessengerService : IMessengerService
         {
             return await action();
         }
-        catch (HubConnectionExсeption ex)
+        catch (HubConnectionException ex)
         {
-            throw new HubConnectionExсeption(
+            throw new HubConnectionException(
                 $"Ошибка соединения с хабом: {ex.Message}"
             );
         }
@@ -62,9 +62,9 @@ public class MessengerService : IMessengerService
         {
             await action();
         }
-        catch (HubConnectionExсeption ex)
+        catch (HubConnectionException ex)
         {
-            throw new HubConnectionExсeption(
+            throw new HubConnectionException(
                 $"Ошибка соединения с хабом: {ex.Message}"
             );
         }

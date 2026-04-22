@@ -71,7 +71,7 @@ public class DatabaseException  :  Exception
     public DatabaseException(string message) : base(message) { }
 }
 
-public class HubConnectionExсeption :  Exception
+public class HubConnectionException :  Exception
 {
-    public HubConnectionExсeption(string message) : base(message) { }
+    public HubConnectionException(string message) : base(message) { }
 }
