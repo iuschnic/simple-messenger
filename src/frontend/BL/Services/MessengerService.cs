@@ -115,13 +115,13 @@ public class MessengerService : IMessengerService
 
         await Execute(() => _db.Chats.Save(chat));
 
-        Events.RaiseMessageReceived(message);
+        await Events.RaiseMessageReceived(message);
     }
 
     private async Task OnUserLeftChat(Guid chatId, Guid userId)
     {
         await Execute(() => _db.Chats.RemoveUserFromChat(chatId, userId));
-        Events.RaiseUserLeftChat(chatId, userId);
+        await  Events.RaiseUserLeftChat(chatId, userId);
     }
 
     private async Task OnChatCreated(Chat chat)
@@ -134,7 +134,7 @@ public class MessengerService : IMessengerService
             await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
 
-        Events.RaiseChatCreated(chat);
+        await Events.RaiseChatCreated(chat);
     }
 
     // ================= AUTH =================

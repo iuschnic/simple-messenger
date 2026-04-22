@@ -84,16 +84,19 @@ class Program
         bl.Events.MessageReceived += m =>
         {
             Console.WriteLine($"[EVENT] New message: [{m.MessageNumber}] {m.Text}");
+            return Task.CompletedTask;
         };
 
         bl.Events.UserLeftChat += (chatId, userId) =>
         {
             Console.WriteLine($"[EVENT] User {userId} left chat {chatId}");
+            return Task.CompletedTask;
         };
 
         bl.Events.ChatCreated += chat =>
         {
             Console.WriteLine($"[EVENT] Chat created: {chat.Id}");
+            return Task.CompletedTask;
         };
 
         // ================= SCENARIO =================

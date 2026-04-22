@@ -6,21 +6,22 @@ namespace BL.Events
     public class MessengerEvents
     {
         // Событие для нового сообщения
-        public event Action<Message> MessageReceived;
+
+        public event Func<Message, Task> MessageReceived;
         
         // Событие для выхода пользователя из чата
-        public event Action<Guid, Guid> UserLeftChat;
+        public event Func<Guid, Guid, Task> UserLeftChat;
         
         // Событие для создания нового чата
-        public event Action<Chat> ChatCreated;
+        public event Func<Chat, Task> ChatCreated;
 
         // Вызов события для получения нового сообщения
-        public void RaiseMessageReceived(Message message) => MessageReceived?.Invoke(message);
+        public async Task RaiseMessageReceived(Message message) => await  MessageReceived.Invoke(message);
 
         // Вызов события для выхода пользователя из чата
-        public void RaiseUserLeftChat(Guid chatId, Guid userId) => UserLeftChat?.Invoke(chatId, userId);
+        public async Task RaiseUserLeftChat(Guid chatId, Guid userId) => await UserLeftChat.Invoke(chatId, userId);
 
         // Вызов события для создания нового чата
-        public void RaiseChatCreated(Chat chat) => ChatCreated?.Invoke(chat);
+        public async Task RaiseChatCreated(Chat chat) => await ChatCreated.Invoke(chat);
     }
 }

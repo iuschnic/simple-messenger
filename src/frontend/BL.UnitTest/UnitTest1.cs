@@ -226,7 +226,11 @@ public class MessengerServiceTests
         await db.Chats.Save(new Chat { Id = chatId, Version = 1 });
 
         Message? received = null;
-        bl.Events.MessageReceived += m => received = m;
+        bl.Events.MessageReceived += m =>
+        {
+            received = m;
+            return Task.CompletedTask;
+        };
 
         rt.SendMessage(new Message
         {
@@ -255,7 +259,11 @@ public class MessengerServiceTests
         await db.Messages.Save(new Message { MessageNumber = 1, ChatId = chatId });
 
         var called = false;
-        bl.Events.MessageReceived += _ => called = true;
+        bl.Events.MessageReceived += _ =>
+        {
+            called = true;
+            return Task.CompletedTask;
+        };
 
         rt.SendMessage(new Message { MessageNumber = 1, ChatId = chatId });
 
@@ -278,7 +286,11 @@ public class MessengerServiceTests
         await db.Chats.AddUserToChat(chatId, userId);
 
         bool eventCalled = false;
-        bl.Events.UserLeftChat += (_, _) => eventCalled = true;
+        bl.Events.UserLeftChat += (_, _) =>
+        {
+            eventCalled = true;
+            return Task.CompletedTask;
+        };
 
         rt.NotifyUserLeftChat(chatId, userId);
 
@@ -296,7 +308,11 @@ public class MessengerServiceTests
         var chat = new Chat { Id = Guid.NewGuid(), Members = new List<User>() };
 
         bool called = false;
-        bl.Events.ChatCreated += _ => called = true;
+        bl.Events.ChatCreated += _ =>
+        {
+            called = true;
+            return Task.CompletedTask;
+        };
 
         rt.NotifyChatCreated(chat);
 
