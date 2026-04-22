@@ -119,6 +119,7 @@ public class MessageService: BaseService, IMessageService
     {
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
+        await EnsureParticipant(chatId, currentUserId);
         var message = await GetMessageOrThrow(chatId, messageNumber);
         if (message.Deleted)
             throw new RuleViolationException("Cannot delete a deleted message");
@@ -135,6 +136,7 @@ public class MessageService: BaseService, IMessageService
             throw new ArgumentException("Message text should not be null/whitespace");
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
+        await EnsureParticipant(chatId, currentUserId);
         var message = await GetMessageOrThrow(chatId, messageNumber);
         if (message.Deleted)
             throw new RuleViolationException("Cannot delete a deleted message");
@@ -148,6 +150,7 @@ public class MessageService: BaseService, IMessageService
     {
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
+        await EnsureParticipant(chatId, currentUserId);
         if (!await _chatUserRepo.TryUpdateLastMessageReadAsync(chatId, currentUserId, lastMessageRead))
             throw new TechnicalException("Failed to mark messages read");
     }
