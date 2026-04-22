@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using Main.API.Models;
 using Main.Application.Dtos;
 using Main.Application.InPorts;
-using Main.Application.Exceptions;
 
 namespace Main.API.Controllers;
 
@@ -80,9 +78,6 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UserDto>> UpdateDisplayedName([FromBody] UpdateDisplayedNameRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _userService.UpdateDisplayedNameAsync(request.NewDisplayedName, User.GetUserId());
         return Ok(result);
     }
@@ -114,9 +109,6 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ContactWithUserDto>> AddContact([FromBody] AddContactRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _contactService.AddContactAsync(User.GetUserId(), request.UserContactId, request.ContactName);
         return CreatedAtAction(nameof(GetContacts), result);
     }
@@ -138,9 +130,6 @@ public class UsersController : ControllerBase
         Guid contactId,
         [FromBody] UpdateContactNameRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _contactService.ChangeContactNameAsync(User.GetUserId(), contactId, request.NewContactName);
         return Ok(result);
     }
