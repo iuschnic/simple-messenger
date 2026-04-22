@@ -162,7 +162,7 @@ public class MessengerService : IMessengerService
 
         var token = await Execute(() => _http.Login(u, p));
 
-        _rt.ConnectToHub(token);
+        await _rt.ConnectToHub(token);
 
         var user = await Execute(() => _http.GetMe());
 
