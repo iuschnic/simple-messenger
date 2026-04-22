@@ -40,6 +40,7 @@ public abstract class BaseCreateMessageRequest
     [Required]
     public MessageTypeApp MessageType { get; set; }
     [Required]
+    [Range(0, long.MaxValue, ErrorMessage = "Client version must be non-negative")]
     public long ClientVersion { get; set; }
 }
 
@@ -64,7 +65,7 @@ public class ForwardMessageRequest : BaseCreateMessageRequest
     [Required]
     public Guid ForwardedFromChatId { get; set; }
     [Required]
-    public long ForwardedFromMessageId { get; set; }
+    public long ForwardedFromMessageNum { get; set; }
 }
 
 public class EditMessageRequest
@@ -72,6 +73,7 @@ public class EditMessageRequest
     [Required]
     public string NewText { get; set; } = string.Empty;
     [Required]
+    [Range(0, long.MaxValue, ErrorMessage = "Client version must be non-negative")]
     public long ClientVersion { get; set; }
 }
 
@@ -92,6 +94,7 @@ public class ChatSyncItem
     [Required]
     public Guid ChatId { get; set; }
     [Required]
+    [Range(0, long.MaxValue, ErrorMessage = "Client version must be non-negative")]
     public long ClientVersion { get; set; }
 }
 
@@ -100,6 +103,15 @@ public class UpdateDisplayedNameRequest
     [Required]
     [MinLength(1)]
     public string NewDisplayedName { get; set; } = string.Empty;
+}
+public class UpdateChatNameRequest
+{
+    [Required]
+    [MinLength(1)]
+    public string NewChatName { get; set; } = string.Empty;
+    [Required]
+    [Range(0, long.MaxValue, ErrorMessage = "Client version must be non-negative")]
+    public long ClientVersion { get; set; }
 }
 
 public class UpdateContactNameRequest
@@ -111,5 +123,9 @@ public class UpdateContactNameRequest
 
 public class AddMemberRequest
 {
+    [Required]
     public Guid UserId { get; set; }
+    [Required]
+    [Range(0, long.MaxValue, ErrorMessage = "Client version must be non-negative")]
+    public long ClientVersion { get; set; }
 }

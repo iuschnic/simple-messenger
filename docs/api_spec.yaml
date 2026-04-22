@@ -728,6 +728,8 @@ paths:
           description: Invalid request data
         "401":
           description: Unauthorized
+        "409":
+          description: Private chat already exists
         "500":
           description: Server error
 
@@ -821,10 +823,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
-        "403":
-          description: Not enough permissions
         "404":
           description: Chat or user not found
         "409":
@@ -861,6 +863,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "403":
@@ -923,12 +927,14 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MessageDto'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
-        "404":
-          description: Chat not found
         "403":
           description: Not a participant
+        "404":
+          description: Chat not found
         "500":
           description: Server error
     post:
@@ -953,6 +959,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "403":
@@ -991,8 +999,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
+        "403":
+          description: User not in chat
         "404":
           description: Chat not found
         "500":
@@ -1029,6 +1041,8 @@ paths:
           description: Invalid request data
         "401":
           description: Unauthorized
+        "403":
+          description: User not in chat
         "404":
           description: Chat not found
         "500":
@@ -1053,6 +1067,8 @@ paths:
       responses:
         "204":
           description: Messages marked as read
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "403":
