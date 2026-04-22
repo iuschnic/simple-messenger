@@ -2,5 +2,5 @@
 
 public class SyncChatsResponseDto
 {
-    public List<SyncChatResponseDto> SyncChats { get; set; }
+    public List<SyncChatResponseDto> Chats { get; set; }
 }

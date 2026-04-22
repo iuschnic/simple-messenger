@@ -25,7 +25,7 @@ public interface IHttpClient
     Task<Chat> CreatePrivateChat(Guid withUserId);
     Task<Chat> GetChat(Guid chatId);
     Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats);
-    Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId);
+    Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong clientVersion);
 
     // ================= MESSAGES =================
 

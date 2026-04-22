@@ -269,12 +269,14 @@ public class HttpClientImpl : IHttpClient
 
         var dto = await Read<SyncChatsResponseDto>(res);
 
-        return dto.SyncChats.Select(DtoMapper.ToSync).ToList();
+        return dto.Chats.Select(DtoMapper.ToSync).ToList();
     }
 
-    public async Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId)
+    public async Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong clientVersion)
     {
-        var res = await Send(() => _http.DeleteAsync($"chats/{chatId}/members/{userId}"));
+        var res = await Send(() => _http.DeleteAsync(
+            $"chats/{chatId}/members/{userId}?clientVersion={clientVersion}"
+        ));
 
         await HandleErrors(res);
 
