@@ -4,6 +4,7 @@ using Main.Application.InPorts;
 using Main.Application.Mappers;
 using Main.Application.OutPorts;
 using Main.BL.Models;
+using Main.BL.Enums;
 
 namespace Main.Application.Services;
 
@@ -121,6 +122,8 @@ public class MessageService: BaseService, IMessageService
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         var message = await GetMessageOrThrow(chatId, messageNumber);
+        if (message.SenderUserId != currentUserId)
+            throw new RuleViolationException("You can only edit your message");
         if (message.Deleted)
             throw new RuleViolationException("Cannot delete a deleted message");
         if (!await _messageRepo.TryDeleteAsync(chatId, messageNumber))
@@ -138,8 +141,12 @@ public class MessageService: BaseService, IMessageService
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         var message = await GetMessageOrThrow(chatId, messageNumber);
+        if (message.SenderUserId != currentUserId)
+            throw new RuleViolationException("You can only edit your message");
         if (message.Deleted)
             throw new RuleViolationException("Cannot delete a deleted message");
+        if (message.Type == MessageType.Forward)
+            throw new RuleViolationException("Cannot edit forwarded message");
         if (!await _messageRepo.TryEditTextAsync(chatId, messageNumber, newText))
             throw new TechnicalException("Failed to edit message");
     }
