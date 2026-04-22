@@ -1,7 +1,11 @@
-﻿using Main.API.Models;
-using Main.Application.Dtos;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using Main.API.Models;
+using Main.Application.Dtos;
+using Main.Application.InPorts;
+using Main.Application.Exceptions;
+using Main.Application.Services;
 
 namespace Main.API.Controllers;
 
@@ -10,52 +14,194 @@ namespace Main.API.Controllers;
 [Authorize]
 public class UsersController : ControllerBase
 {
-    [HttpGet]
-    public ActionResult<List<UserDto>> SearchUsers([FromQuery] string? substr, [FromQuery] long? maxUsers)
+    private readonly IUserService _userService;
+    private readonly IContactService _contactService;
+    public UsersController(IUserService userService, IContactService contactService)
     {
-        return Ok();
+        _userService = userService;
+        _contactService = contactService;
+    }
+    [HttpGet]
+    public async Task<ActionResult<List<UserDto>>> SearchUsers([FromQuery] string substr, [FromQuery] int maxUsers)
+    {
+        try
+        {
+            var result = await _userService.SearchUsersAsync(substr, maxUsers, User.GetUserId());
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpGet("{id:guid}")]
-    public ActionResult<UserDto> GetUserById(Guid id)
+    public async Task<ActionResult<UserDto>> GetUserById(Guid id)
     {
-        return Ok();
+        try
+        {
+            var result = await _userService.GetUserByIdAsync(id, User.GetUserId());
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpGet("me")]
-    public ActionResult<UserDto> GetMyProfile()
+    public async Task<ActionResult<UserDto>> GetMyProfile()
     {
-        return Ok();
+        try
+        {
+            var result = await _userService.GetMyProfileAsync(User.GetUserId());
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpPatch("me")]
-    public ActionResult<UserDto> UpdateDisplayedName([FromBody] UpdateDisplayedNameRequest request)
+    public async Task<ActionResult<UserDto>> UpdateDisplayedName([FromBody] UpdateDisplayedNameRequest request)
     {
-        return Ok();
+        try
+        {
+            var result = await _userService.UpdateDisplayedNameAsync(request.NewDisplayedName, User.GetUserId());
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpGet("me/contacts")]
-    public ActionResult<List<ContactWithUserDto>> GetContacts()
+    public async Task<ActionResult<List<ContactWithUserDto>>> GetContacts()
     {
-        return Ok();
+        try
+        {
+            var result = await _contactService.GetMyContactsAsync(User.GetUserId());
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpPost("me/contacts")]
-    public ActionResult<ContactWithUserDto> AddContact([FromBody] AddContactRequest request)
+    public async Task<ActionResult<ContactWithUserDto>> AddContact([FromBody] AddContactRequest request)
     {
-
-        return Ok();
+        try
+        {
+            var result = await _contactService.AddContactAsync(User.GetUserId(), request.UserContactId, request.ContactName);
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpPatch("me/contacts/{contactId:guid}")]
-    public ActionResult<ContactWithUserDto> UpdateContactName(Guid contactId, [FromBody] UpdateContactNameRequest request)
+    public async Task<ActionResult<ContactWithUserDto>> UpdateContactName(Guid contactId, [FromBody] UpdateContactNameRequest request)
     {
-        return Ok();
+        try
+        {
+            var result = await _contactService.ChangeContactNameAsync(User.GetUserId(), contactId, request.NewContactName);
+            return Ok(result);
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 
     [HttpDelete("me/contacts/{contactId:guid}")]
-    public IActionResult RemoveContact(Guid contactId)
+    public async Task<IActionResult> RemoveContact(Guid contactId)
     {
-        return NoContent();
+        try
+        {
+            await _contactService.RemoveContactAsync(User.GetUserId(), contactId);
+            return NoContent();
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Internal server error" });
+        }
     }
 }
