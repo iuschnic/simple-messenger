@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Main.Application\Main.Application.csproj" />
+      <ProjectReference Include="..\Shared.Main.Auth\Shared.Main.Auth.csproj" />
+    </ItemGroup>
+
 </Project>
