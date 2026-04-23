@@ -146,6 +146,7 @@ public class MessengerService : IMessengerService
             await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
 
+        await SyncFullChat(chat.Id);
         await Events.RaiseChatCreated(chat);
     }
 
