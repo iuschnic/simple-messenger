@@ -315,7 +315,7 @@ public class MessengerService : IMessengerService
     {
         var chat = await Execute(() => _db.Chats.Find(chatId));
         await Execute(() => _http.RemoveUserFromChat(chatId, userId, chat!.Version));
-        await Execute(() => _db.Chats.RemoveUserFromChat(chatId, userId));
+        await Execute(() => _db.Chats.LeaveAndDeleteChat(chatId, userId));
     }
 
     // ================= MESSAGES =================

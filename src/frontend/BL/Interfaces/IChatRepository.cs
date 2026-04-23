@@ -20,4 +20,5 @@ public interface IChatRepository
 
     Task<Chat?> UpdateLastMessageNum(Guid chatId, ulong lastMessageNum);
     Task UpdateLastReadMessageNum(Guid chatId, Guid userId, ulong lastReadMessageNum);
+    Task LeaveAndDeleteChat(Guid chatId, Guid userId);
 }

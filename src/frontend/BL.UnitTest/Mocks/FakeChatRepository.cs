@@ -129,4 +129,22 @@ public class FakeChatRepository : IChatRepository
         MaybeThrow();
         return Task.CompletedTask;
     }
+    public Task LeaveAndDeleteChat(Guid chatId, Guid userId)
+    {
+        MaybeThrow();
+
+        // 1. Удаляем пользователя из чата
+        if (_chatUsers.ContainsKey(chatId))
+        {
+            _chatUsers[chatId].Remove(userId);
+
+            // 2. Удаляем ВСЕ связи пользователей (эмуляция удаления чата)
+            _chatUsers.Remove(chatId);
+        }
+
+        // 3. Удаляем сам чат
+        _chats.Remove(chatId);
+
+        return Task.CompletedTask;
+    }
 }
