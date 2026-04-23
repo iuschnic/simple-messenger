@@ -13,7 +13,8 @@ public class UserService : BaseService, IUserService
         IUserRepository userRepo,
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
-        IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
+        IChatUserRepository chatUserRepo,
+        IMessageProducer messageProducer) : base(userRepo, chatRepo, chatUserRepo, messageRepo, messageProducer) { }
 
     public async Task<UserDto> GetUserByIdAsync(Guid userId, Guid currentUserId)
     {

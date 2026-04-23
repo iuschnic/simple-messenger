@@ -12,7 +12,8 @@ public class SyncService: BaseService, ISyncService
         IUserRepository userRepo,
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
-        IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
+        IChatUserRepository chatUserRepo,
+        IMessageProducer messageProducer) : base(userRepo, chatRepo, chatUserRepo, messageRepo, messageProducer) { }
     public async Task<List<ChatSyncDto>> SyncChatsAsync(
         List<(Guid ChatId, ulong ClientVersion)> clientChats,
         Guid currentUserId)

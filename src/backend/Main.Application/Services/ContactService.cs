@@ -17,7 +17,8 @@ public class ContactService: BaseService, IContactService
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
         IChatUserRepository chatUserRepo,
-        IContactRepository contactRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo)
+        IContactRepository contactRepo,
+        IMessageProducer messageProducer) : base(userRepo, chatRepo, chatUserRepo, messageRepo, messageProducer)
     {
         _contactRepo = contactRepo;
     }

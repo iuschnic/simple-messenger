@@ -15,7 +15,8 @@ public class ChatService: BaseService, IChatService
         IChatRepository chatRepo,
         IUserRepository userRepo,
         IChatUserRepository chatUserRepo,
-        IMessageRepository messageRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
+        IMessageRepository messageRepo,
+        IMessageProducer messageProducer) : base(userRepo, chatRepo, chatUserRepo, messageRepo, messageProducer) { }
     public async Task<IEnumerable<ChatWithUsersDto>> GetChatsAsync(Guid currentUserId)
     {
         await EnsureCurrentUserAuthorized(currentUserId);

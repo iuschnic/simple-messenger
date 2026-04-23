@@ -10,16 +10,19 @@ public abstract class BaseService
     protected readonly IChatRepository _chatRepo;
     protected readonly IChatUserRepository _chatUserRepo;
     protected readonly IMessageRepository _messageRepo;
+    protected readonly IMessageProducer _messageProducer;
     protected BaseService(
         IUserRepository userRepo,
         IChatRepository chatRepo,
         IChatUserRepository chatUserRepo,
-        IMessageRepository messageRepo)
+        IMessageRepository messageRepo,
+        IMessageProducer messageProducer)
     {
         _userRepo = userRepo;
         _chatRepo = chatRepo;
         _chatUserRepo = chatUserRepo;
         _messageRepo = messageRepo;
+        _messageProducer = messageProducer;
     }
     protected async Task EnsureUserExists(Guid userId)
     {
