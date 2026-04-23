@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Main.Application.Exceptions;
 
-namespace Main.Presentation.Middleware;
+namespace Main.API.Controllers;
 
 public class ExceptionHandlingMiddleware
 {

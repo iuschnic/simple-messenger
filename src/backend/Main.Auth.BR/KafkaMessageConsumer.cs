@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Main.Application.InPorts;
@@ -11,42 +12,37 @@ namespace Main.Auth.BR;
 public class KafkaMessageConsumer : BackgroundService
 {
     private readonly IConsumer<Null, byte[]> _consumer;
-    private readonly IMessageHandler _messageHandler;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly string _topic;
     private readonly ILogger _logger;
 
     public KafkaMessageConsumer(
-        IMessageHandler messageHandler,
+        IConsumer<Null, byte[]> consumer,
+        IServiceScopeFactory scopeFactory,
         IOptions<KafkaConsumerConfig> config,
         ILogger logger)
     {
-        _messageHandler = messageHandler;
+        _consumer = consumer;
+        _scopeFactory = scopeFactory;
+        _topic = config.Value.Topic;
         _logger = logger;
-
-        var kafkaConfig = config.Value;
-        _topic = kafkaConfig.Topic;
-
-        var consumerConfig = new ConsumerConfig
-        {
-            BootstrapServers = kafkaConfig.BootstrapServers,
-            GroupId = kafkaConfig.GroupId,
-            AutoOffsetReset = kafkaConfig.AutoOffsetReset,
-            EnableAutoCommit = kafkaConfig.EnableAutoCommit
-        };
-
-        _consumer = new ConsumerBuilder<Null, byte[]>(consumerConfig).Build();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _consumer.Subscribe(_topic);
         _logger.Information("Subscribed to {Topic}", _topic);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 var consumeResult = _consumer.Consume(stoppingToken);
-                await ProcessMessageAsync(consumeResult);
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var handler = scope.ServiceProvider.GetRequiredService<IMessageHandler>();
+                    await ProcessMessageAsync(consumeResult, handler);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -62,7 +58,9 @@ public class KafkaMessageConsumer : BackgroundService
         _logger.Information("Consumer stopped");
     }
 
-    private async Task ProcessMessageAsync(ConsumeResult<Null, byte[]> consumeResult)
+    private async Task ProcessMessageAsync(
+        ConsumeResult<Null, byte[]> consumeResult,
+        IMessageHandler handler)
     {
         var eventType = ExtractEventTypeFromHeaders(consumeResult.Message.Headers);
         if (!eventType.HasValue)
@@ -74,7 +72,7 @@ public class KafkaMessageConsumer : BackgroundService
         var dataJson = Encoding.UTF8.GetString(consumeResult.Message.Value);
         try
         {
-            await _messageHandler.OnMessageReceivedFromBrokerAsync(eventType.Value, dataJson);
+            await handler.OnMessageReceivedFromBrokerAsync(eventType.Value, dataJson);
         }
         finally
         {

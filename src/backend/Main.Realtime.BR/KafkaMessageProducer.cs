@@ -16,21 +16,12 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
     private readonly ILogger _logger;
 
     public KafkaMessageProducer(
+        IProducer<Null, byte[]> producer,
         IOptions<KafkaProducerConfig> config,
         ILogger logger)
     {
-        var kafkaConfig = config.Value;
-        var producerConfig = new ProducerConfig
-        {
-            BootstrapServers = kafkaConfig.BootstrapServers,
-            Acks = Acks.All,
-            MessageSendMaxRetries = 3,
-            RetryBackoffMs = 100,
-            EnableIdempotence = true,
-            CompressionType = CompressionType.Snappy
-        };
-        _producer = new ProducerBuilder<Null, byte[]>(producerConfig).Build();
-        _topic = kafkaConfig.Topic;
+        _producer = producer;
+        _topic = config.Value.Topic;
         _logger = logger;
     }
 
