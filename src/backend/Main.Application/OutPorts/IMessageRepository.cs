@@ -11,7 +11,7 @@ public interface IMessageRepository
     Task<IEnumerable<Message>> GetMessagesAfterVersionAsync(Guid chatId, ulong fromVersion);
     Task<ulong> GetLastMessageNumberAsync(Guid chatId);
     Task<int> GetMessagesCountAsync(Guid chatId);
-    Task<bool> TryCreateAsync(Message message);
+    Task<ulong?> TryCreateAsync(Message message);
     Task<bool> TryEditTextAsync(Guid chatId, ulong messageNumber, string newText);
     Task<bool> TryDeleteAsync(Guid chatId, ulong messageNumber);
     Task<bool> ExistsAsync(Guid chatId, ulong messageNumber);

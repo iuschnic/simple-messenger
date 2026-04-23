@@ -110,7 +110,7 @@ public class MessageRepository : IMessageRepository
     }*/
 
     // попытка в optimistic блокировку
-    public async Task<bool> TryCreateAsync(Message message)
+    public async Task<ulong?> TryCreateAsync(Message message)
     {
         const int maxRetries = 3;
         for (int attempt = 0; attempt < maxRetries; attempt++)
@@ -122,7 +122,7 @@ public class MessageRepository : IMessageRepository
                 var chatDb = await _context.Chats
                     .FirstOrDefaultAsync(c => c.Id == message.ChatId);
                 if (chatDb == null)
-                    return false;
+                    return null;
                 var newVersion = chatDb.Version + 1;
                 var newMessageNumber = chatDb.LastMessageNum + 1;
                 chatDb.Version = newVersion;
@@ -133,7 +133,7 @@ public class MessageRepository : IMessageRepository
                 await _context.Messages.AddAsync(messageDb);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return true;
+                return newMessageNumber;
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -144,10 +144,10 @@ public class MessageRepository : IMessageRepository
             catch
             {
                 await transaction.RollbackAsync();
-                return false;
+                return null;
             }
         }
-        return false;
+        return null;
     }
     public async Task<bool> TryEditTextAsync(Guid chatId, ulong messageNumber, string newText)
     {

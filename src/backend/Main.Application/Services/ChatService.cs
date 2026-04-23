@@ -128,17 +128,6 @@ public class ChatService: BaseService, IChatService
             chat.CreatedAt, chat.Version, chat.LastMessageNum);
     }
 
-    /*
-    Task SendMessageReceivedAsync
-    Task SendMessageUpdatedAsync
-    Task SendMessageReadAsync
-    Task SendUserChangedAsync
-    Task SendChatCreatedAsync
-    Task SendChatUpdatedAsync
-    Task SendChatDeletedAsync
-    Task SendChatUserJoinedAsync
-    Task SendChatUserLeftAsync
-    */
     public async Task AddMemberAsync(Guid chatId, Guid userIdToAdd, Guid currentUserId)
     {
         var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);

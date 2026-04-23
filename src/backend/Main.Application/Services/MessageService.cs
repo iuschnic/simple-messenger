@@ -60,6 +60,7 @@ public class MessageService: BaseService, IMessageService
         var messages = await _messageRepo.GetLastMessagesAsync(chatId, limit);
         return messages.Select(m => m.ToDto());
     }
+    
     public async Task CreateRegularMessageAsync(
         Guid chatId,
         Guid currentUserId,
@@ -70,10 +71,17 @@ public class MessageService: BaseService, IMessageService
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
-        if (!await _messageRepo.TryCreateAsync(Message.CreateRegular(chatId, currentUserId, text)))
+        var messageNum = await _messageRepo.TryCreateAsync(Message.CreateRegular(chatId, currentUserId, text));
+        if (messageNum == null)
             throw new TechnicalException("Failed to create message");
-
+        var message = await _messageRepo.GetByNumberAsync(chatId, messageNum.Value);
+        if (message == null)
+            throw new TechnicalException("Failed to create message");
+        await _messageProducer.SendMessageReceivedAsync(message.MessageNumber, message.ChatId, message.SenderUserId, 
+            message.Text, message.CreatedAt, message.EditedAt, message.Deleted, message.Version, message.Type, 
+            message.ReplyToMessageNumber, message.ForwardedFromUserId);
     }
+
     public async Task CreateReplyMessageAsync(
         Guid chatId,
         Guid currentUserId,
@@ -90,10 +98,17 @@ public class MessageService: BaseService, IMessageService
         var original = await GetMessageOrThrow(chatId, replyToMessageNumber);
         if (original.Deleted)
             throw new RuleViolationException("Cannot reply to a deleted message");
-
-        if (!await _messageRepo.TryCreateAsync(Message.CreateReply(chatId, currentUserId, text, replyToMessageNumber)))
+        var messageNum = await _messageRepo.TryCreateAsync(Message.CreateReply(chatId, currentUserId, text, replyToMessageNumber));
+        if (messageNum == null)
             throw new TechnicalException("Failed to create message");
+        var message = await _messageRepo.GetByNumberAsync(chatId, messageNum.Value);
+        if (message == null)
+            throw new TechnicalException("Failed to create message");
+        await _messageProducer.SendMessageReceivedAsync(message.MessageNumber, message.ChatId, message.SenderUserId,
+            message.Text, message.CreatedAt, message.EditedAt, message.Deleted, message.Version, message.Type,
+            message.ReplyToMessageNumber, message.ForwardedFromUserId);
     }
+
     public async Task CreateForwardMessageAsync(
         Guid targetChatId,
         Guid sourceChatId,
@@ -110,10 +125,18 @@ public class MessageService: BaseService, IMessageService
         if (original.Deleted)
             throw new RuleViolationException("Cannot forward a deleted message");
 
-        if (!await _messageRepo.TryCreateAsync(Message.CreateForward(targetChatId, currentUserId,
-            original.Text, original.SenderUserId)))
+        var messageNum = await _messageRepo.TryCreateAsync(Message.CreateForward(targetChatId, currentUserId,
+            original.Text, original.SenderUserId));
+        if (messageNum == null)
             throw new TechnicalException("Failed to create message");
+        var message = await _messageRepo.GetByNumberAsync(targetChatId, messageNum.Value);
+        if (message == null)
+            throw new TechnicalException("Failed to create message");
+        await _messageProducer.SendMessageReceivedAsync(message.MessageNumber, message.ChatId, message.SenderUserId,
+            message.Text, message.CreatedAt, message.EditedAt, message.Deleted, message.Version, message.Type,
+            message.ReplyToMessageNumber, message.ForwardedFromUserId);
     }
+
     public async Task DeleteMessageAsync(
         Guid chatId,
         ulong messageNumber,
@@ -129,7 +152,12 @@ public class MessageService: BaseService, IMessageService
             throw new RuleViolationException("Cannot delete a deleted message");
         if (!await _messageRepo.TryDeleteAsync(chatId, messageNumber))
             throw new TechnicalException("Failed to delete message");
+
+        await _messageProducer.SendMessageUpdatedAsync(message.MessageNumber, message.ChatId, message.SenderUserId,
+            message.Text, message.CreatedAt, message.EditedAt, message.Deleted, message.Version, message.Type,
+            message.ReplyToMessageNumber, message.ForwardedFromUserId);
     }
+
     public async Task EditMessageAsync(
         Guid chatId,
         ulong messageNumber,
@@ -150,16 +178,24 @@ public class MessageService: BaseService, IMessageService
             throw new RuleViolationException("Cannot edit forwarded message");
         if (!await _messageRepo.TryEditTextAsync(chatId, messageNumber, newText))
             throw new TechnicalException("Failed to edit message");
+
+        await _messageProducer.SendMessageUpdatedAsync(message.MessageNumber, message.ChatId, message.SenderUserId,
+            message.Text, message.CreatedAt, message.EditedAt, message.Deleted, message.Version, message.Type,
+            message.ReplyToMessageNumber, message.ForwardedFromUserId);
     }
+
     public async Task MarkMessagesAsReadAsync(
         Guid chatId,
         ulong lastMessageRead,
         Guid currentUserId)
     {
-        await EnsureCurrentUserAuthorized(currentUserId);
+        var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
         if (!await _chatUserRepo.TryUpdateLastMessageReadAsync(chatId, currentUserId, lastMessageRead))
             throw new TechnicalException("Failed to mark messages read");
+
+        await _messageProducer.SendMessageReadAsync(chatId, currentUser.Id, currentUser.UniqueName,
+            currentUser.DisplayedName, lastMessageRead);
     }
 }
