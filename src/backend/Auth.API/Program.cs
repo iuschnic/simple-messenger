@@ -4,6 +4,7 @@ using Auth.BL.OutputPorts;
 using Auth.BL.Services;
 using Auth.BL.Utils;
 using Auth.DB.Postgres;
+using Auth.Main.BR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -67,7 +68,7 @@ builder.Services.AddDbContext<ServerDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IKafkaProducer, Auth.Main.BR.KafkaProducer>();
+builder.Services.AddScoped<IKafkaProducer, KafkaProducer>();
 
 // ---------- Логирование (Serilog) ----------
 var logger = new LoggerConfiguration()
