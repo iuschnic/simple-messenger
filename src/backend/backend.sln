@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Main.Auth", "Shared.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Main.Realtime", "Shared.Main.Realtime\Shared.Main.Realtime.csproj", "{F7208B18-9D32-4F25-9B40-D61E15BB34D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Realtime.UnitTests", "Realtime.UnitTests\Realtime.UnitTests.csproj", "{28AE78AC-1618-47C6-8BF6-D30C4645B19D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,5 +98,9 @@ Global
 		{F7208B18-9D32-4F25-9B40-D61E15BB34D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7208B18-9D32-4F25-9B40-D61E15BB34D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7208B18-9D32-4F25-9B40-D61E15BB34D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28AE78AC-1618-47C6-8BF6-D30C4645B19D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28AE78AC-1618-47C6-8BF6-D30C4645B19D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28AE78AC-1618-47C6-8BF6-D30C4645B19D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28AE78AC-1618-47C6-8BF6-D30C4645B19D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
