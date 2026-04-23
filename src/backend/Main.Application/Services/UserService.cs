@@ -48,6 +48,9 @@ public class UserService : BaseService, IUserService
         var user = await GetCurrentUserOrUnauthorized(currentUserId);
         if (!await _userRepo.UpdateDisplayedNameAsync(currentUserId, newDisplayedName))
             throw new TechnicalException("Failed to update user displayed name");
+
+        await _messageProducer.SendUserChangedAsync(user.Id, user.UniqueName, newDisplayedName);
+
         user = User.Create(user.Id, user.UniqueName, newDisplayedName);
         return user.ToDto();
     }
