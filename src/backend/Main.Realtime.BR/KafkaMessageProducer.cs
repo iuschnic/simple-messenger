@@ -198,8 +198,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
         Guid chatId,
         Guid userId,
         string uniqueName,
-        string displayedName,
-        ulong lastMessageRead)
+        string displayedName)
     {
         var userDto = new UserDto(
             userId,
@@ -208,7 +207,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
         var chatUserDto = new ChatUserDto(
             chatId,
             userDto,
-            lastMessageRead);
+            0);
         await ProduceAsync(EventType.ChatUserJoined, chatUserDto);
     }
 
@@ -216,8 +215,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
         Guid chatId,
         Guid userId,
         string uniqueName,
-        string displayedName,
-        ulong lastMessageRead)
+        string displayedName)
     {
         var userDto = new UserDto(
             userId,
@@ -226,7 +224,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
         var chatUserDto = new ChatUserDto(
             chatId,
             userDto,
-            lastMessageRead);
+            0);
         await ProduceAsync(EventType.ChatUserLeft, chatUserDto);
     }
 

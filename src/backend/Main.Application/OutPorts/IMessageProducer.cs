@@ -75,13 +75,11 @@ public interface IMessageProducer
         Guid chatId,
         Guid userId,
         string uniqueName,
-        string displayedName,
-        ulong lastMessageRead);
+        string displayedName);
 
     Task SendChatUserLeftAsync(
         Guid chatId,
         Guid userId,
         string uniqueName,
-        string displayedName,
-        ulong lastMessageRead);
+        string displayedName);
 }

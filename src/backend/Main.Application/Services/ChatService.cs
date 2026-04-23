@@ -5,7 +5,6 @@ using Main.Application.Mappers;
 using Main.Application.OutPorts;
 using Main.BL.Enums;
 using Main.BL.Models;
-using System.Xml.Linq;
 
 namespace Main.Application.Services;
 
@@ -44,8 +43,8 @@ public class ChatService: BaseService, IChatService
     {
         if (currentUserId == otherUserId)
             throw new RuleViolationException("Cannot create private chat with yourself");
-        await EnsureCurrentUserAuthorized(currentUserId);
-        await EnsureUserExists(otherUserId);
+        var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);
+        var otherUser = await GetUserOrNotFound(otherUserId);
 
         if (await _chatRepo.ExistsPrivateBetweenUsersAsync(currentUserId, otherUserId))
             throw new ConflictException("Private chat already exists between these users");
@@ -55,6 +54,9 @@ public class ChatService: BaseService, IChatService
 
         var chat = Chat.CreatePrivate(participant1, participant2);
         await _chatRepo.CreateAsync(chat);
+        await _messageProducer.SendChatCreatedAsync(chat.Id, chat.Name, chat.Type, 
+            chat.OwnerUserId, chat.CreatedAt, chat.Version, chat.LastMessageNum, 
+            new List<User>([currentUser, otherUser]).Select(u => (u.Id, u.UniqueName, u.DisplayedName)));
         return chat.Id;
     }
 
@@ -100,8 +102,12 @@ public class ChatService: BaseService, IChatService
                 )
             );
         }
+        await _messageProducer.SendChatCreatedAsync(chat.Id, chat.Name, chat.Type,
+            chat.OwnerUserId, chat.CreatedAt, chat.Version, chat.LastMessageNum,
+            members.Select(u => (u.Id, u.UniqueName, u.DisplayedName)));
         return chat.Id;
     }
+
     public async Task UpdateChatNameAsync(Guid chatId, string newName, Guid currentUserId)
     {
         if (string.IsNullOrEmpty(newName))
@@ -118,7 +124,21 @@ public class ChatService: BaseService, IChatService
                     $"{user.DisplayedName} изменил(а) название группы на \"{newName}\""
                 )
             );
+        await _messageProducer.SendChatUpdatedAsync(chatId, newName, chat.Type, chat.OwnerUserId, 
+            chat.CreatedAt, chat.Version, chat.LastMessageNum);
     }
+
+    /*
+    Task SendMessageReceivedAsync
+    Task SendMessageUpdatedAsync
+    Task SendMessageReadAsync
+    Task SendUserChangedAsync
+    Task SendChatCreatedAsync
+    Task SendChatUpdatedAsync
+    Task SendChatDeletedAsync
+    Task SendChatUserJoinedAsync
+    Task SendChatUserLeftAsync
+    */
     public async Task AddMemberAsync(Guid chatId, Guid userIdToAdd, Guid currentUserId)
     {
         var currentUser = await GetCurrentUserOrUnauthorized(currentUserId);
@@ -138,6 +158,8 @@ public class ChatService: BaseService, IChatService
                     $"{currentUser.DisplayedName} добавил(а) {toAddUser.DisplayedName}"
                 )
             );
+        await _messageProducer.SendChatUserJoinedAsync(chatId, toAddUser.Id, toAddUser.UniqueName,
+            toAddUser.DisplayedName);
     }
     public async Task RemoveMemberAsync(Guid chatId, Guid userIdToRemove, Guid currentUserId)
     {
@@ -163,6 +185,8 @@ public class ChatService: BaseService, IChatService
                     $"{currentUser.DisplayedName} удалил(а) {toRemoveUser.DisplayedName}"
                 )
             );
+        await _messageProducer.SendChatUserLeftAsync(chatId, toRemoveUser.Id, toRemoveUser.UniqueName,
+            toRemoveUser.DisplayedName);
     }
     public async Task LeaveChatAsync(Guid chatId, Guid currentUserId)
     {
@@ -181,6 +205,8 @@ public class ChatService: BaseService, IChatService
                     $"{currentUser.DisplayedName} покинул(а) группу"
                 )
             );
+        await _messageProducer.SendChatUserLeftAsync(chatId, currentUser.Id, currentUser.UniqueName,
+            currentUser.DisplayedName);
     }
     private void EnsureGroupChat(Chat chat)
     {
