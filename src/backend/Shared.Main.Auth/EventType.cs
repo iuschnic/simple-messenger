@@ -2,5 +2,6 @@
 
 public enum EventType
 {
-    CreateUser
+    CreateUser,
+    RemoveUser
 }

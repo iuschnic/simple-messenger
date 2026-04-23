@@ -34,6 +34,12 @@ public class UserService : BaseService, IUserService
             throw new TechnicalException("Failed to create user");
         return user.ToDto();
     }
+    public async Task RemoveUserAsync(Guid id)
+    {
+        await EnsureUserExists(id);
+        if (!await _userRepo.DeleteAsync(id))
+            throw new TechnicalException("Failed to remove user");
+    }
     public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
     {
         if (string.IsNullOrWhiteSpace(newDisplayedName))

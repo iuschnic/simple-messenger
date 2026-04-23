@@ -24,6 +24,9 @@ public class MessageHandler: IMessageHandler
             case EventType.CreateUser:
                 await CreateUser(dataJson);
                 break;
+            case EventType.RemoveUser:
+                await RemoveUser(dataJson);
+                break;
         }
     }
 
@@ -42,6 +45,24 @@ public class MessageHandler: IMessageHandler
         if (user is null)
             throw new DeserializeException();
 
-        await _userService.CreateUserAsync(user.UniqueName, user.DisplayedName);
+        await _userService.CreateUserAsync(user.Id, user.UniqueName, user.DisplayedName);
+    }
+
+    private async Task RemoveUser(string dataJson)
+    {
+        UserRemoveDto? user;
+        try
+        {
+            user = JsonConvert.DeserializeObject<UserRemoveDto>(dataJson);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "Failed to deserialize message");
+            throw new DeserializeException();
+        }
+        if (user is null)
+            throw new DeserializeException();
+
+        await _userService.RemoveUserAsync(user.Id);
     }
 }
