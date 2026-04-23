@@ -4,10 +4,21 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+        <PackageReference Include="Serilog" Version="4.3.1" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="../Auth.DB/Auth.DB.csproj" />
+      <ProjectReference Include="../Auth.Main.BR/Auth.Main.BR.csproj" />
+      <ProjectReference Include="..\Auth.BL\Auth.BL.csproj" />
     </ItemGroup>
 
 </Project>
