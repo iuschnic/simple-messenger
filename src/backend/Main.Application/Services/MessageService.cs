@@ -14,7 +14,8 @@ public class MessageService: BaseService, IMessageService
         IUserRepository userRepo,
         IMessageRepository messageRepo,
         IChatRepository chatRepo,
-        IChatUserRepository chatUserRepo) : base(userRepo, chatRepo, chatUserRepo, messageRepo) { }
+        IChatUserRepository chatUserRepo,
+        IMessageProducer messageProducer) : base(userRepo, chatRepo, chatUserRepo, messageRepo, messageProducer) { }
     public async Task<IEnumerable<MessageDto>> GetOlderMessagesAsync(
         Guid chatId,
         ulong fromMessageNumber,
