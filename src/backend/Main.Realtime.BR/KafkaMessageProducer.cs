@@ -1,9 +1,11 @@
 ﻿using Confluent.Kafka;
 using Main.Application.OutPorts;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System.Text;
+using Serilog;
 using Shared.Main.Realtime;
 using Shared.Main.Realtime.Models;
-using System.Text;
 
 namespace Main.Realtime.BR;
 
@@ -11,19 +13,28 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
 {
     private readonly IProducer<Null, byte[]> _producer;
     private readonly string _topic;
+    private readonly ILogger _logger;
 
-    public KafkaMessageProducer(KafkaProducerConfig config)
+    public KafkaMessageProducer(
+        IOptions<KafkaProducerConfig> config,
+        ILogger logger)
     {
+        var kafkaConfig = config.Value;
         var producerConfig = new ProducerConfig
         {
-            BootstrapServers = config.BootstrapServers
+            BootstrapServers = kafkaConfig.BootstrapServers,
+            Acks = Acks.All,
+            MessageSendMaxRetries = 3,
+            RetryBackoffMs = 100,
+            EnableIdempotence = true,
+            CompressionType = CompressionType.Snappy
         };
-
         _producer = new ProducerBuilder<Null, byte[]>(producerConfig).Build();
-        _topic = config.Topic;
+        _topic = kafkaConfig.Topic;
+        _logger = logger;
     }
 
-    public Task SendMessageReceivedAsync(
+    public async Task SendMessageReceivedAsync(
         ulong messageNumber,
         Guid chatId,
         Guid? senderId,
@@ -48,10 +59,10 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
             MapMessageType(type),
             replyToMessageNumber,
             forwardedFromUserId);
-        return ProduceAsync(EventType.MessageReceived, dto);
+        await ProduceAsync(EventType.MessageReceived, dto);
     }
 
-    public Task SendMessageUpdatedAsync(
+    public async Task SendMessageUpdatedAsync(
         ulong messageNumber,
         Guid chatId,
         Guid? senderId,
@@ -76,7 +87,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
             MapMessageType(type),
             replyToMessageNumber,
             forwardedFromUserId);
-        return ProduceAsync(EventType.MessageUpdated, dto);
+        await ProduceAsync(EventType.MessageUpdated, dto);
     }
 
     public async Task SendMessageReadAsync(
@@ -233,8 +244,19 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
             }
         };
 
-        await _producer.ProduceAsync(_topic, message);
+        try
+        {
+            var deliveryResult = await _producer.ProduceAsync(_topic, message);
+            _logger.Debug("Message delivered to {Topic}[{Partition}] at offset {Offset}",
+                deliveryResult.Topic, deliveryResult.Partition, deliveryResult.Offset);
+        }
+        catch (ProduceException<Null, byte[]> ex)
+        {
+            _logger.Error(ex, "Failed to deliver message to {Topic}", _topic);
+            throw;
+        }
     }
+
     private static Shared.Main.Realtime.Models.MessageType MapMessageType(
         BL.Enums.MessageType type)
     {
@@ -247,6 +269,7 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
+
     private static Shared.Main.Realtime.Models.ChatType MapChatType(
         BL.Enums.ChatType type)
     {
@@ -257,4 +280,17 @@ public class KafkaMessageProducer : IMessageProducer, IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
+
+    public void Dispose()
+    {
+        _producer?.Dispose();
+    }
+}
+
+public class KafkaProducerConfig
+{
+    public string BootstrapServers { get; set; } = string.Empty;
+    public string Topic { get; set; } = string.Empty;
+    public int MessageSendMaxRetries { get; set; } = 3;
+    public int RetryBackoffMs { get; set; } = 100;
 }
