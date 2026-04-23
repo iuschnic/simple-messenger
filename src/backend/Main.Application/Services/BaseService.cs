@@ -1,0 +1,88 @@
+﻿using Main.Application.Exceptions;
+using Main.BL.Models;
+using Main.Application.OutPorts;
+
+namespace Main.Application.Services;
+
+public abstract class BaseService
+{
+    protected readonly IUserRepository _userRepo;
+    protected readonly IChatRepository _chatRepo;
+    protected readonly IChatUserRepository _chatUserRepo;
+    protected readonly IMessageRepository _messageRepo;
+    protected readonly IMessageProducer _messageProducer;
+    protected BaseService(
+        IUserRepository userRepo,
+        IChatRepository chatRepo,
+        IChatUserRepository chatUserRepo,
+        IMessageRepository messageRepo,
+        IMessageProducer messageProducer)
+    {
+        _userRepo = userRepo;
+        _chatRepo = chatRepo;
+        _chatUserRepo = chatUserRepo;
+        _messageRepo = messageRepo;
+        _messageProducer = messageProducer;
+    }
+    protected async Task EnsureUserExists(Guid userId)
+    {
+        if (!await _userRepo.ExistsAsync(userId))
+            throw new NotFoundException(nameof(User), userId);
+    }
+    protected async Task EnsureCurrentUserAuthorized(Guid userId)
+    {
+        if (!await _userRepo.ExistsAsync(userId))
+            throw new UnauthorizedException(nameof(User), userId);
+    }
+    protected async Task EnsureChatExists(Guid chatId)
+    {
+        if (!await _chatRepo.ExistsAsync(chatId))
+            throw new NotFoundException(nameof(Chat), chatId);
+    }
+    protected async Task EnsureMessageExists(Guid chatId, ulong messageNum)
+    {
+        if (!await _messageRepo.ExistsAsync(chatId, messageNum))
+            throw new NotFoundException(nameof(Message), messageNum);
+    }
+    protected async Task EnsureParticipant(Guid chatId, Guid userId)
+    {
+        if (!await _chatUserRepo.IsParticipantAsync(chatId, userId))
+            throw new ForbiddenException($"User {userId} is not a participant of chat {chatId}");
+    }
+    protected async Task EnsureNotParticipant(Guid chatId, Guid userId)
+    {
+        if (await _chatUserRepo.IsParticipantAsync(chatId, userId))
+            throw new ConflictException($"User {userId} is already a participant of chat {chatId}");
+    }
+    protected void EnsureOwner(Chat chat, Guid userId)
+    {
+        if (chat.OwnerUserId != userId)
+            throw new ForbiddenException("User {userId} is not an owner of chat {chatId} so can not perform this action");
+    }
+    protected void EnsureNotOwner(Chat chat, Guid userId)
+    {
+        if (chat.OwnerUserId == userId)
+            throw new ForbiddenException("User {userId} as an owner of chat {chatId} can not perform this action");
+    }
+    protected async Task<Message> GetMessageOrThrow(Guid chatId, ulong messageNum)
+    {
+        return await _messageRepo.GetByNumberAsync(chatId, messageNum)
+            ?? throw new NotFoundException(nameof(Message), messageNum);
+    }
+    protected async Task<Chat> GetChatOrThrow(Guid chatId)
+    {
+        return await _chatRepo.GetByIdAsync(chatId)
+            ?? throw new NotFoundException(nameof(Chat), chatId);
+    }
+    protected async Task<User> GetUserOrNotFound(Guid userId)
+    {
+        return await _userRepo.GetByIdAsync(userId)
+            ?? throw new NotFoundException(nameof(User), userId);
+    }
+    protected async Task<User> GetCurrentUserOrUnauthorized(Guid userId)
+    {
+        return await _userRepo.GetByIdAsync(userId)
+            ?? throw new UnauthorizedException(nameof(User), userId);
+    }
+
+}
