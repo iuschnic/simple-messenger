@@ -60,7 +60,7 @@ public class UserRepository : IUserRepository
     }
     public async Task<bool> CreateAsync(User user)
     {
-        var existDb = await _context.Users.FindAsync(user.UniqueName);
+        // var existDb = await _context.Users.FindAsync(user.UniqueName);
         if (await _context.Users.AnyAsync(u => u.UniqueName == user.UniqueName || u.Id == user.Id))
             return false;
         var userDb = user.ToDb();
