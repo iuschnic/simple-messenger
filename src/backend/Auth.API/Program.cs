@@ -67,7 +67,7 @@ builder.Services.AddDbContext<ServerDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IKafkaProducer, Auth.Main.BR.KafkaProducer>(); // если KafkaProducer в папке Kafka в проекте Auth.Api
+builder.Services.AddScoped<IKafkaProducer, Auth.Main.BR.KafkaProducer>();
 
 // ---------- Логирование (Serilog) ----------
 var logger = new LoggerConfiguration()

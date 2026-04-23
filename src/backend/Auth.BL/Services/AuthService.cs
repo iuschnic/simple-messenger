@@ -3,7 +3,7 @@ using Auth.BL.Models;
 using Auth.BL.OutputPorts;
 using Auth.BL.InputPorts;
 using Auth.BL.Utils;
-using Shared.Main.Auth.Models;
+using Shared.Main.Auth.Dtos;
 
 namespace Auth.BL.Services;
 public class AuthService : IAuthService

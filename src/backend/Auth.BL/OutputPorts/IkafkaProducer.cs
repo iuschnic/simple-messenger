@@ -1,8 +1,8 @@
-using Shared.Main.Auth.Models;
+using Shared.Main.Auth.Dtos;
 
 namespace Auth.BL.OutputPorts;
 
 public interface IKafkaProducer
 {
-    Task ProduceUserRegisteredAsync(UserCreateDto message, CancellationToken cancellationToken = default);
+    Task ProduceUserRegisteredAsync(UserCreateDto message);
 }
