@@ -1,0 +1,15 @@
+﻿using Main.Application.Enums;
+
+namespace Main.Application.Dtos;
+
+public class ChatWithUsersDto
+{
+    public Guid Id { get; init; }
+    public string? Name { get; init; }
+    public ChatTypeApp Type { get; init; }
+    public Guid? OwnerUserId { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public ulong Version { get; init; }
+    public ulong LastMessageNum { get; init; }
+    public IReadOnlyList<UserDto> Participants { get; init; }
+}
