@@ -137,4 +137,46 @@ public class ChatRepository : IChatRepository
             WHERE ChatId = @chatId AND UserId = @userId
         ", new { chatId, userId, lastReadMessageNum });
     }
+    
+    public async Task LeaveAndDeleteChat(Guid chatId, Guid userId)
+    {
+        using var db = _factory.Create();
+        await db.OpenAsync();
+
+        using var tx = db.BeginTransaction();
+
+        try
+        {
+            // 1. Удаляем пользователя из чата
+            await db.ExecuteAsync(@"
+            DELETE FROM ChatsUsers
+            WHERE ChatId = @chatId AND UserId = @userId
+        ", new { chatId, userId }, tx);
+
+            // 2. Удаляем ВСЕ сообщения чата
+            await db.ExecuteAsync(@"
+            DELETE FROM Messages
+            WHERE ChatId = @chatId
+        ", new { chatId }, tx);
+
+            // 3. Удаляем ВСЕХ пользователей из чата (связи)
+            await db.ExecuteAsync(@"
+            DELETE FROM ChatsUsers
+            WHERE ChatId = @chatId
+        ", new { chatId }, tx);
+
+            // 4. Удаляем сам чат
+            await db.ExecuteAsync(@"
+            DELETE FROM Chats
+            WHERE Id = @chatId
+        ", new { chatId }, tx);
+
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+    }
 }

@@ -146,6 +146,7 @@ public class MessengerService : IMessengerService
             await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
 
+        await SyncFullChat(chat.Id);
         await Events.RaiseChatCreated(chat);
     }
 
@@ -315,7 +316,7 @@ public class MessengerService : IMessengerService
     {
         var chat = await Execute(() => _db.Chats.Find(chatId));
         await Execute(() => _http.RemoveUserFromChat(chatId, userId, chat!.Version));
-        await Execute(() => _db.Chats.RemoveUserFromChat(chatId, userId));
+        await Execute(() => _db.Chats.LeaveAndDeleteChat(chatId, userId));
     }
 
     // ================= MESSAGES =================
