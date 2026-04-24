@@ -31,6 +31,12 @@ public class ChatService: BaseService, IChatService
             [.. c.Participants.Select(p => userMap[p.UserId])]));
     }
 
+    public async Task<IEnumerable<Guid>> GetChatsIdsAsync(Guid userId)
+    {
+        await EnsureCurrentUserAuthorized(userId);
+        return (await _chatRepo.GetUserChatsAsync(userId)).Select(c => c.Id);
+    }
+
     public async Task<ChatWithUsersDto> GetChatByIdAsync(Guid chatId, Guid currentUserId)
     {
         await EnsureCurrentUserAuthorized(currentUserId);

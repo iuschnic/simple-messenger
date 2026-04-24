@@ -1,4 +1,5 @@
 using Confluent.Kafka;
+using Main.API.Controllers;
 using Main.Application.Handlers;
 using Main.Application.InPorts;
 using Main.Application.OutPorts;
@@ -97,6 +98,9 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ISyncService, SyncService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMessageHandler, MessageHandler>();
+
+// ================== internal auth ==================
+builder.Services.AddScoped<ApiKeyAuthFilter>();
 
 // ================== Kafka ==================
 builder.Services.Configure<KafkaProducerConfig>(

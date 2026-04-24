@@ -3,6 +3,7 @@ namespace Main.Application.InPorts;
 public interface IChatService
 {
     Task<IEnumerable<ChatWithUsersDto>> GetChatsAsync(Guid currentUserId);
+    Task<IEnumerable<Guid>> GetChatsIdsAsync(Guid userId);
     Task<ChatWithUsersDto> GetChatByIdAsync(Guid chatId, Guid currentUserId);
     Task<Guid> CreatePrivateChatAsync(Guid otherUserId, Guid currentUserId);
     Task<Guid> CreateGroupChatAsync(string name, List<Guid> memberIds, Guid currentUserId);

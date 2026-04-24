@@ -17,6 +17,12 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: API key for internal service communication
 
   schemas:
 
@@ -1143,5 +1149,37 @@ paths:
           description: Unauthorized
         "404":
           description: Chat not found
+        "500":
+          description: Server error
+    
+  /internal/chats/by-user/{userId}:
+    get:
+      summary: Get user's chat IDs (internal service endpoint)
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID to get chats for
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Chat IDs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+        "400":
+          description: Invalid user ID
+        "401":
+          description: Invalid or missing API key
+        "404":
+          description: User not found
         "500":
           description: Server error
