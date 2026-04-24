@@ -26,6 +26,7 @@ public class MessengerService : IMessengerService
         _rt.MessageReceived += OnMessageReceived;
         _rt.UserLeftChat += OnUserLeftChat;
         _rt.ChatCreated += OnChatCreated;
+        _rt.ReconnectedToHub += OnReconnectedToHub;
     }
 
     // ================= ERROR WRAPPER =================
@@ -89,15 +90,15 @@ public class MessengerService : IMessengerService
         var chat = await Execute(() => _db.Chats.Find(chatId));
         var version = chat?.Version ?? 0;
 
-        var sync = (await Execute(() =>
-            _http.SyncChats(new List<(Guid, ulong)> { (chatId, version) })
-        )).First();
+        var sync = await Execute(() =>
+            _http.SyncChat(chatId, version)
+        );
+        
+        foreach (var u in sync.Participants)
+            await Execute(() => _db.Users.Save(u));
 
         foreach (var m in sync.Messages)
             await Execute(() => _db.Messages.Save(m));
-
-        if (chat == null)
-            chat = new Chat { Id = chatId };
 
         chat.Version = sync.LastVersion;
 
@@ -107,6 +108,40 @@ public class MessengerService : IMessengerService
         await Execute(() => _db.Chats.Save(chat));
     }
 
+    private async Task SyncFullChats()
+    {
+        var chats = (await Execute(() => _db.Chats.GetAllChats())) 
+                    ?? new List<Chat>();
+
+        var request = chats
+            .Select(c => (c.Id, c.Version))
+            .ToList();
+
+        var syncResults = await Execute(() => _http.SyncChats(request));
+
+        foreach (var sync in syncResults)
+        {
+            var chat = chats.FirstOrDefault(c => c.Id == sync.ChatId);
+            
+            foreach (var u in sync.Participants)
+                await Execute(() => _db.Users.Save(u));
+            
+            foreach (var m in sync.Messages)
+                await Execute(() => _db.Messages.Save(m));
+
+            if (chat == null)
+                chat = new Chat { Id = sync.ChatId };
+
+            chat.Version = sync.LastVersion;
+
+            if (sync.Messages.Any())
+                chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+
+            await Execute(() => _db.Chats.Save(chat));
+        }
+    }
+
+    
     private async Task OnMessageReceived(Message message)
     {
         if (await Execute(() => _db.Messages.Find(message.MessageNumber)) != null)
@@ -116,7 +151,7 @@ public class MessengerService : IMessengerService
 
         if (chat == null || message.Version > chat.Version + 1)
         {
-            await SyncFullChat(message.ChatId);
+            await SyncFullChats();
             return;
         }
 
@@ -148,6 +183,12 @@ public class MessengerService : IMessengerService
 
         await SyncFullChat(chat.Id);
         await Events.RaiseChatCreated(chat);
+    }
+    
+    private async Task OnReconnectedToHub()
+    {
+        await SyncFullChats();
+        await Events.RaiseReconnectedToHub();
     }
 
     // ================= AUTH =================

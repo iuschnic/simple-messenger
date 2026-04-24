@@ -14,7 +14,13 @@ namespace BL.Events
         
         // Событие для создания нового чата
         public event Func<Chat, Task> ChatCreated;
+        
+        // Событие для синхронизации после потери соединения
+        public event Func<Task> ReconnectedToHub;
 
+        // Вызов события для сихронизации после потери соединения
+        public async Task RaiseReconnectedToHub() => await  ReconnectedToHub.Invoke();
+        
         // Вызов события для получения нового сообщения
         public async Task RaiseMessageReceived(Message message) => await  MessageReceived.Invoke(message);
 

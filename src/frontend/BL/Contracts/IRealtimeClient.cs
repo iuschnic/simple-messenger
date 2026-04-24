@@ -9,6 +9,8 @@ namespace BL.Contracts
         event Func<ulong, Task> MessageDeleted;
         event Func<Guid, Guid, Task> UserLeftChat;  // Событие для выхода пользователя из чата
         event Func<Chat, Task> ChatCreated;   // Событие для создания нового чата с текущимс пользователем
+        
+        event Func<Task> ReconnectedToHub;
             
         public Task ConnectToHub(string token);
         // Методы

@@ -24,6 +24,7 @@ public interface IHttpClient
     Task<Chat> CreateGroupChat(string name, List<Guid> memberIds);
     Task<Chat> CreatePrivateChat(Guid withUserId);
     Task<Chat> GetChat(Guid chatId);
+    Task<SyncChatResult> SyncChat(Guid chatId, ulong clientVersion);
     Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats);
     Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong clientVersion);
 
@@ -32,5 +33,5 @@ public interface IHttpClient
     Task<SyncChatResult> SendMessage(Guid chatId, string text, ulong clientVersion);
     Task<SyncChatResult> EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion);
     Task<SyncChatResult> DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion);
-    Task<List<Message>> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null);
+    Task<List<Message>> GetMessages(Guid chatId, ulong fromMessageNumber, int limit);
 }
