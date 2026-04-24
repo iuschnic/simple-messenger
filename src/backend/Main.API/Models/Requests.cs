@@ -92,7 +92,7 @@ public class SyncChatsRequest
 public class SyncChatRequest
 {
     [Required]
-    public ulong ClientVersion { get; set; }
+    public long ClientVersion { get; set; }
 }
 
 public class ChatSyncItem
