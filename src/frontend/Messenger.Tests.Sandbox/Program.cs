@@ -98,6 +98,12 @@ class Program
             Console.WriteLine($"[EVENT] Chat created: {chat.Id}");
             return Task.CompletedTask;
         };
+        
+        bl.Events.ReconnectedToHub += () =>
+        {
+            Console.WriteLine($"[EVENT] Connection up;)");
+            return Task.CompletedTask;
+        };
 
         // ================= SCENARIO =================
 

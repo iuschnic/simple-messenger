@@ -26,6 +26,7 @@ public class MessengerService : IMessengerService
         _rt.MessageReceived += OnMessageReceived;
         _rt.UserLeftChat += OnUserLeftChat;
         _rt.ChatCreated += OnChatCreated;
+        _rt.ReconnectedToHub += OnReconnectedToHub;
     }
 
     // ================= ERROR WRAPPER =================
@@ -182,6 +183,12 @@ public class MessengerService : IMessengerService
 
         await SyncFullChat(chat.Id);
         await Events.RaiseChatCreated(chat);
+    }
+    
+    private async Task OnReconnectedToHub()
+    {
+        await SyncFullChats();
+        await Events.RaiseReconnectedToHub();
     }
 
     // ================= AUTH =================

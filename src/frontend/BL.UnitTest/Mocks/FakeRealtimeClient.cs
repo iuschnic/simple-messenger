@@ -11,6 +11,7 @@ namespace BL.UnitTest.Mocks
         public event Func<Message, Task>? MessageReceived;
         public event Func<Message, Task>? MessageUpdated;
         public event Func<ulong, Task>? MessageDeleted;
+        public event Func<Task>? ReconnectedToHub;
         public event Func<Guid, Guid, Task>? UserLeftChat;  // Событие для выхода пользователя из чата
         public event Func<Chat, Task>? ChatCreated;   // Событие для создания нового чата с текущим пользователем
 
@@ -45,6 +46,12 @@ namespace BL.UnitTest.Mocks
         {
             // Симулируем создание нового чата
             ChatCreated?.Invoke(chatId);
+        }
+        
+        public void NotifyReconnectedToHub()
+        {
+            // Симулируем создание нового чата
+            ReconnectedToHub?.Invoke();
         }
 
         public Task ConnectToHub(string token)
