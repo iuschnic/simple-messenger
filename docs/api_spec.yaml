@@ -407,6 +407,16 @@ components:
         lastMessageNum:
           type: integer
           format: int64
+    
+    SyncChatRequest:
+      type: object
+      required:
+        - clientVersion
+      properties:
+        clientVersion:
+          type: integer
+          format: int64
+
 
     SyncChatsRequest:
       type: object
@@ -1094,6 +1104,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncChatsResponse'
+        "400":
+          description: Invalid request data
+        "401":
+          description: Unauthorized
+        "404":
+          description: Chat not found
+        "500":
+          description: Server error
+          
+  /chats/sync/{chatId}:
+    post:
+      summary: Sync single chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          description: ID of the chat to sync
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncChatRequest'
+      responses:
+        "200":
+          description: Sync successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChatResponse'
+        "400":
+          description: Invalid request data
         "401":
           description: Unauthorized
         "404":

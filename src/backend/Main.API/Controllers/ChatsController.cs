@@ -287,6 +287,33 @@ public class ChatsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Синхронизировать один чат
+    /// </summary>
+    /// <param name="chatId">ID чата для синхронизации</param>
+    /// <param name="request">Версия клиента</param>
+    /// <returns>Обновлённые данные чата</returns>
+    [HttpPost("sync/{chatId:guid}")]
+    [ProducesResponseType(typeof(SyncChatResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<SyncChatResponse>> SyncChat(
+        Guid chatId,
+        [FromBody] SyncChatRequest request)
+    {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} sync chat {chatId}", userId, chatId);
+        if (request.ClientVersion < 0)
+            throw new RuleViolationException("Client version must be non-negative");
+        var sync = await _syncService.SyncChatAsync(chatId, (ulong)request.ClientVersion, userId);
+        _logger.LogInformation(
+            "User {userId} successfully sync chat {chatId}: status={status}", userId,
+            chatId, sync.Status);
+        return Ok(new SyncChatResponse { Chat = sync });
+    }
+
     [HttpPost("sync")]
     [ProducesResponseType(typeof(SyncChatsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

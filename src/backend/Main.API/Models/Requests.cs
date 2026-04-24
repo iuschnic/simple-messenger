@@ -89,6 +89,12 @@ public class SyncChatsRequest
     public List<ChatSyncItem> Chats { get; set; } = new();
 }
 
+public class SyncChatRequest
+{
+    [Required]
+    public ulong ClientVersion { get; set; }
+}
+
 public class ChatSyncItem
 {
     [Required]
