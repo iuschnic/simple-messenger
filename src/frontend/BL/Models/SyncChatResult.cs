@@ -8,6 +8,11 @@ public class SyncChatResult
 
     public ulong LastVersion { get; set; }
 
-    // ✅ добавляем пользователей
     public List<User> Participants { get; set; } = new();
+    
+    public string? ChatName { get; set; }
+
+    public ChatType ChatType { get; set; }
+
+    public ulong LastMessageNum { get; set; }
 }

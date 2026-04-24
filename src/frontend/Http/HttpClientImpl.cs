@@ -8,6 +8,7 @@ using Http.Dto;
 using Http.Mapping;
 using BL.Exceptions;
 using Microsoft.Extensions.Configuration;
+using Http.Dto;
 
 namespace Http;
 
@@ -186,7 +187,7 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        return DtoMapper.ToCurrentUser(await Read<CurrentUserDto>(res));
+        return DtoMapper.ToCurrentUser(await Read<UserDto>(res));
     }
 
     public async Task<User> UpdateContactName(Guid id, string contactName)
@@ -227,9 +228,17 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        await Read<SyncChatResponseDto>(res);
+        var dto = await Read<SyncChatResponseDto>(res);
 
-        return (await GetChats()).First(c => c.Name == name);
+        // берём из sync
+        return new Chat
+        {
+            Id = dto.Chat.ChatId,
+            Name = dto.Chat.ChatMeta?.Name,
+            Type = (ChatType)(dto.Chat.ChatMeta?.Type ?? 0),
+            Version = dto.Chat.ChatMeta?.Version ?? 0,
+            LastMessageNum = dto.Chat.ChatMeta?.LastMessageNum ?? 0
+        };
     }
 
     public async Task<Chat> CreatePrivateChat(Guid withUserId)
@@ -242,9 +251,16 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        await Read<SyncChatResponseDto>(res);
+        var dto = await Read<SyncChatResponseDto>(res);
 
-        return (await GetChats()).First();
+        return new Chat
+        {
+            Id = dto.Chat.ChatId,
+            Name = dto.Chat.ChatMeta?.Name,
+            Type = (ChatType)(dto.Chat.ChatMeta?.Type ?? 1),
+            Version = dto.Chat.ChatMeta?.Version ?? 0,
+            LastMessageNum = dto.Chat.ChatMeta?.LastMessageNum ?? 0
+        };
     }
 
     public async Task<Chat> GetChat(Guid chatId)
@@ -267,7 +283,9 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
+        var dto = await Read<SyncChatResponseDto>(res);
+
+        return DtoMapper.ToSync(dto.Chat);
     }
 
     public async Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats)
@@ -296,7 +314,9 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
+        var dto = await Read<SyncChatResponseDto>(res);
+
+        return DtoMapper.ToSync(dto.Chat);
     }
 
     // ================= MESSAGES =================
@@ -314,7 +334,9 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
+        var dto = await Read<SyncChatResponseDto>(res);
+
+        return DtoMapper.ToSync(dto.Chat);
     }
 
     public async Task<SyncChatResult> EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion)
@@ -325,7 +347,9 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
+        var dto = await Read<SyncChatResponseDto>(res);
+
+        return DtoMapper.ToSync(dto.Chat);
     }
 
     public async Task<SyncChatResult> DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion)
@@ -335,19 +359,14 @@ public class HttpClientImpl : IHttpClient
         ));
 
         await HandleErrors(res);
+        var dto = await Read<SyncChatResponseDto>(res);
 
-        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
+        return DtoMapper.ToSync(dto.Chat);
     }
 
-    public async Task<List<Message>> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
+    public async Task<List<Message>> GetMessages(Guid chatId, ulong fromMessageNumber, int limit)
     {
-        var url = $"chats/{chatId}/messages?";
-
-        if (fromMessageNumber != null)
-            url += $"fromMessageNum={fromMessageNumber}&";
-
-        if (limit != null)
-            url += $"limit={limit}";
+        var url = $"chats/{chatId}/messages?fromMessageNum={fromMessageNumber}&limit={limit}";
 
         var res = await Send(() => _http.GetAsync(url));
 

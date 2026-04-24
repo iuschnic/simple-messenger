@@ -4,13 +4,13 @@ using Http.Dto;
 
 public class ChatDto
 {
-    public Guid ChatId { get; set; }
-    public string Name { get; set; }
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
     public int Type { get; set; }
-    public Guid OwnerId { get; set; }
+    public Guid OwnerUserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public ulong Version { get; set; }
     public ulong LastMessageNum { get; set; }
 
-    public List<UserDto> Members { get; set; } = new();
+    public List<UserDto>? Participants { get; set; }
 }

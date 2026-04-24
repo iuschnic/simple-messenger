@@ -274,18 +274,15 @@ public class FakeHttpClient : IHttpClient
         });
     }
 
-    public Task<List<Message>> GetMessages(Guid chatId, ulong? fromMessageNumber = null, int? limit = null)
+    public Task<List<Message>> GetMessages(Guid chatId, ulong fromMessageNumber, int limit)
     {
-        IEnumerable<Message> query = _messages.Values
+        var result = _messages.Values
             .Where(m => m.ChatId == chatId)
-            .OrderBy(m => m.MessageNumber);
+            .Where(m => m.MessageNumber >= fromMessageNumber)
+            .OrderBy(m => m.MessageNumber)
+            .Take(limit)
+            .ToList();
 
-        if (fromMessageNumber != null)
-            query = query.Where(m => m.MessageNumber >= fromMessageNumber.Value);
-
-        if (limit != null)
-            query = query.Take(limit.Value);
-
-        return Task.FromResult(query.ToList());
+        return Task.FromResult(result);
     }
 }
