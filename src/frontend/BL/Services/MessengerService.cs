@@ -109,7 +109,8 @@ public class MessengerService : IMessengerService
 
     private async Task SyncFullChats()
     {
-        var chats = (await Execute(() => _db.Chats.GetAll())) ?? new List<Chat>();
+        var chats = (await Execute(() => _db.Chats.GetAllChats())) 
+                    ?? new List<Chat>();
 
         var request = chats
             .Select(c => (c.Id, c.Version))
@@ -120,6 +121,9 @@ public class MessengerService : IMessengerService
         foreach (var sync in syncResults)
         {
             var chat = chats.FirstOrDefault(c => c.Id == sync.ChatId);
+            
+            foreach (var u in sync.Participants)
+                await Execute(() => _db.Users.Save(u));
             
             foreach (var m in sync.Messages)
                 await Execute(() => _db.Messages.Save(m));
