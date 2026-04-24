@@ -4,6 +4,7 @@ using Main.Application.Exceptions;
 using Main.Application.InPorts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace Main.API.Controllers;
 
@@ -15,11 +16,14 @@ public class ChatsController : ControllerBase
     private readonly IChatService _chatService;
     private readonly IMessageService _messageService;
     private readonly ISyncService _syncService;
-    public ChatsController(IChatService chatService, IMessageService messageService, ISyncService syncService)
+    private readonly ILogger _logger;
+    public ChatsController(IChatService chatService, IMessageService messageService,
+        ISyncService syncService, ILogger logger)
     {
         _chatService = chatService;
         _messageService = messageService;
         _syncService = syncService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -28,7 +32,10 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<ChatWithUsersDto>>> GetUserChats()
     {
-        var result = await _chatService.GetChatsAsync(User.GetUserId());
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} getting chats", userId);
+        var result = await _chatService.GetChatsAsync(userId);
+        _logger.LogInformation("User {userId} successfully retrieved {count} chats", userId, result.Count());
         return Ok(result);
     }
 
@@ -46,21 +53,24 @@ public class ChatsController : ControllerBase
     public async Task<ActionResult<SyncChatResponse>> CreateChat([FromBody] BaseCreateChatRequest request)
     {
         Guid chatId;
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} creating {type} chat", userId, request.ChatType.ToString());
         switch (request)
         {
             case CreatePrivateChatRequest privateChat:
-                chatId = await _chatService.CreatePrivateChatAsync(privateChat.WithUserId, User.GetUserId());
+                chatId = await _chatService.CreatePrivateChatAsync(privateChat.WithUserId, userId);
                 break;
 
             case CreateGroupChatRequest groupChat:
-                chatId = await _chatService.CreateGroupChatAsync(groupChat.ChatName, groupChat.MemberIds, User.GetUserId());
+                chatId = await _chatService.CreateGroupChatAsync(groupChat.ChatName, groupChat.MemberIds, userId);
                 break;
 
             default:
                 throw new RuleViolationException($"Unknown chat type: {request.GetType().Name}");
         }
-        var sync = await _syncService.SyncChatAsync(chatId, 0, User.GetUserId());
+        var sync = await _syncService.SyncChatAsync(chatId, 0, userId);
         var response = new SyncChatResponse { Chat = sync };
+        _logger.LogInformation("User {userId} successfully created {type} chat", userId, request.ChatType.ToString());
         return CreatedAtAction(nameof(GetChatInfo), new { chatId }, response);
     }
 
@@ -71,7 +81,10 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ChatWithUsersDto>> GetChatInfo(Guid chatId)
     {
-        var result = await _chatService.GetChatByIdAsync(chatId, User.GetUserId());
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} getting chat {chatId} info", userId, chatId);
+        var result = await _chatService.GetChatByIdAsync(chatId, userId);
+        _logger.LogInformation("User {userId} successfully got chat {chatId} info", userId, chatId);
         return Ok(result);
     }
 
@@ -84,10 +97,13 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatResponse>> UpdateChatName(Guid chatId, [FromBody] UpdateChatNameRequest request)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} updating chat {chatId} name", userId, chatId);
         if (request.ClientVersion < 0)
-            return BadRequest("Client version must be non-negative");
-        await _chatService.UpdateChatNameAsync(chatId, request.NewChatName, User.GetUserId());
-        var result = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, User.GetUserId());
+            throw new ArgumentException("Client version must be non-negative");
+        await _chatService.UpdateChatNameAsync(chatId, request.NewChatName, userId);
+        var result = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, userId);
+        _logger.LogInformation("User {userId} successfully updated chat {chatId} name", userId, chatId);
         return Ok(new SyncChatResponse { Chat = result });
     }
 
@@ -100,10 +116,14 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatResponse>> AddUserToChat(Guid chatId, [FromBody] AddMemberRequest request)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} adding user {toadd} into chat {chatId}", userId, request.UserId, chatId);
         if (request.ClientVersion < 0)
-            return BadRequest("Client version must be non-negative");
-        await _chatService.AddMemberAsync(chatId, request.UserId, User.GetUserId());
-        var result = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, User.GetUserId());
+            throw new ArgumentException("Client version must be non-negative");
+        await _chatService.AddMemberAsync(chatId, request.UserId, userId);
+        var result = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, userId);
+        _logger.LogInformation("User {userId} successfully added user {toadd} into chat {chatId}", userId, 
+            request.UserId, chatId);
         return Ok(new SyncChatResponse { Chat = result });
     }
 
@@ -116,10 +136,13 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatResponse>> RemoveUserFromChat(Guid chatId, Guid userId, [FromQuery] long clientVersion)
     {
+        var id = User.GetUserId();
+        _logger.LogInformation("User {userId} removing user {torm} from chat {chatId}", id, userId, chatId);
         if (clientVersion < 0)
-            return BadRequest("Client version must be non-negative");
-        await _chatService.RemoveMemberAsync(chatId, userId, User.GetUserId());
-        var result = await _syncService.SyncChatAsync(chatId, (ulong) clientVersion, User.GetUserId());
+            throw new ArgumentException("Client version must be non-negative");
+        await _chatService.RemoveMemberAsync(chatId, userId, id);
+        var result = await _syncService.SyncChatAsync(chatId, (ulong) clientVersion, id);
+        _logger.LogInformation("User {userId} successfully removed user {torm} from chat {chatId}", id, userId, chatId);
         return Ok(new SyncChatResponse { Chat = result });
     }
 
@@ -131,7 +154,10 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> LeaveChat(Guid chatId)
     {
-        await _chatService.LeaveChatAsync(chatId, User.GetUserId());
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} leaving chat {chatId}", userId, chatId);
+        await _chatService.LeaveChatAsync(chatId, userId);
+        _logger.LogInformation("User {userId} successfully left chat {chatId}", userId, chatId);
         return NoContent();
     }
 
@@ -145,9 +171,13 @@ public class ChatsController : ControllerBase
     public async Task<ActionResult<List<MessageDto>>> GetMessageHistory(Guid chatId, 
         [FromQuery] long fromMessageNum, [FromQuery] int limit)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} getting message history from chat {chatId}", userId, chatId);
         if (fromMessageNum < 0 || limit <= 0)
-            return BadRequest("fromMessageNum >= 0 and limit > 0");
-        var result = await _messageService.GetOlderMessagesAsync(chatId, (ulong) fromMessageNum, limit, User.GetUserId());
+            throw new ArgumentException("fromMessageNum >= 0 and limit > 0");
+        var result = await _messageService.GetOlderMessagesAsync(chatId, (ulong) fromMessageNum, limit, userId);
+        _logger.LogInformation("User {userId} successfully got {cnt} messages from chat {chatId}",
+            userId, result.Count(), chatId);
         return Ok(result);
     }
 
@@ -160,33 +190,38 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatResponse>> CreateMessage(Guid chatId, [FromBody] BaseCreateMessageRequest request)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} sending {type} message into chat {chatId}", userId, 
+            request.MessageType.ToString(), chatId);
         if (request.ClientVersion < 0)
-            return BadRequest("ClientVersion >= 0");
+            throw new ArgumentException("ClientVersion >= 0");
         switch (request)
         {
             case SendMessageRequest regularMessage:
-                await _messageService.CreateRegularMessageAsync(chatId, User.GetUserId(), regularMessage.Text);
+                await _messageService.CreateRegularMessageAsync(chatId, userId, regularMessage.Text);
                 break;
 
             case ReplyMessageRequest replyMessage:
                 if (replyMessage.ReplyToMessageNum < 0)
-                    return BadRequest("replyToMessageNum >= 0");
-                await _messageService.CreateReplyMessageAsync(chatId, User.GetUserId(), 
+                    throw new ArgumentException("replyToMessageNum >= 0");
+                await _messageService.CreateReplyMessageAsync(chatId, userId, 
                     replyMessage.Text, (ulong) replyMessage.ReplyToMessageNum);
                 break;
 
             case ForwardMessageRequest forwardMessage:
                 if (forwardMessage.ForwardedFromMessageNum < 0)
-                    return BadRequest("ForwardedFromMessageNum >= 0");
+                    throw new ArgumentException("ForwardedFromMessageNum >= 0");
                 await _messageService.CreateForwardMessageAsync(chatId, forwardMessage.ForwardedFromChatId, 
-                    (ulong) forwardMessage.ForwardedFromMessageNum, User.GetUserId());
+                    (ulong) forwardMessage.ForwardedFromMessageNum, userId);
                 break;
 
             default:
                 throw new RuleViolationException($"Unknown message type: {request.GetType().Name}");
         }
-        var sync = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, User.GetUserId());
+        var sync = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, userId);
         var result = new SyncChatResponse { Chat = sync };
+        _logger.LogInformation("User {userId} successfully sent {type} message into chat {chatId}", 
+            userId, request.MessageType.ToString(), chatId);
         return Ok(result);
     }
 
@@ -199,10 +234,14 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatResponse>> DeleteMessage(Guid chatId, long messageNum, [FromQuery] long clientVersion)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} deleting message {messageNum} in chat {chatId}", userId, messageNum, chatId);
         if (messageNum < 0 || clientVersion < 0)
-            return BadRequest("MessageNum >= 0 and ClientVersion >= 0");
-        await _messageService.DeleteMessageAsync(chatId, (ulong) messageNum, User.GetUserId());
-        var sync = await _syncService.SyncChatAsync(chatId, (ulong) clientVersion, User.GetUserId());
+            throw new ArgumentException("MessageNum >= 0 and ClientVersion >= 0");
+        await _messageService.DeleteMessageAsync(chatId, (ulong) messageNum, userId);
+        var sync = await _syncService.SyncChatAsync(chatId, (ulong) clientVersion, userId);
+        _logger.LogInformation("User {userId} successfully deleted message {messageNum} from chat {chatId}", 
+            userId, messageNum, chatId);
         var result = new SyncChatResponse { Chat = sync };
         return Ok(result);
     }
@@ -216,10 +255,14 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatResponse>> EditMessage(Guid chatId, long messageNum, [FromBody] EditMessageRequest request)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} editing message {messageNum} in chat {chatId}", userId, messageNum, chatId);
         if (messageNum < 0)
-            return BadRequest("MessageNum >= 0");
-        await _messageService.EditMessageAsync(chatId, (ulong) messageNum, request.NewText, User.GetUserId());
-        var sync = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, User.GetUserId());
+            throw new ArgumentException("MessageNum >= 0");
+        await _messageService.EditMessageAsync(chatId, (ulong) messageNum, request.NewText, userId);
+        var sync = await _syncService.SyncChatAsync(chatId, (ulong) request.ClientVersion, userId);
+        _logger.LogInformation("User {userId} successfully edited message {messageNum} in chat {chatId}", 
+            userId, messageNum, chatId);
         var result = new SyncChatResponse { Chat = sync };
         return Ok(result);
     }
@@ -233,9 +276,14 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> MarkMessagesAsRead(Guid chatId, [FromBody] ReadMessagesRequest request)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} reading messages up to {messageNum} in chat {chatId}", 
+            userId, request.LastMessageNum, chatId);
         if (request.LastMessageNum < 0)
-            return BadRequest("MessageNum >= 0");
-        await _messageService.MarkMessagesAsReadAsync(chatId, (ulong) request.LastMessageNum, User.GetUserId());
+            throw new ArgumentException("MessageNum >= 0");
+        await _messageService.MarkMessagesAsReadAsync(chatId, (ulong) request.LastMessageNum, userId);
+        _logger.LogInformation("User {userId} successfully read messages up to {messageNum} in chat {chatId}",
+            userId, request.LastMessageNum, chatId);
         return NoContent();
     }
 
@@ -247,10 +295,13 @@ public class ChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SyncChatsResponse>> SyncChats([FromBody] SyncChatsRequest request)
     {
+        var userId = User.GetUserId();
+        _logger.LogInformation("User {userId} sync chats", userId);
         if (request.Chats.Any(c => c.ClientVersion < 0))
-            return BadRequest("ClientVersion >= 0");
+            throw new ArgumentException("ClientVersion >= 0");
         var result = await _syncService.SyncChatsAsync(
-            request.Chats.Select(c => (c.ChatId, (ulong) c.ClientVersion)).ToList(), User.GetUserId());
+            request.Chats.Select(c => (c.ChatId, (ulong) c.ClientVersion)).ToList(), userId);
+        _logger.LogInformation("User {userId} successfully sync chats", userId);
         return Ok(new SyncChatsResponse { Chats = result });
     }
 }

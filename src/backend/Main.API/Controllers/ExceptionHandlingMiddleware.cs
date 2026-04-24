@@ -1,5 +1,6 @@
-﻿using System.Text.Json;
-using Main.Application.Exceptions;
+﻿using Main.Application.Exceptions;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace Main.API.Controllers;
 
@@ -35,52 +36,67 @@ public class ExceptionHandlingMiddleware
     {
         var response = context.Response;
         response.ContentType = "application/json";
+
+        var traceId = context.TraceIdentifier;
+        var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anonymous";
+        var method = context.Request.Method;
+        var path = context.Request.Path;
+
+        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            ["TraceId"] = traceId,
+            ["UserId"] = userId,
+            ["Method"] = method,
+            ["Path"] = path
+        });
+
         var errorResponse = new ErrorResponse
         {
-            TraceId = context.TraceIdentifier
+            TraceId = traceId
         };
+
         switch (exception)
         {
             case UnauthorizedException ex:
                 response.StatusCode = StatusCodes.Status401Unauthorized;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "UNAUTHORIZED";
-                _logger.LogWarning(ex, "Unauthorized access: {Message}", ex.Message);
+                _logger.LogWarning("Unauthorized access: {Message}", ex.Message);
                 break;
 
             case ForbiddenException ex:
                 response.StatusCode = StatusCodes.Status403Forbidden;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "FORBIDDEN";
-                _logger.LogWarning(ex, "Forbidden access: {Message}", ex.Message);
+                _logger.LogWarning("Forbidden access for user {UserId} to {Path}", userId, path);
                 break;
 
             case NotFoundException ex:
                 response.StatusCode = StatusCodes.Status404NotFound;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "NOT_FOUND";
-                _logger.LogInformation(ex, "Resource not found: {Message}", ex.Message);
+                _logger.LogInformation("Resource not found: {Resource}", ex.Message);
                 break;
 
             case ConflictException ex:
                 response.StatusCode = StatusCodes.Status409Conflict;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "CONFLICT";
-                _logger.LogInformation(ex, "Conflict: {Message}", ex.Message);
+                _logger.LogInformation("Conflict detected: {ConflictDetails}", ex.Message);
                 break;
 
             case RuleViolationException ex:
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "RULE_VIOLATION";
-                _logger.LogInformation(ex, "Business rule violation: {Message}", ex.Message);
+                _logger.LogInformation("Business rule violation: {RuleName}", ex.Message);
                 break;
 
             case ArgumentException ex:
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "INVALID_ARGUMENT";
-                _logger.LogInformation(ex, "Invalid argument: {Message}", ex.Message);
+                _logger.LogInformation("Invalid argument: {ArgumentError}", ex.Message);
                 break;
 
             case TechnicalException ex:
@@ -89,16 +105,22 @@ public class ExceptionHandlingMiddleware
                     ? ex.Message
                     : "A technical error occurred";
                 errorResponse.Code = "TECHNICAL_ERROR";
-                _logger.LogError(ex, "Technical error: {Message}", ex.Message);
+                _logger.LogError(ex, "Technical error at {Method} {Path}: {ErrorMessage}",
+                    method, path, ex.Message);
+
                 if (_env.IsDevelopment() && ex.InnerException != null)
+                {
+                    _logger.LogDebug("Inner exception: {InnerMessage}", ex.InnerException.Message);
                     errorResponse.InnerError = ex.InnerException.Message;
+                }
                 break;
 
             case AppException ex:
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "APPLICATION_ERROR";
-                _logger.LogWarning(ex, "Application error: {Message}", ex.Message);
+                _logger.LogWarning("Application error: {ErrorType} - {Message}",
+                    ex.GetType().Name, ex.Message);
                 break;
 
             default:
@@ -107,14 +129,23 @@ public class ExceptionHandlingMiddleware
                     ? exception.Message
                     : "An unexpected error occurred";
                 errorResponse.Code = "INTERNAL_ERROR";
-                _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
+                _logger.LogError(exception,
+                    "Unhandled exception at {Method} {Path}: {ExceptionType} - {Message}",
+                    method, path, exception.GetType().Name, exception.Message);
                 break;
         }
         if (_env.IsDevelopment())
         {
             errorResponse.StackTrace = exception.StackTrace;
             if (exception.InnerException != null)
+            {
                 errorResponse.InnerError = exception.InnerException.Message;
+            }
+        }
+        else
+        {
+            if (exception is not AppException)
+                _logger.LogDebug("Stack trace: {StackTrace}", exception.StackTrace);
         }
         var jsonOptions = new JsonSerializerOptions
         {
