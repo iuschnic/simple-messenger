@@ -80,8 +80,7 @@ builder.Services.AddSingleton<ILogger>(_ => logger);
 // ================== DB ==================
 builder.Services.AddDbContext<MainDbContext>(options =>
     options.UseNpgsql(
-        Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-        ?? builder.Configuration.GetConnectionString("PostgresConnection")
+        builder.Configuration.GetConnectionString("PostgresConnection")
     ));
 
 // ================== Repositories ==================
@@ -139,6 +138,12 @@ builder.Services.AddHostedService<KafkaMessageConsumer>();
 
 // ================== Build ==================
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MainDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 // ================== Pipeline ==================
 app.UseAuthentication();
