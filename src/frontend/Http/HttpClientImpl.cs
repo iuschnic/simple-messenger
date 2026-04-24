@@ -253,6 +253,20 @@ public class HttpClientImpl : IHttpClient
 
         return DtoMapper.ToChat(await Read<ChatDto>(res));
     }
+    
+    public async Task<SyncChatResult> SyncChat(Guid chatId, ulong clientVersion)
+    {
+        var res = await Send(() => _http.PostAsJsonAsync(
+            $"chats/sync/{chatId}",
+            new
+            {
+                clientVersion
+            }));
+
+        await HandleErrors(res);
+
+        return DtoMapper.ToSync(await Read<SyncChatResponseDto>(res));
+    }
 
     public async Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats)
     {

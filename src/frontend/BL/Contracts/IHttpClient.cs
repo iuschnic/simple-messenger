@@ -24,6 +24,7 @@ public interface IHttpClient
     Task<Chat> CreateGroupChat(string name, List<Guid> memberIds);
     Task<Chat> CreatePrivateChat(Guid withUserId);
     Task<Chat> GetChat(Guid chatId);
+    Task<SyncChatResult> SyncChat(Guid chatId, ulong clientVersion);
     Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats);
     Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong clientVersion);
 

@@ -171,6 +171,31 @@ public class FakeHttpClient : IHttpClient
 
         return Task.FromResult(result);
     }
+    
+    public Task<SyncChatResult> SyncChat(Guid chatId, ulong clientVersion)
+    {
+        if (!_chats.TryGetValue(chatId, out var chat))
+        {
+            return Task.FromResult(new SyncChatResult
+            {
+                ChatId = chatId,
+                Messages = new List<Message>(),
+                LastVersion = _version
+            });
+        }
+
+        var messages = _messages.Values
+            .Where(m => m.ChatId == chatId && m.Version > clientVersion)
+            .OrderBy(m => m.MessageNumber)
+            .ToList();
+
+        return Task.FromResult(new SyncChatResult
+        {
+            ChatId = chat.Id,
+            Messages = messages,
+            LastVersion = _version
+        });
+    }
 
     public Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong version)
     {

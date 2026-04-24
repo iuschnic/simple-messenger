@@ -107,6 +107,30 @@ public class MessengerService : IMessengerService
         await Execute(() => _db.Chats.Save(chat));
     }
 
+    private async Task SyncFullChats(Guid chatId)
+    {
+        var chat = await Execute(() => _db.Chats.Find(chatId));
+        var version = chat?.Version ?? 0;
+
+        var sync = (await Execute(() =>
+            _http.SyncChats(new List<(Guid, ulong)> { (chatId, version) })
+        )).First();
+
+        foreach (var m in sync.Messages)
+            await Execute(() => _db.Messages.Save(m));
+
+        if (chat == null)
+            chat = new Chat { Id = chatId };
+
+        chat.Version = sync.LastVersion;
+
+        if (sync.Messages.Any())
+            chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+
+        await Execute(() => _db.Chats.Save(chat));
+    }
+
+    
     private async Task OnMessageReceived(Message message)
     {
         if (await Execute(() => _db.Messages.Find(message.MessageNumber)) != null)
