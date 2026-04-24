@@ -89,15 +89,15 @@ public class MessengerService : IMessengerService
         var chat = await Execute(() => _db.Chats.Find(chatId));
         var version = chat?.Version ?? 0;
 
-        var sync = (await Execute(() =>
-            _http.SyncChats(new List<(Guid, ulong)> { (chatId, version) })
-        )).First();
+        var sync = await Execute(() =>
+            _http.SyncChat(chatId, version)
+        );
+        
+        foreach (var u in sync.Participants)
+            await Execute(() => _db.Users.Save(u));
 
         foreach (var m in sync.Messages)
             await Execute(() => _db.Messages.Save(m));
-
-        if (chat == null)
-            chat = new Chat { Id = chatId };
 
         chat.Version = sync.LastVersion;
 
@@ -107,27 +107,33 @@ public class MessengerService : IMessengerService
         await Execute(() => _db.Chats.Save(chat));
     }
 
-    private async Task SyncFullChats(Guid chatId)
+    private async Task SyncFullChats()
     {
-        var chat = await Execute(() => _db.Chats.Find(chatId));
-        var version = chat?.Version ?? 0;
+        var chats = (await Execute(() => _db.Chats.GetAll())) ?? new List<Chat>();
 
-        var sync = (await Execute(() =>
-            _http.SyncChats(new List<(Guid, ulong)> { (chatId, version) })
-        )).First();
+        var request = chats
+            .Select(c => (c.Id, c.Version))
+            .ToList();
 
-        foreach (var m in sync.Messages)
-            await Execute(() => _db.Messages.Save(m));
+        var syncResults = await Execute(() => _http.SyncChats(request));
 
-        if (chat == null)
-            chat = new Chat { Id = chatId };
+        foreach (var sync in syncResults)
+        {
+            var chat = chats.FirstOrDefault(c => c.Id == sync.ChatId);
+            
+            foreach (var m in sync.Messages)
+                await Execute(() => _db.Messages.Save(m));
 
-        chat.Version = sync.LastVersion;
+            if (chat == null)
+                chat = new Chat { Id = sync.ChatId };
 
-        if (sync.Messages.Any())
-            chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+            chat.Version = sync.LastVersion;
 
-        await Execute(() => _db.Chats.Save(chat));
+            if (sync.Messages.Any())
+                chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+
+            await Execute(() => _db.Chats.Save(chat));
+        }
     }
 
     
@@ -140,7 +146,7 @@ public class MessengerService : IMessengerService
 
         if (chat == null || message.Version > chat.Version + 1)
         {
-            await SyncFullChat(message.ChatId);
+            await SyncFullChats();
             return;
         }
 

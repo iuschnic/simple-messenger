@@ -198,7 +198,9 @@ public class HttpClientImpl : IHttpClient
 
         await HandleErrors(res);
 
-        return DtoMapper.ToUser(await Read<UserDto>(res));
+        var dto = await Read<ContactDto>(res);
+
+        return DtoMapper.ToUser(dto);
     }
 
     // ================= CHATS =================
