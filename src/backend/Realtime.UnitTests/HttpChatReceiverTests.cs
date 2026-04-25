@@ -21,6 +21,9 @@ public class HttpChatReceiverTests
         mockConfiguration
             .Setup(x => x["MainServiceChatsUrl"])
             .Returns(_baseUrl);
+        mockConfiguration
+            .Setup(x => x["InternalApiKey"])
+            .Returns(string.Empty);
 
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
         var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
@@ -122,6 +125,9 @@ public class HttpChatReceiverTests
         configuration
             .Setup(x => x["MainServiceChatsUrl"])
             .Returns((string)null!);
+        configuration
+            .Setup(x => x["InternalApiKey"])
+            .Returns(string.Empty);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new HttpChatReceiver(configuration.Object));
