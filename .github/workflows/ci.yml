@@ -87,7 +87,7 @@ jobs:
       - name: Run backend tests
         # run: dotnet test src/backend/**/*.*Tests.csproj --no-build -c Release -o build --verbosity normal
         # run: dotnet test src/backend/Realtime.UnitTests/Realtime.UnitTests.csproj --no-build -c Release -o build --verbosity normal
-        run: dotnet test build/Realtime.UnitTests.dll --verbosity normal
+        run: dotnet test build/*.*Tests.dll --verbosity normal
 
   frontend-tests:
     needs: build-frontend
