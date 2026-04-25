@@ -4,7 +4,7 @@ namespace BL.Interfaces;
 
 public interface IMessageRepository
 {
-    Task<Message?> Find(ulong id);
+    Task<Message?> Find(ulong id, Guid chatId);
     Task<List<Message>> FindChatMessages(Guid chatId);
 
     Task<Message> Save(Message message);

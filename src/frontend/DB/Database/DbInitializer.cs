@@ -60,7 +60,7 @@ public class DbInitializer
         );
 
         CREATE TABLE IF NOT EXISTS Messages (
-            MessageNumber INTEGER PRIMARY KEY AUTOINCREMENT,
+            MessageNumber INTEGER,
             ChatId TEXT,
             SenderId TEXT,
             Text TEXT,
@@ -74,7 +74,8 @@ public class DbInitializer
             FOREIGN KEY (ChatId) REFERENCES Chats(Id),
             FOREIGN KEY (SenderId) REFERENCES Users(Id),
             FOREIGN KEY (ForwardedFromUserId) REFERENCES Users(Id),
-            FOREIGN KEY (ReplyToMessageNumber) REFERENCES Messages(MessageNumber)
+            FOREIGN KEY (ReplyToMessageNumber, ChatId) REFERENCES Messages(MessageNumber, ChatId),
+            PRIMARY KEY (MessageNumber, ChatId)
         );
 
         CREATE TABLE IF NOT EXISTS ChatsUsers (

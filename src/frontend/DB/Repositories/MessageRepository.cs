@@ -14,13 +14,13 @@ public class MessageRepository : IMessageRepository
         _factory = factory;
     }
 
-    public async Task<Message?> Find(ulong id)
+    public async Task<Message?> Find(ulong id, Guid chatId)
     {
         using var db = _factory.Create();
 
         return await db.QueryFirstOrDefaultAsync<Message>(
-            "SELECT * FROM Messages WHERE MessageNumber = @id",
-            new { id });
+            "SELECT * FROM Messages WHERE MessageNumber = @id AND ChatId = @chatId",
+            new { id, chatId });
     }
 
     public async Task<List<Message>> FindChatMessages(Guid chatId)
@@ -41,16 +41,12 @@ public class MessageRepository : IMessageRepository
     {
         using var db = _factory.Create();
 
-        var id = await db.ExecuteScalarAsync<long>(@"
+        await db.ExecuteAsync(@"
             INSERT INTO Messages
-            (ChatId, SenderId, Text, CreatedAt, EditedAt, Deleted, Version, Type)
+            (MessageNumber, ChatId, SenderId, Text, CreatedAt, EditedAt, Deleted, Version, Type)
             VALUES
-            (@ChatId, @SenderId, @Text, @CreatedAt, @EditedAt, @Deleted, @Version, @Type);
-
-            SELECT last_insert_rowid();
+            (@MessageNumber, @ChatId, @SenderId, @Text, @CreatedAt, @EditedAt, @Deleted, @Version, @Type);
         ", message);
-
-        message.MessageNumber = (ulong)id;
 
         return message;
     }
@@ -66,7 +62,7 @@ public class MessageRepository : IMessageRepository
             WHERE MessageNumber = @id
         ", new { id, editedAt, newText });
 
-        return await Find((ulong)id);
+        return await Find((ulong)id, Guid.Empty);
     }
 
     public async Task Delete(long id)

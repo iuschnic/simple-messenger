@@ -1,20 +1,21 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using BL.Contracts;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using BL.Interfaces;
 using BL.Services;
+using Dapper;
 using DB.Database;
 using DB.Repositories;
-using Messenger.Tests.Sandbox.Mocks;
+using Http;
 using Messenger.Tests.Sandbox.Scenario;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using RT;
 
-class Program
+namespace Messenger.Tests.Sandbox;
+
+internal abstract class Program
 {
-    static void Main()
+    private static async Task Main()
     {
         Console.OutputEncoding = Encoding.UTF8;
         Console.InputEncoding = Encoding.UTF8;
@@ -64,8 +65,8 @@ class Program
         // ================= HTTP + RT =================
 
         // если хочешь оставить моки
-        services.AddSingleton<IHttpClient, FakeHttpClient>();
-        services.AddSingleton<IRealtimeClient, FakeRealtimeClient>();
+        services.AddSingleton<IHttpClient, HttpClientImpl>();
+        services.AddSingleton<IRealtimeClient, RealtimeClient>();
 
         // если реальные — раскомментируй:
         // services.AddHttpClient<IHttpClient, HttpClientImpl>();
@@ -110,8 +111,10 @@ class Program
         var http = provider.GetRequiredService<IHttpClient>();
         var scenario = new UiScenario(bl, http, repoHub);
 
-        scenario.Run();
+        await scenario.Run();
 
+        Console.WriteLine("Press ENTER to exit...");
+        Console.ReadLine();
         Console.WriteLine("DONE");
     }
 }

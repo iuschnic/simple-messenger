@@ -98,7 +98,13 @@ public class MessengerService : IMessengerService
             await Execute(() => _db.Users.Save(u));
 
         foreach (var m in sync.Messages)
-            await Execute(() => _db.Messages.Save(m));
+        {
+            try
+            {
+                await Execute(() => _db.Messages.Save(m));
+            }
+            catch{}
+        }
 
         chat.Version = sync.LastVersion;
 
@@ -125,9 +131,15 @@ public class MessengerService : IMessengerService
             
             foreach (var u in sync.Participants)
                 await Execute(() => _db.Users.Save(u));
-            
+
             foreach (var m in sync.Messages)
-                await Execute(() => _db.Messages.Save(m));
+            {
+                try
+                {
+                    await Execute(() => _db.Messages.Save(m));
+                }
+                catch{}
+            }
 
             if (chat == null)
                 chat = new Chat { Id = sync.ChatId };
@@ -144,7 +156,7 @@ public class MessengerService : IMessengerService
     
     private async Task OnMessageReceived(Message message)
     {
-        if (await Execute(() => _db.Messages.Find(message.MessageNumber)) != null)
+        if (await Execute(() => _db.Messages.Find(message.MessageNumber, message.ChatId)) != null)
             return;
 
         var chat = await Execute(() => _db.Chats.Find(message.ChatId));
@@ -155,7 +167,14 @@ public class MessengerService : IMessengerService
             return;
         }
 
-        await Execute(() => _db.Messages.Save(message));
+        try
+        {
+            await Execute(() => _db.Messages.Save(message));
+        }
+        catch
+        {
+            return;
+        }
 
         chat.LastMessageNum = message.MessageNumber;
         chat.Version = message.Version;
@@ -173,7 +192,17 @@ public class MessengerService : IMessengerService
 
     private async Task OnChatCreated(Chat chat)
     {
-        await Execute(() => _db.Chats.Save(chat));
+        if (await Execute(() => _db.Chats.Find(chat.Id)) != null)
+            return;
+
+        try
+        {
+            await Execute(() => _db.Chats.Save(chat));
+        }
+        catch
+        {
+            return;
+        }
 
         foreach (var p in chat.Members)
         {
@@ -207,18 +236,30 @@ public class MessengerService : IMessengerService
         }));
     }
 
+    public async Task LoginAgain()
+    {
+        var u = await Execute(() =>  _db.CurrentUser.Get());
+        
+        var token = await Execute(() => _http.Login(u.UniqueName, u.PasswordHash));
+        
+        await _rt.ConnectToHub(token);
+    }
+
     public async Task<User> Login(string u, string p)
     {
-        var local = await Execute(() => _db.CurrentUser.Get());
-
-        if (local == null || u != local.UniqueName || p != local.PasswordHash)
-            throw new AuthException("Неверный логин или пароль");
-
         var token = await Execute(() => _http.Login(u, p));
 
         await _rt.ConnectToHub(token);
 
         var user = await Execute(() => _http.GetMe());
+        
+        await Execute(() => _db.CurrentUser.Save(new CurrentUser
+        {
+            Id = Guid.NewGuid(),
+            UniqueName = u,
+            PasswordHash = p,
+            DisplayedName = user.DisplayName
+        }));
 
         return await Execute(() => _db.Users.Save(new User
         {
@@ -299,7 +340,8 @@ public class MessengerService : IMessengerService
             Id = chatHttp.Id,
             OwnerId = chatHttp.OwnerId,
             Name = chatHttp.Name,
-            Version = chatHttp.Version,
+            CreatedAt = chatHttp.CreatedAt,
+            Version = 0,
             Type = chatHttp.Type,
             LastMessageNum = chatHttp.LastMessageNum,
         };
@@ -312,6 +354,8 @@ public class MessengerService : IMessengerService
             if (user != null)
                 await Execute(() => _db.Chats.AddUserToChat(chat.Id, user.Id));
         }
+
+        await Execute(() => SyncFullChat(chat.Id));
 
         return chat;
     }
@@ -326,7 +370,7 @@ public class MessengerService : IMessengerService
             OwnerId = chatHttp.OwnerId,
             Name = chatHttp.Name,
             CreatedAt = chatHttp.CreatedAt,
-            Version = chatHttp.Version,
+            Version = 0,
             Type = chatHttp.Type,
             LastMessageNum = chatHttp.LastMessageNum,
         };
@@ -381,7 +425,7 @@ public class MessengerService : IMessengerService
     {
         var chat = await Execute(() => _db.Chats.Find(chatId))
                    ?? throw new NotFoundAppException("Chat not found");
-
+        
         var sync = await Execute(() => _http.SendMessage(chatId, text, chat.Version));
 
         if (sync.Messages == null || sync.Messages.Count == 0)
@@ -389,8 +433,16 @@ public class MessengerService : IMessengerService
 
         foreach (var m in sync.Messages)
         {
-            if (await Execute(() => _db.Messages.Find(m.MessageNumber)) == null)
-                await Execute(() => _db.Messages.Save(m));
+            if (await Execute(() => _db.Messages.Find(m.MessageNumber, sync.ChatId)) == null)
+            {
+                Console.WriteLine($"SendMessage {m.MessageNumber} {m.ChatId}");
+                try
+                {
+                    await Execute(() => _db.Messages.Save(m));
+                }
+                catch
+                {}
+            }
         }
 
         chat.Version = sync.LastVersion;

@@ -51,14 +51,14 @@ public static class DtoMapper
 
     public static Message ToMessage(MessageDto d) => new()
     {
-        MessageNumber = d.MessageNum,
+        MessageNumber = (ulong)d.MessageNum,
         ChatId = d.ChatId,
         SenderId = d.SenderId,
         Text = d.Text,
         CreatedAt = d.CreatedAt,
         EditedAt = d.EditedAt,
         Deleted = d.Deleted,
-        Version = d.Version,
+        Version = (ulong)d.Version,
         Type = (MessageType)d.Type,
     };
 
