@@ -24,20 +24,28 @@ public class UiScenario
 
     public async Task Run()
     {
-        // Console.WriteLine("=== REGISTRATION FLOW ===");
-        //
-        // try
-        // {
-        //     var alice = await _bl.RegisterUser("alice", "123", "a@mail.com", "yxye");
-        //     Console.WriteLine($"REGISTERED: {alice.Id} {alice.UniqueName}");
-        // }
-        // catch (Exception ex)
-        // {
-        //     Console.WriteLine($"ERROR: {ex.Message}");
-        // }
+        Console.WriteLine("=== REGISTRATION FLOW ===");
+        
+        try
+        {
+            var alice = await _bl.RegisterUser("alice", "123", "a@mail.com", "yxye");
+            Console.WriteLine($"REGISTERED: {alice.Id} {alice.UniqueName}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex.Message}");
+        }
 
-        var logged = await _bl.Login("alice", "123");
-        Console.WriteLine($"LOGGED IN: {logged.Id} {logged.UniqueName}");
+        User logged = null;
+        if ((await _bl.LoginAgain()) == ReturnCode.Error)
+        {
+            logged = await _bl.Login("alice", "123");
+            Console.WriteLine($"LOGGED IN: {logged.Id} {logged.UniqueName}");
+        }
+        else
+        {
+            Console.WriteLine($"LOGGED IN: ERROR");
+        }
 
         var testUser = await _bl.GetCurrentUser();
         Console.WriteLine($"CURRENT USER: {testUser?.Id} {testUser?.UniqueName}");
