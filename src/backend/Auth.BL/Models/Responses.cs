@@ -1,3 +1,3 @@
 namespace Auth.BL.Models;
 
-public record AuthResponse(string Jwt);
+public record AuthResponse(string Token);
