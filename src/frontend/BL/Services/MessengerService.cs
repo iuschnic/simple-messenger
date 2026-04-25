@@ -249,7 +249,7 @@ public class MessengerService : IMessengerService
     {
         var token = await Execute(() => _http.Login(u, p));
 
-        await _rt.ConnectToHub(token);
+        await Execute(() => _rt.ConnectToHub(token));
 
         var user = await Execute(() => _http.GetMe());
         
