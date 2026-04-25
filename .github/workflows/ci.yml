@@ -10,8 +10,7 @@ permissions:
   actions: read
 
 jobs:
-  # ─── Сборка ────────────────────────────────────────────────────
-  build:
+  build-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,29 +22,51 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets') }}
+          key: ${{ runner.os }}-nuget-net10-${{ hashFiles('src/backend/**/*.csproj', 'src/backend/**/*.props', 'src/backend/**/*.targets') }}
           restore-keys: |
-            ${{ runner.os }}-nuget-
+            ${{ runner.os }}-nuget-net10-
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore src/backend
 
       - name: Build
-        run: dotnet build --no-restore -c Release
+        run: dotnet build src/backend --no-restore -c Release -o build
 
       - uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: |
-            **/bin/Release/net10.0/
-            **/*.deps.json
-            **/*.runtimeconfig.json
+          name: backend-build-output
+          path: build/
 
-  # ─── Тесты ─────────────────────────────────────────────────────
-  test:
-    needs: build
+  build-frontend:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-net9-${{ hashFiles('src/frontend/**/*.csproj', 'src/frontend/**/*.props', 'src/frontend/**/*.targets') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-net9-
+
+      - name: Restore dependencies
+        run: dotnet restore src/frontend
+
+      - name: Build
+        run: dotnet build src/frontend --no-restore -c Release -o build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-output
+          path: build/
+
+  backend-tests:
+    needs: build-backend
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -55,8 +76,26 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: build-output
-          path: ${{ github.workspace }}
+          name: backend-build-output
+          path: build
 
-      - name: Run tests
-        run: dotnet test **/*.Tests.csproj --no-build -c Release --verbosity normal
+      - name: Run backend tests
+        run: dotnet test src/backend/**/*.*Tests.csproj --no-build -c Release -o build --verbosity normal
+
+  frontend-tests:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-output
+          path: build
+
+      - name: Run frontend tests
+        run: dotnet test src/frontend/**/*.UnitTest.csproj --no-build -c Release -o build --verbosity normal
