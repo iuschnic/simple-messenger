@@ -24,7 +24,6 @@ public class ChatDb
     }
     [Required]
     public Guid Id { get; set; }
-    [Required]
     public string? Name { get; set; }  //у приватного чата нет названия, у публичного есть
     [Required]
     public ChatTypeDb Type { get; set; }
