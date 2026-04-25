@@ -55,7 +55,7 @@ jobs:
             ${{ runner.os }}-nuget-net9-
 
       - name: Restore dependencies
-        run: dotnet restore src/frontend
+        run: dotnet restore src/frontend -p:EnableWindowsTargeting=true
 
       - name: Build
         run: dotnet build src/frontend --no-restore -c Release -o build -p:EnableWindowsTargeting=true
