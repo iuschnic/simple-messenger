@@ -108,8 +108,7 @@ internal partial class MessengerForm : Form
         var uniqueName = searchUserTextBox.Text.Trim();
         var user = await _session.Messenger.GetUserByNameWithServer(uniqueName);
 
-        usersListBox.DataSource = new List<User> { user };
-        usersListBox.DisplayMember = nameof(User.UniqueName);
+        usersListBox.DataSource = new List<UserListItem> { new(user) };
         usersListBox.SelectedIndex = 0;
         contactNameTextBox.Text = user.ContactName ?? string.Empty;
 
@@ -119,8 +118,7 @@ internal partial class MessengerForm : Form
     private async Task LoadContactsAsync()
     {
         var contacts = await _session.Messenger.FindUsersWithContactName();
-        usersListBox.DataSource = contacts;
-        usersListBox.DisplayMember = nameof(User.UniqueName);
+        usersListBox.DataSource = contacts.Select(u => new UserListItem(u)).ToList();
 
         if (contacts.Count > 0)
             usersListBox.SelectedIndex = 0;
@@ -313,7 +311,7 @@ internal partial class MessengerForm : Form
     }
 
     private User GetSelectedUser()
-        => usersListBox.SelectedItem as User
+        => (usersListBox.SelectedItem as UserListItem)?.User
            ?? throw new InvalidOperationException("Сначала выберите пользователя");
 
     private void EnsureLoggedInUser()
@@ -392,6 +390,9 @@ internal partial class MessengerForm : Form
     private static string FormatUserName(User user)
         => user.ContactName ?? user.DisplayName ?? user.UniqueName;
 
+    private static string FormatUserWithUniqueName(User user)
+        => $"{FormatUserName(user)} ({user.UniqueName})";
+
     private sealed class ChatListItem
     {
         public ChatListItem(Chat chat, string title)
@@ -416,9 +417,19 @@ internal partial class MessengerForm : Form
         public User User { get; }
 
         public override string ToString()
-            => $"{userLabel(User)} (@{User.UniqueName})";
+            => FormatUserWithUniqueName(User);
+    }
 
-        private static string userLabel(User user)
-            => user.ContactName ?? user.DisplayName ?? user.UniqueName;
+    private sealed class UserListItem
+    {
+        public UserListItem(User user)
+        {
+            User = user;
+        }
+
+        public User User { get; }
+
+        public override string ToString()
+            => FormatUserWithUniqueName(User);
     }
 }

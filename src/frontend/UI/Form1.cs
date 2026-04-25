@@ -44,9 +44,8 @@ public partial class Form1 : Form
 
         loginUniqueNameTextBox.Text = uniqueName;
         loginPasswordTextBox.Text = password;
-        statusLabel.Text = $"Аккаунт создан: {user.UniqueName}. Выполняю вход.";
-
-        await LoginInternalAsync(uniqueName, password);
+        statusLabel.Text = $"Аккаунт создан: {user.UniqueName}. Теперь войдите на вкладке \"Вход\".";
+        authTabs.SelectedTab = loginTab;
     }
 
     private async Task LoginAsync()
