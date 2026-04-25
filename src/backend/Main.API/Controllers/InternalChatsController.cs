@@ -1,8 +1,9 @@
 ﻿using Main.Application.InPorts;
-using Main.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Main.API.Controllers;
+
+using ILogger = Serilog.ILogger;
 
 [ApiController]
 [Route("api/v1/internal/chats")]
@@ -28,9 +29,9 @@ public class InternalChatsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<Guid>>> GetUserChatIds(Guid userId)
     {
-        _logger.LogInformation("Internal: getting chat IDs for user {UserId} (internal call)", userId);
+        _logger.Information("Internal: getting chat IDs for user {UserId} (internal call)", userId);
         var chatIds = await _chatService.GetChatsIdsAsync(userId);
-        _logger.LogInformation("Internal: retrieved {Count} chat IDs for user {UserId}",
+        _logger.Information("Internal: retrieved {Count} chat IDs for user {UserId}",
             chatIds.Count(), userId);
         return Ok(chatIds);
     }

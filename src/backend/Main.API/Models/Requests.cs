@@ -2,6 +2,7 @@
 using Main.Application.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Main.API.Models;
 
@@ -13,6 +14,9 @@ public class AddContactRequest
     public string ContactName { get; set; } = string.Empty;
 }
 
+[SwaggerDiscriminator("chatType")]
+[SwaggerSubType(typeof(CreateGroupChatRequest), DiscriminatorValue = "0")]
+[SwaggerSubType(typeof(CreatePrivateChatRequest), DiscriminatorValue = "1")]
 [JsonConverter(typeof(CreateChatRequestConverter))]
 public abstract class BaseCreateChatRequest
 {
@@ -34,6 +38,10 @@ public class CreateGroupChatRequest : BaseCreateChatRequest
     public string ChatName { get; set; } = string.Empty;
 }
 
+[SwaggerDiscriminator("messageType")]
+[SwaggerSubType(typeof(SendMessageRequest), DiscriminatorValue = "0")]
+[SwaggerSubType(typeof(ReplyMessageRequest), DiscriminatorValue = "1")]
+[SwaggerSubType(typeof(ForwardMessageRequest), DiscriminatorValue = "2")]
 [JsonConverter(typeof(CreateMessageRequestConverter))]
 public abstract class BaseCreateMessageRequest
 {

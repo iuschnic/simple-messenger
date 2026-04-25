@@ -35,7 +35,6 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
     });
-
     /*options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -47,8 +46,29 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new List<string>()
+            new string[] {}
         }
+    });*/
+    /*options.EnableAnnotations();
+    options.UseOneOfForPolymorphism();
+    //options.UseAllOfForInheritance();
+    options.SelectDiscriminatorNameUsing(type =>
+    {
+        if (type == typeof(BaseCreateChatRequest)) return "chatType";
+        if (type == typeof(BaseCreateMessageRequest)) return "messageType";
+        return null;
+    });
+    options.SelectDiscriminatorValueUsing(subType =>
+    {
+        return subType.Name switch
+        {
+            nameof(CreateGroupChatRequest) => "0",
+            nameof(CreatePrivateChatRequest) => "1",
+            nameof(SendMessageRequest) => "0",
+            nameof(ReplyMessageRequest) => "1",
+            nameof(ForwardMessageRequest) => "2",
+            _ => null
+        };
     });*/
 });
 
@@ -72,11 +92,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // ================== Serilog ==================
-var logger = new LoggerConfiguration()
+Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
     .CreateLogger();
 
-builder.Services.AddSingleton<ILogger>(_ => logger);
+builder.Host.UseSerilog();
+builder.Services.AddSingleton(Log.Logger);
 
 // ================== DB ==================
 builder.Services.AddDbContext<MainDbContext>(options =>
@@ -150,6 +172,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ================== Pipeline ==================
+app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -3,14 +3,15 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
 
 namespace Main.API.Controllers;
+using ILogger = Serilog.ILogger;
 
 public class ApiKeyAuthFilter : IAsyncAuthorizationFilter
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<ApiKeyAuthFilter> _logger;
+    private readonly ILogger _logger;
     private const string ApiKeyHeader = "X-Api-Key";
 
-    public ApiKeyAuthFilter(IConfiguration configuration, ILogger<ApiKeyAuthFilter> logger)
+    public ApiKeyAuthFilter(IConfiguration configuration, ILogger logger)
     {
         _configuration = configuration;
         _logger = logger;
@@ -20,7 +21,7 @@ public class ApiKeyAuthFilter : IAsyncAuthorizationFilter
     {
         if (!context.HttpContext.Request.Headers.TryGetValue(ApiKeyHeader, out var extractedApiKey))
         {
-            _logger.LogError("Missing API key for internal endpoint {Path}",
+            _logger.Error("Missing API key for internal endpoint {Path}",
                 context.HttpContext.Request.Path);
             context.Result = new UnauthorizedObjectResult(new
             {
@@ -32,7 +33,7 @@ public class ApiKeyAuthFilter : IAsyncAuthorizationFilter
         var apiKey = _configuration.GetValue<string>("InternalApiKey");
         if (string.IsNullOrEmpty(apiKey) || !apiKey.Equals(extractedApiKey))
         {
-            _logger.LogError("Invalid API key for internal endpoint {Path}",
+            _logger.Error("Invalid API key for internal endpoint {Path}",
                 context.HttpContext.Request.Path);
 
             context.Result = new UnauthorizedObjectResult(new

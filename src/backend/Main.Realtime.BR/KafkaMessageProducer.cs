@@ -9,6 +9,8 @@ using Shared.Main.Realtime.Models;
 
 namespace Main.Realtime.BR;
 
+using ILogger = Serilog.ILogger;
+
 public class KafkaMessageProducer : IMessageProducer, IDisposable
 {
     private readonly IProducer<Null, byte[]> _producer;
