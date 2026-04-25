@@ -18,6 +18,7 @@ public class RealtimeClient(IConfiguration config) : IRealtimeClient, IAsyncDisp
     public event Func<ulong, Task>? MessageDeleted;
     public event Func<Guid, Guid, Task>? UserLeftChat;
     public event Func<Chat, Task>? ChatCreated;
+    public event Func<Task>? ReconnectedToHub;
 
     public async Task ConnectToHub(string token)
     {
@@ -25,7 +26,7 @@ public class RealtimeClient(IConfiguration config) : IRealtimeClient, IAsyncDisp
             await DisconnectAsync();
         
         _connection = new HubConnectionBuilder()
-            .WithUrl(config["Backend:ApiBaseUrl"] + "/api/v1/hub?access_token=" + token)
+            .WithUrl(config["Backend:ApiBaseUrl"] + "hub?access_token=" + token)
             .WithAutomaticReconnect([
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(2), 
@@ -39,6 +40,8 @@ public class RealtimeClient(IConfiguration config) : IRealtimeClient, IAsyncDisp
         _connection.On<string>("ChatUserLeft", OnUserLeftChat);
         
         _connection.On<string>("ChatCreated", OnChatCreated);
+        
+        _connection.Reconnected += _ => ReconnectedToHub?.Invoke() ?? Task.CompletedTask; 
 
         try
         {
@@ -92,10 +95,8 @@ public class RealtimeClient(IConfiguration config) : IRealtimeClient, IAsyncDisp
     {
         var chatDto = JsonConvert.DeserializeObject<FullChatDto>(chatJson);
 
-        if (chatDto?.Chat.OwnerId is null || chatDto.Chat.Name is null)
+        if (chatDto is null)
             return;
-        
-        var ownerId = chatDto.Chat.OwnerId.Value;
         
         var users = chatDto.Participants
             .Select(x => x.User)
@@ -106,7 +107,7 @@ public class RealtimeClient(IConfiguration config) : IRealtimeClient, IAsyncDisp
         var chat = new Chat
         {
             Id = chatDto.Chat.Id,
-            OwnerId = ownerId,
+            OwnerId = chatDto.Chat.OwnerId,
             Name = chatDto.Chat.Name ?? string.Empty,
             CreatedAt =  chatDto.Chat.CreatedAt.DateTime,
             Version = chatDto.Chat.Version,
