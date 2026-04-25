@@ -24,6 +24,7 @@ internal partial class MessengerForm : Form
         updateContactButton.Click += async (_, _) => await RunAction(UpdateContactAsync);
         createPrivateChatButton.Click += async (_, _) => await RunAction(CreatePrivateChatAsync);
         createGroupChatButton.Click += async (_, _) => await RunAction(CreateGroupChatAsync);
+        refreshGroupMembersButton.Click += async (_, _) => await RunAction(LoadGroupContactsAsync);
         refreshChatsButton.Click += async (_, _) => await RunAction(() => RefreshChatsAsync());
         participantsButton.Click += async (_, _) => await RunAction(LoadParticipantsAsync);
         markReadButton.Click += async (_, _) => await RunAction(MarkAsReadAsync);
@@ -51,7 +52,7 @@ internal partial class MessengerForm : Form
         {
             PostToUi(async () =>
             {
-                AddLog($"[EVENT] Создан чат {chat.Name} ({chat.Id})");
+                AddLog($"[EVENT] Создан чат {chat.Id}");
                 await RefreshChatsAsync(chat.Id);
             });
 
@@ -79,6 +80,7 @@ internal partial class MessengerForm : Form
                 AddLog("[EVENT] Переподключение к хабу");
                 await RefreshChatsAsync(_selectedChat?.Id);
                 await RefreshMessagesAsync();
+                await LoadGroupContactsAsync();
             });
 
             return Task.CompletedTask;
@@ -98,6 +100,7 @@ internal partial class MessengerForm : Form
 
         AddLog("Окно мессенджера открыто");
         await RefreshChatsAsync();
+        await LoadGroupContactsAsync();
     }
 
     private async Task SearchUserAsync()
@@ -123,6 +126,20 @@ internal partial class MessengerForm : Form
             usersListBox.SelectedIndex = 0;
 
         AddLog($"Контактов: {contacts.Count}");
+        await LoadGroupContactsAsync();
+    }
+
+    private async Task LoadGroupContactsAsync()
+    {
+        var contacts = await _session.Messenger.FindUsersWithContactName();
+        var items = contacts
+            .Where(u => u.Id != _me?.Id)
+            .OrderBy(u => u.ContactName ?? u.DisplayName ?? u.UniqueName)
+            .Select(u => new GroupMemberItem(u))
+            .ToArray();
+
+        groupMembersCheckedListBox.Items.Clear();
+        groupMembersCheckedListBox.Items.AddRange(items);
     }
 
     private async Task UpdateContactAsync()
@@ -131,6 +148,7 @@ internal partial class MessengerForm : Form
         var updated = await _session.Messenger.UpdateContactName(user.Id, contactNameTextBox.Text.Trim());
         AddLog($"Контакт обновлён: {updated.UniqueName}");
         await SearchUserAsync();
+        await LoadGroupContactsAsync();
     }
 
     private async Task CreatePrivateChatAsync()
@@ -139,7 +157,7 @@ internal partial class MessengerForm : Form
 
         var user = GetSelectedUser();
         var chat = await _session.Messenger.CreatePrivateChat(_me!.Id, new List<Guid> { _me.Id, user.Id });
-        AddLog($"Создан личный чат: {chat.Name}");
+        AddLog($"Создан личный чат с {FormatUserName(user)}");
         await RefreshChatsAsync(chat.Id);
     }
 
@@ -147,17 +165,16 @@ internal partial class MessengerForm : Form
     {
         EnsureLoggedInUser();
 
-        var members = new List<Guid> { _me!.Id };
-        var uniqueNames = groupMembersTextBox.Text
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+        var checkedUsers = groupMembersCheckedListBox.CheckedItems
+            .OfType<GroupMemberItem>()
+            .Select(i => i.User)
             .ToList();
 
-        foreach (var uniqueName in uniqueNames)
-        {
-            var user = await _session.Messenger.GetUserByNameWithServer(uniqueName);
-            members.Add(user.Id);
-        }
+        if (checkedUsers.Count == 0)
+            throw new InvalidOperationException("Выберите хотя бы одного участника из контактов");
+
+        var members = new List<Guid> { _me!.Id };
+        members.AddRange(checkedUsers.Select(u => u.Id));
 
         var chat = await _session.Messenger.CreateGroupChat(
             groupNameTextBox.Text.Trim(),
@@ -171,7 +188,8 @@ internal partial class MessengerForm : Form
     private async Task RefreshChatsAsync(Guid? selectChatId = null)
     {
         var chats = await _session.Messenger.GetAllChats();
-        var items = chats.Select(c => new ChatListItem(c)).ToList();
+        var itemTasks = chats.Select(CreateChatListItemAsync);
+        var items = (await Task.WhenAll(itemTasks)).ToList();
 
         chatsListBox.DataSource = null;
         chatsListBox.DataSource = items;
@@ -196,10 +214,23 @@ internal partial class MessengerForm : Form
         }
     }
 
+    private async Task<ChatListItem> CreateChatListItemAsync(Chat chat)
+    {
+        if (chat.Type != ChatType.Private)
+            return new ChatListItem(chat, chat.Name);
+
+        var participants = await _session.Messenger.GetChatParticipants(chat.Id);
+        var companion = participants.FirstOrDefault(u => u.Id != _me?.Id);
+        var title = companion == null ? chat.Name : FormatUserName(companion);
+
+        return new ChatListItem(chat, title);
+    }
+
     private async Task OnChatSelectedAsync()
     {
-        _selectedChat = (chatsListBox.SelectedItem as ChatListItem)?.Chat;
-        activeChatLabel.Text = _selectedChat == null ? "Выберите чат" : _selectedChat.Name;
+        var selectedItem = chatsListBox.SelectedItem as ChatListItem;
+        _selectedChat = selectedItem?.Chat;
+        activeChatLabel.Text = selectedItem?.Title ?? "Выберите чат";
         await RefreshMessagesAsync();
         await LoadParticipantsAsync();
     }
@@ -213,9 +244,15 @@ internal partial class MessengerForm : Form
         }
 
         var messages = await _session.Messenger.GetChatMessages(_selectedChat.Id);
+        var participants = await _session.Messenger.GetChatParticipants(_selectedChat.Id);
+        var participantMap = participants.ToDictionary(u => u.Id, u => FormatUserName(u));
+
         var items = messages.Select(m =>
         {
-            var sender = m.SenderId == _me?.Id ? "Вы" : ShortGuid(m.SenderId);
+            var sender = m.SenderId == _me?.Id
+                ? "Вы"
+                : participantMap.GetValueOrDefault(m.SenderId, ShortGuid(m.SenderId));
+
             return $"[{m.MessageNumber}] {sender}: {m.Text}";
         }).ToList();
 
@@ -234,7 +271,7 @@ internal partial class MessengerForm : Form
         var participants = await _session.Messenger.GetChatParticipants(_selectedChat.Id);
         participantsListBox.DataSource = null;
         participantsListBox.DataSource = participants
-            .Select(u => $"{u.UniqueName} ({u.ContactName ?? u.DisplayName})")
+            .Select(FormatUserName)
             .ToList();
     }
 
@@ -317,6 +354,7 @@ internal partial class MessengerForm : Form
         updateContactButton.Enabled = enabled;
         createPrivateChatButton.Enabled = enabled;
         createGroupChatButton.Enabled = enabled;
+        refreshGroupMembersButton.Enabled = enabled;
         refreshChatsButton.Enabled = enabled;
         participantsButton.Enabled = enabled;
         markReadButton.Enabled = enabled;
@@ -351,18 +389,36 @@ internal partial class MessengerForm : Form
     private static string ShortGuid(Guid id)
         => id.ToString()[..8];
 
+    private static string FormatUserName(User user)
+        => user.ContactName ?? user.DisplayName ?? user.UniqueName;
+
     private sealed class ChatListItem
     {
-        public ChatListItem(Chat chat)
+        public ChatListItem(Chat chat, string title)
         {
             Chat = chat;
+            Title = string.IsNullOrWhiteSpace(title) ? $"Chat {chat.Id.ToString()[..8]}" : title;
         }
 
         public Chat Chat { get; }
+        public string Title { get; }
+
+        public override string ToString() => Title;
+    }
+
+    private sealed class GroupMemberItem
+    {
+        public GroupMemberItem(User user)
+        {
+            User = user;
+        }
+
+        public User User { get; }
 
         public override string ToString()
-            => string.IsNullOrWhiteSpace(Chat.Name)
-                ? $"Chat {Chat.Id.ToString()[..8]}"
-                : Chat.Name;
+            => $"{userLabel(User)} (@{User.UniqueName})";
+
+        private static string userLabel(User user)
+            => user.ContactName ?? user.DisplayName ?? user.UniqueName;
     }
 }

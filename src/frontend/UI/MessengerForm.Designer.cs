@@ -26,7 +26,8 @@ partial class MessengerForm
     private GroupBox groupGroup;
     private TableLayoutPanel groupLayout;
     private TextBox groupNameTextBox;
-    private TextBox groupMembersTextBox;
+    private CheckedListBox groupMembersCheckedListBox;
+    private Button refreshGroupMembersButton;
     private Button createGroupChatButton;
     private SplitContainer rightSplit;
     private GroupBox chatsGroup;
@@ -78,7 +79,8 @@ partial class MessengerForm
         groupGroup = new GroupBox();
         groupLayout = new TableLayoutPanel();
         groupNameTextBox = new TextBox();
-        groupMembersTextBox = new TextBox();
+        groupMembersCheckedListBox = new CheckedListBox();
+        refreshGroupMembersButton = new Button();
         createGroupChatButton = new Button();
         rightSplit = new SplitContainer();
         chatsGroup = new GroupBox();
@@ -357,12 +359,14 @@ partial class MessengerForm
         groupLayout.ColumnCount = 1;
         groupLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         groupLayout.Controls.Add(groupNameTextBox, 0, 0);
-        groupLayout.Controls.Add(groupMembersTextBox, 0, 1);
-        groupLayout.Controls.Add(createGroupChatButton, 0, 2);
+        groupLayout.Controls.Add(refreshGroupMembersButton, 0, 1);
+        groupLayout.Controls.Add(groupMembersCheckedListBox, 0, 2);
+        groupLayout.Controls.Add(createGroupChatButton, 0, 3);
         groupLayout.Dock = DockStyle.Fill;
         groupLayout.Location = new Point(10, 30);
         groupLayout.Name = "groupLayout";
-        groupLayout.RowCount = 3;
+        groupLayout.RowCount = 4;
+        groupLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
         groupLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
         groupLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         groupLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
@@ -380,17 +384,27 @@ partial class MessengerForm
         groupNameTextBox.TabIndex = 0;
         groupNameTextBox.Text = "TestChat";
         // 
-        // groupMembersTextBox
+        // refreshGroupMembersButton
         // 
-        groupMembersTextBox.Dock = DockStyle.Fill;
-        groupMembersTextBox.Location = new Point(6, 50);
-        groupMembersTextBox.Margin = new Padding(6);
-        groupMembersTextBox.Multiline = true;
-        groupMembersTextBox.Name = "groupMembersTextBox";
-        groupMembersTextBox.PlaceholderText = "Участники через запятую";
-        groupMembersTextBox.Size = new Size(358, 136);
-        groupMembersTextBox.TabIndex = 1;
-        groupMembersTextBox.Text = "stass, stasss";
+        refreshGroupMembersButton.Dock = DockStyle.Fill;
+        refreshGroupMembersButton.Location = new Point(6, 50);
+        refreshGroupMembersButton.Margin = new Padding(6);
+        refreshGroupMembersButton.Name = "refreshGroupMembersButton";
+        refreshGroupMembersButton.Size = new Size(358, 32);
+        refreshGroupMembersButton.TabIndex = 1;
+        refreshGroupMembersButton.Text = "Обновить список контактов";
+        refreshGroupMembersButton.UseVisualStyleBackColor = true;
+        // 
+        // groupMembersCheckedListBox
+        // 
+        groupMembersCheckedListBox.CheckOnClick = true;
+        groupMembersCheckedListBox.Dock = DockStyle.Fill;
+        groupMembersCheckedListBox.FormattingEnabled = true;
+        groupMembersCheckedListBox.Location = new Point(6, 94);
+        groupMembersCheckedListBox.Margin = new Padding(6);
+        groupMembersCheckedListBox.Name = "groupMembersCheckedListBox";
+        groupMembersCheckedListBox.Size = new Size(358, 92);
+        groupMembersCheckedListBox.TabIndex = 2;
         // 
         // createGroupChatButton
         // 
@@ -399,7 +413,7 @@ partial class MessengerForm
         createGroupChatButton.Margin = new Padding(6);
         createGroupChatButton.Name = "createGroupChatButton";
         createGroupChatButton.Size = new Size(358, 36);
-        createGroupChatButton.TabIndex = 2;
+        createGroupChatButton.TabIndex = 3;
         createGroupChatButton.Text = "Создать групповой чат";
         createGroupChatButton.UseVisualStyleBackColor = true;
         // 
