@@ -23,6 +23,7 @@ internal static class AppBootstrapper
         var factory = new DbConnectionFactory(dbPath);
 
         var initializer = new DbInitializer(factory);
+        initializer.Reset().GetAwaiter().GetResult();
         initializer.Init().GetAwaiter().GetResult();
 
         var repositoryHub = new RepositoryHub(
@@ -33,10 +34,11 @@ internal static class AppBootstrapper
             new CurrentUserRepository(factory)
         );
 
-        IHttpClient httpClient = new FakeHttpClient();
+        var httpClient = new FakeHttpClient();
         var realtimeClient = new FakeRealtimeClient();
         IMessengerService messengerService = new MessengerService(httpClient, realtimeClient, repositoryHub);
+        var session = new UiSession(messengerService, realtimeClient, httpClient);
 
-        return new Form1(messengerService, realtimeClient);
+        return new Form1(session);
     }
 }

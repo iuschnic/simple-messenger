@@ -12,9 +12,7 @@ internal sealed class FakeHttpClient : IHttpClient
 
     private ulong _messageCounter = 1;
     private ulong _version = 1;
-
-    private static readonly Guid TestUserId =
-        Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private User? _loggedInUser;
 
     public Task Register(string uniqueName, string password, string email, string displayName)
     {
@@ -31,15 +29,37 @@ internal sealed class FakeHttpClient : IHttpClient
     }
 
     public Task<string> Login(string uniqueName, string password)
-        => Task.FromResult("fake-token");
+    {
+        _loggedInUser = _users.Values.FirstOrDefault(u =>
+            u.UniqueName.Equals(uniqueName, StringComparison.OrdinalIgnoreCase));
+
+        _loggedInUser ??= new User
+        {
+            Id = Guid.NewGuid(),
+            UniqueName = uniqueName,
+            DisplayName = uniqueName
+        };
+
+        _users[_loggedInUser.Id] = _loggedInUser;
+
+        return Task.FromResult("fake-token");
+    }
 
     public Task<User> GetMe()
-        => Task.FromResult(new User
+    {
+        _loggedInUser ??= new User
         {
-            Id = TestUserId,
             UniqueName = "alice",
             DisplayName = "yxye"
-        });
+        };
+
+        if (_loggedInUser.Id == Guid.Empty)
+            _loggedInUser.Id = Guid.NewGuid();
+
+        _users[_loggedInUser.Id] = _loggedInUser;
+
+        return Task.FromResult(_loggedInUser);
+    }
 
     public Task<User> GetUser(Guid id)
     {
@@ -68,11 +88,20 @@ internal sealed class FakeHttpClient : IHttpClient
     }
 
     public Task<CurrentUser> UpdateMeDisplayName(string displayName)
-        => Task.FromResult(new CurrentUser
+    {
+        if (_loggedInUser != null)
         {
-            Id = TestUserId,
+            _loggedInUser.DisplayName = displayName;
+            _users[_loggedInUser.Id] = _loggedInUser;
+        }
+
+        return Task.FromResult(new CurrentUser
+        {
+            Id = _loggedInUser?.Id ?? Guid.NewGuid(),
+            UniqueName = _loggedInUser?.UniqueName ?? "alice",
             DisplayedName = displayName
         });
+    }
 
     public Task<User> UpdateContactName(Guid id, string contactName)
     {
@@ -142,7 +171,7 @@ internal sealed class FakeHttpClient : IHttpClient
         {
             Id = chatId,
             Name = "private",
-            OwnerId = TestUserId,
+            OwnerId = _loggedInUser?.Id ?? Guid.NewGuid(),
             CreatedAt = DateTime.UtcNow,
             Type = ChatType.Private,
             Version = _version++
@@ -200,7 +229,7 @@ internal sealed class FakeHttpClient : IHttpClient
         {
             MessageNumber = _messageCounter++,
             ChatId = chatId,
-            SenderId = TestUserId,
+            SenderId = _loggedInUser?.Id ?? Guid.NewGuid(),
             Text = text,
             CreatedAt = DateTime.UtcNow,
             Version = _version++,
@@ -272,4 +301,7 @@ internal sealed class FakeHttpClient : IHttpClient
 
         return Task.FromResult(result);
     }
+
+    public User? GetLoggedInUser()
+        => _loggedInUser;
 }
