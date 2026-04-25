@@ -1,11 +1,12 @@
 ﻿using Main.API.Models;
 using Main.Application.Dtos;
 using Main.Application.InPorts;
-using Main.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Main.API.Controllers;
+
+using ILogger = Serilog.ILogger;
 
 [ApiController]
 [Route("api/v1/users")]
@@ -36,9 +37,9 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<List<UserDto>>> SearchUsers([FromQuery] string substr, [FromQuery] int maxUsers)
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} searching users by substring {sub}", userId, substr);
+        _logger.Information("User {userId} searching users by substring {sub}", userId, substr);
         var result = await _userService.SearchUsersAsync(substr, maxUsers, userId);
-        _logger.LogInformation("User {userId} successfully found {cnt} users by substring {sub}", 
+        _logger.Information("User {userId} successfully found {cnt} users by substring {sub}", 
             userId, result.Count(), substr);
         return Ok(result);
     }
@@ -56,9 +57,9 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<UserDto>> GetUserById(Guid id)
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} getting user {id} info", userId, id);
+        _logger.Information("User {userId} getting user {id} info", userId, id);
         var result = await _userService.GetUserByIdAsync(id, userId);
-        _logger.LogInformation("User {userId} successfully got user {id} info", userId, id);
+        _logger.Information("User {userId} successfully got user {id} info", userId, id);
         return Ok(result);
     }
 
@@ -73,9 +74,9 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<UserDto>> GetMyProfile()
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} getting his profile info", userId);
+        _logger.Information("User {userId} getting his profile info", userId);
         var result = await _userService.GetMyProfileAsync(userId);
-        _logger.LogInformation("User {userId} successfully got his profile info", userId);
+        _logger.Information("User {userId} successfully got his profile info", userId);
         return Ok(result);
     }
 
@@ -92,9 +93,9 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<UserDto>> UpdateDisplayedName([FromBody] UpdateDisplayedNameRequest request)
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} updating his displayed name", userId);
+        _logger.Information("User {userId} updating his displayed name", userId);
         var result = await _userService.UpdateDisplayedNameAsync(request.NewDisplayedName, userId);
-        _logger.LogInformation("User {userId} successfully updated his displayed name", userId);
+        _logger.Information("User {userId} successfully updated his displayed name", userId);
         return Ok(result);
     }
 
@@ -109,9 +110,9 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<List<ContactWithUserDto>>> GetContacts()
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} gettig his contacts", userId);
+        _logger.Information("User {userId} gettig his contacts", userId);
         var result = await _contactService.GetMyContactsAsync(userId);
-        _logger.LogInformation("User {userId} successfully got {cnt} contacts", userId, result.Count());
+        _logger.Information("User {userId} successfully got {cnt} contacts", userId, result.Count());
         return Ok(result);
     }
 
@@ -130,9 +131,9 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<ContactWithUserDto>> AddContact([FromBody] AddContactRequest request)
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} adding contact with user {id}", userId, request.UserContactId);
+        _logger.Information("User {userId} adding contact with user {id}", userId, request.UserContactId);
         var result = await _contactService.AddContactAsync(userId, request.UserContactId, request.ContactName);
-        _logger.LogInformation("User {userId} successfully added contact with user {id}", userId, request.UserContactId);
+        _logger.Information("User {userId} successfully added contact with user {id}", userId, request.UserContactId);
         return CreatedAtAction(nameof(AddContact), result);
     }
 
@@ -153,9 +154,9 @@ public class UsersController : ControllerBase
         [FromBody] UpdateContactNameRequest request)
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} changing contact name with user {id}", userId, contactId);
+        _logger.Information("User {userId} changing contact name with user {id}", userId, contactId);
         var result = await _contactService.ChangeContactNameAsync(userId, contactId, request.NewContactName);
-        _logger.LogInformation("User {userId} successfully changed contact name with user {id}", userId, contactId);
+        _logger.Information("User {userId} successfully changed contact name with user {id}", userId, contactId);
         return Ok(result);
     }
 
@@ -172,9 +173,9 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> RemoveContact(Guid contactId)
     {
         var userId = User.GetUserId();
-        _logger.LogInformation("User {userId} removing contact with user {id}", userId, contactId);
+        _logger.Information("User {userId} removing contact with user {id}", userId, contactId);
         await _contactService.RemoveContactAsync(userId, contactId);
-        _logger.LogInformation("User {userId} successfully removed contact with user {id}", userId, contactId);
+        _logger.Information("User {userId} successfully removed contact with user {id}", userId, contactId);
         return NoContent();
     }
 }
