@@ -17,9 +17,9 @@ public class HttpClientImpl : IHttpClient
     private readonly HttpClient _http;
     private string? _token;
 
-    public HttpClientImpl(HttpClient http, IConfiguration config)
+    public HttpClientImpl(IConfiguration config)
     {
-        _http = http;
+        _http = new HttpClient();
 
         var baseUrl = config["Backend:ApiBaseUrl"]
                       ?? throw new Exception("ApiBaseUrl not configured");
@@ -234,7 +234,9 @@ public class HttpClientImpl : IHttpClient
         return new Chat
         {
             Id = dto.Chat.ChatId,
+            OwnerId = dto.Chat.ChatMeta?.OwnerUserId,
             Name = dto.Chat.ChatMeta?.Name,
+            CreatedAt = dto.Chat.ChatMeta!.CreatedAt,
             Type = (ChatType)(dto.Chat.ChatMeta?.Type ?? 0),
             Version = dto.Chat.ChatMeta?.Version ?? 0,
             LastMessageNum = dto.Chat.ChatMeta?.LastMessageNum ?? 0
@@ -257,6 +259,7 @@ public class HttpClientImpl : IHttpClient
         {
             Id = dto.Chat.ChatId,
             Name = dto.Chat.ChatMeta?.Name,
+            CreatedAt = dto.Chat.ChatMeta!.CreatedAt,
             Type = (ChatType)(dto.Chat.ChatMeta?.Type ?? 1),
             Version = dto.Chat.ChatMeta?.Version ?? 0,
             LastMessageNum = dto.Chat.ChatMeta?.LastMessageNum ?? 0
