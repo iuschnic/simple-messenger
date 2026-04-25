@@ -22,7 +22,7 @@ public class HttpChatReceiver : IHttpChatReceiver
     {
         var request = new HttpRequestMessage(
             HttpMethod.Get,
-            $"{_mainServiceChatsUrl}/{userId}");
+            $"{_mainServiceChatsUrl}{userId}");
 
         request.Headers.Add("X-Api-Key", _apiKey);
         var response = await _httpClient.SendAsync(request);
