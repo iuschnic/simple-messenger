@@ -11,7 +11,7 @@ public class Message
 {
     public ulong MessageNumber { get; set; }
     public Guid ChatId { get; set; }
-    public Guid SenderId { get; set; }
+    public Guid? SenderId { get; set; }
     public string Text { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? EditedAt { get; set; }

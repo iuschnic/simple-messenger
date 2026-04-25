@@ -1,18 +1,31 @@
-﻿namespace Http.Dto;
+﻿using System.Text.Json.Serialization;
+
+namespace Http.Dto;
 
 
 public class MessageDto
 {
-    public ulong MessageNum { get; set; }
+    [JsonPropertyName("messageNumber")]
+    public long MessageNum { get; set; }
+    [JsonPropertyName("chatId")]
     public Guid ChatId { get; set; }
-    public Guid SenderId { get; set; }
+    [JsonPropertyName("senderUserId")]
+    public Guid? SenderId { get; set; }
+    [JsonPropertyName("text")]
     public string Text { get; set; } = string.Empty;
+    [JsonPropertyName("createdAt")]
     public DateTime CreatedAt { get; set; }
+    [JsonPropertyName("editedAt")]
     public DateTime? EditedAt { get; set; }
+    [JsonPropertyName("deleted")]
     public bool Deleted { get; set; }
-    public ulong Version { get; set; }
+    [JsonPropertyName("version")]
+    public long Version { get; set; }
+    [JsonPropertyName("type")]
     public int Type { get; set; }
-
-    public ulong? ReplyToMessageNum { get; set; }
+    
+    [JsonPropertyName("replyToMessageNumber")]
+    public long? ReplyToMessageNum { get; set; }
+    [JsonPropertyName("forwardedFromUserId")]
     public Guid? ForwardedFromUserId { get; set; }
 }
