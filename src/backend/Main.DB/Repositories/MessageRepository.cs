@@ -58,56 +58,6 @@ public class MessageRepository : IMessageRepository
             .ToListAsync();
         return messagesDb.Select(m => m.ToDomain());
     }
-    public async Task<ulong> GetLastMessageNumberAsync(Guid chatId)
-    {
-        var chat = await _context.Chats.FindAsync(chatId);
-        return chat.LastMessageNum;
-    }
-    public async Task<int> GetMessagesCountAsync(Guid chatId)
-    {
-        return await _context.Messages
-            .CountAsync(m => m.ChatId == chatId && !m.Deleted);
-    }
-
-    /*public async Task<bool> TryCreateMessageAsync(Message message)
-    {
-        using var transaction = await _context.Database.BeginTransactionAsync();
-
-        try
-        {
-            // 1. Блокируем чат для обновления (пессимистическая блокировка)
-            var chatDb = await _context.Chats
-                .FromSqlRaw("SELECT * FROM Chats WHERE Id = {0} FOR UPDATE", message.ChatId)
-                .FirstOrDefaultAsync();
-            if (chatDb == null)
-                return false;
-            // 2. Вычисляем новую версию
-            var newVersion = chatDb.Version + 1;
-
-            // 3. Обновляем чат (версия и последний номер сообщения)
-            chatDb.Version = newVersion;
-            chatDb.LastMessageNum += 1;
-
-            // 4. Создаем сообщение с правильными номером и версией
-            var messageDb = message.ToDb();
-            messageDb.MessageNumber = chatDb.LastMessageNum;
-            messageDb.Version = newVersion;
-            await _context.Messages.AddAsync(messageDb);
-
-            // 5. Сохраняем всё одной операцией
-            await _context.SaveChangesAsync();
-
-            // 6. Подтверждаем транзакцию
-            await transaction.CommitAsync();
-
-            return true;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            return false;
-        }
-    }*/
 
     // попытка в optimistic блокировку
     public async Task<ulong?> TryCreateAsync(Message message)
