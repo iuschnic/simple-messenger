@@ -58,7 +58,7 @@ jobs:
         run: dotnet restore src/frontend
 
       - name: Build
-        run: dotnet build src/frontend --no-restore -c Release -o build
+        run: dotnet build src/frontend --no-restore -c Release -o build -p:EnableWindowsTargeting=true
 
       - uses: actions/upload-artifact@v4
         with:
