@@ -8,7 +8,7 @@ public class MessageDbConfiguration: IEntityTypeConfiguration<MessageDb>
 {
     public void Configure(EntityTypeBuilder<MessageDb> builder)
     {
-        builder.HasKey(m => m.MessageNumber);
+        builder.HasKey(m => new { m.MessageNumber, m.ChatId });
 
         // Каскадное удаление сообщений при удалении чата
         builder.HasOne(m => m.Chat)
@@ -29,9 +29,9 @@ public class MessageDbConfiguration: IEntityTypeConfiguration<MessageDb>
             .OnDelete(DeleteBehavior.SetNull);
 
         // Проставление null в ReplyToMessageNumber при удалении оригинального сообщения
-        builder.HasOne(cu => cu.ReplyToMessage)
+        builder.HasOne(m => m.ReplyToMessage)
             .WithMany()
-            .HasForeignKey(cu => cu.ReplyToMessageNumber)
+            .HasForeignKey(m => new { m.ReplyToMessageNumber, m.ChatId })
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
