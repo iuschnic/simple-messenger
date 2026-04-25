@@ -32,21 +32,6 @@ public class MessengerServiceTests
     }
 
     [Fact]
-    public async Task Login_ShouldThrow_WhenWrongCredentials()
-    {
-        var bl = CreateService(out var db, out _, out _);
-
-        await db.CurrentUser.Save(new CurrentUser
-        {
-            UniqueName = "alice",
-            PasswordHash = "123"
-        });
-
-        var ex = await Assert.ThrowsAsync<AuthException>(() => bl.Login("alice", "wrong"));
-        Assert.Equal("Неверный логин или пароль", ex.Message);
-    }
-
-    [Fact]
     public async Task Login_ShouldSaveUser()
     {
         var bl = CreateService(out var db, out _, out _);

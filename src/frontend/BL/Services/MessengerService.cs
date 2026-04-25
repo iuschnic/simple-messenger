@@ -236,20 +236,26 @@ public class MessengerService : IMessengerService
         }));
     }
 
-    public async Task LoginAgain()
+    public async Task<ReturnCode> LoginAgain()
     {
         var u = await Execute(() =>  _db.CurrentUser.Get());
+        if (u == null)
+        {
+            return ReturnCode.Error;
+        }
         
         var token = await Execute(() => _http.Login(u.UniqueName, u.PasswordHash));
         
-        await _rt.ConnectToHub(token);
+        await Execute(() => _rt.ConnectToHub(token));
+        
+        return ReturnCode.Success;
     }
 
     public async Task<User> Login(string u, string p)
     {
         var token = await Execute(() => _http.Login(u, p));
 
-        await _rt.ConnectToHub(token);
+        await Execute(() => _rt.ConnectToHub(token));
 
         var user = await Execute(() => _http.GetMe());
         

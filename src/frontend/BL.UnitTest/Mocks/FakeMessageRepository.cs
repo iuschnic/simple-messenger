@@ -14,7 +14,7 @@ public class FakeMessageRepository : IMessageRepository
             throw ExceptionToThrow;
     }
 
-    public Task<Message?> Find(ulong id)
+    public Task<Message?> Find(ulong id, Guid chatId)
     {
         MaybeThrow();
         _messages.TryGetValue(id, out var message);

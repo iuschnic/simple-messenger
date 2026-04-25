@@ -7,6 +7,7 @@ public interface IMessengerService
 {
     Task<CurrentUser> RegisterUser(string uniqueName, string password, string email, string displayedName);
     Task<User> Login(string u, string p);
+    Task<ReturnCode> LoginAgain();
 
     Task<User?> GetUserById(Guid userId);
     Task<User> UpdateContactName(Guid id, string contact);
