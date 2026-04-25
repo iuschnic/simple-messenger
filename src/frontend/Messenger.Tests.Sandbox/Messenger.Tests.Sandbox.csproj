@@ -11,6 +11,7 @@
       <ProjectReference Include="..\BL\BL.csproj" />
       <ProjectReference Include="..\DB\DB.csproj" />
       <ProjectReference Include="..\Http\Http.csproj" />
+      <ProjectReference Include="..\RT\RT.csproj" />
     </ItemGroup>
 
     <ItemGroup>
