@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish self-contained exe for Windows
+        run: >
+          dotnet publish src/frontend/UI/UI.csproj 
+          -c Release 
+          -r win-x64 
+          --self-contained true 
+          -p:PublishSingleFile=true 
+          -p:IncludeNativeLibrariesForSelfExtract=true 
+          -p:EnableWindowsTargeting=true 
+          -p:DebugType=None 
+          -o ./publish
+
+      - name: Create ZIP archive
+        run: |
+          cd publish
+          zip -r ../Min-Messenger-win-x64.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: Release v${{ github.event.inputs.version }}
+          files: Min-Messenger-win-x64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
