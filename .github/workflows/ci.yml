@@ -104,8 +104,8 @@ jobs:
           name: frontend-build-output
           path: build
 
-      - name: Run frontend Unit tests
-        run: dotnet test build/*.UnitTest.dll --no-build -c Release -o build --verbosity normal
+      - name: Run frontend tests
+        run: dotnet test build/*.*Test*.dll --no-build -c Release -o build --verbosity normal
 
-      - name: Run frontend DB tests
-        run: dotnet test build/*.Tests.dll --no-build -c Release -o build --verbosity normal
+      # - name: Run frontend DB tests
+      #   run: dotnet test build/*.Tests.dll --no-build -c Release -o build --verbosity normal
