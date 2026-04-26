@@ -321,4 +321,23 @@ public class FakeHttpClient : IHttpClient
                 ContactName = contactName
             };
         });
+    
+    public Task<List<User>> GetContacts()
+        => Wrap(() => new List<User>
+        {
+            new User
+            {
+                Id = Guid.NewGuid(),
+                UniqueName = "bob",
+                DisplayName = "Bob",
+                ContactName = "Bobby"
+            },
+            new User
+            {
+                Id = Guid.NewGuid(),
+                UniqueName = "charlie",
+                DisplayName = "Charlie",
+                ContactName = "Chuck"
+            }
+        });
 }

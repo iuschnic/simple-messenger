@@ -93,11 +93,13 @@ public class MessengerService : IMessengerService
         var sync = await Execute(() =>
             _http.SyncChat(chatId, version)
         );
+        var contacts = await Execute(() => _http.GetContacts());
 
         foreach (var u in sync.Participants)
         {
             try
             {
+                u.ContactName = contacts.FirstOrDefault(c => c.Id == u.Id)?.ContactName;
                 await Execute(() => _db.Users.Save(u));
             }
             catch{}
@@ -143,6 +145,7 @@ public class MessengerService : IMessengerService
             .ToList();
 
         var syncResults = await Execute(() => _http.SyncChats(request));
+        var contacts = await Execute(() => _http.GetContacts());
 
         foreach (var sync in syncResults)
         {
@@ -164,6 +167,7 @@ public class MessengerService : IMessengerService
             {
                 try
                 {
+                    u.ContactName = contacts.FirstOrDefault(c => c.Id == u.Id)?.ContactName;
                     await Execute(() => _db.Users.Save(u));
                 }
                 catch{}

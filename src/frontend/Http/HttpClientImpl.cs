@@ -203,6 +203,17 @@ public class HttpClientImpl : IHttpClient
 
         return DtoMapper.ToUser(dto);
     }
+    
+    public async Task<List<User>> GetContacts()
+    {
+        var res = await Send(() => _http.GetAsync("users/me/contacts"));
+
+        await HandleErrors(res);
+
+        var list = await Read<List<ContactDto>>(res);
+
+        return list.Select(DtoMapper.ToUser).ToList();
+    }
 
     // ================= CHATS =================
 
