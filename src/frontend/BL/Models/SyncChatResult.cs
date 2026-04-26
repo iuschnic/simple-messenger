@@ -3,6 +3,8 @@
 public class SyncChatResult
 {
     public Guid ChatId { get; set; }
+    public Guid? OwnerId { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public List<Message> Messages { get; set; } = new();
 
