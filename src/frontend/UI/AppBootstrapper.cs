@@ -4,6 +4,9 @@ using BL.Services;
 using Dapper;
 using DB.Database;
 using DB.Repositories;
+using Http;
+using Microsoft.Extensions.Configuration;
+using RT;
 
 namespace UI;
 
@@ -19,11 +22,19 @@ internal static class AppBootstrapper
             _guidHandlerRegistered = true;
         }
 
-        var dbPath = Path.Combine(AppContext.BaseDirectory, "messenger_ui.db");
+        var config = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false)
+            .Build();
+
+        var configuredDbPath = config["Database:Path"]
+                               ?? throw new InvalidOperationException("Database:Path not configured");
+        var dbPath = Path.IsPathRooted(configuredDbPath)
+            ? configuredDbPath
+            : Path.Combine(AppContext.BaseDirectory, configuredDbPath);
         var factory = new DbConnectionFactory(dbPath);
 
         var initializer = new DbInitializer(factory);
-        initializer.Reset().GetAwaiter().GetResult();
         initializer.Init().GetAwaiter().GetResult();
 
         var repositoryHub = new RepositoryHub(
@@ -34,8 +45,8 @@ internal static class AppBootstrapper
             new CurrentUserRepository(factory)
         );
 
-        var httpClient = new FakeHttpClient();
-        var realtimeClient = new FakeRealtimeClient();
+        IHttpClient httpClient = new HttpClientImpl(config);
+        IRealtimeClient realtimeClient = new RealtimeClient(config);
         IMessengerService messengerService = new MessengerService(httpClient, realtimeClient, repositoryHub);
         var session = new UiSession(messengerService, realtimeClient, httpClient);
 

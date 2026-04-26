@@ -11,7 +11,6 @@ partial class MessengerForm
     private Label headerTitleLabel;
     private Label currentUserLabel;
     private Button refreshChatsButton;
-    private Button simulateReconnectButton;
     private SplitContainer mainSplit;
     private TableLayoutPanel leftLayout;
     private GroupBox usersGroup;
@@ -64,7 +63,6 @@ partial class MessengerForm
         headerTitleLabel = new Label();
         currentUserLabel = new Label();
         refreshChatsButton = new Button();
-        simulateReconnectButton = new Button();
         mainSplit = new SplitContainer();
         leftLayout = new TableLayoutPanel();
         usersGroup = new GroupBox();
@@ -139,7 +137,6 @@ partial class MessengerForm
         // headerPanel
         // 
         headerPanel.BackColor = Color.FromArgb(24, 40, 72);
-        headerPanel.Controls.Add(simulateReconnectButton);
         headerPanel.Controls.Add(refreshChatsButton);
         headerPanel.Controls.Add(currentUserLabel);
         headerPanel.Controls.Add(headerTitleLabel);
@@ -167,7 +164,7 @@ partial class MessengerForm
         currentUserLabel.ForeColor = Color.FromArgb(220, 227, 235);
         currentUserLabel.Location = new Point(799, 23);
         currentUserLabel.Name = "currentUserLabel";
-        currentUserLabel.Size = new Size(420, 30);
+        currentUserLabel.Size = new Size(568, 30);
         currentUserLabel.TabIndex = 1;
         currentUserLabel.Text = "Текущий пользователь";
         currentUserLabel.TextAlign = ContentAlignment.MiddleRight;
@@ -175,22 +172,12 @@ partial class MessengerForm
         // refreshChatsButton
         // 
         refreshChatsButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        refreshChatsButton.Location = new Point(1235, 18);
+        refreshChatsButton.Location = new Point(1383, 18);
         refreshChatsButton.Name = "refreshChatsButton";
         refreshChatsButton.Size = new Size(137, 40);
         refreshChatsButton.TabIndex = 2;
         refreshChatsButton.Text = "Обновить";
         refreshChatsButton.UseVisualStyleBackColor = true;
-        // 
-        // simulateReconnectButton
-        // 
-        simulateReconnectButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        simulateReconnectButton.Location = new Point(1383, 18);
-        simulateReconnectButton.Name = "simulateReconnectButton";
-        simulateReconnectButton.Size = new Size(137, 40);
-        simulateReconnectButton.TabIndex = 3;
-        simulateReconnectButton.Text = "Переподключ.";
-        simulateReconnectButton.UseVisualStyleBackColor = true;
         // 
         // mainSplit
         // 
