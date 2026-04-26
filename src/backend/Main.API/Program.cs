@@ -189,5 +189,6 @@ app.UseSwaggerUI(options =>
 });
 
 app.MapControllers();
+app.MapGet("api/v1/health", () => Results.Ok("Healthy"));
 
 app.Run();
