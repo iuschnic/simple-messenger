@@ -90,6 +90,7 @@ internal partial class MessengerForm : Form
 
     private async Task InitializeScreenAsync()
     {
+        await _session.Messenger.SyncFullChats();
         _currentUser = await _session.Messenger.GetCurrentUser();
         _me = _currentUser == null
             ? null

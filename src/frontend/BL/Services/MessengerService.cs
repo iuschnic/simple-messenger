@@ -93,9 +93,35 @@ public class MessengerService : IMessengerService
         var sync = await Execute(() =>
             _http.SyncChat(chatId, version)
         );
+
+        foreach (var u in sync.Participants)
+        {
+            try
+            {
+                await Execute(() => _db.Users.Save(u));
+            }
+            catch{}
+        }
+        
+        chat.Version = sync.LastVersion;
+        chat.Name = sync.ChatName;
+        chat.CreatedAt = sync.CreatedAt;
+        chat.OwnerId = sync.OwnerId;
+        chat.Type = sync.ChatType;
+
+        if (sync.Messages.Any())
+            chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+
+        await Execute(() => _db.Chats.Save(chat));
         
         foreach (var u in sync.Participants)
-            await Execute(() => _db.Users.Save(u));
+        {
+            try
+            {
+                await Execute(() => _db.Chats.AddUserToChat(chat.Id, u.Id));
+            }
+            catch{}
+        }
 
         foreach (var m in sync.Messages)
         {
@@ -105,16 +131,9 @@ public class MessengerService : IMessengerService
             }
             catch{}
         }
-
-        chat.Version = sync.LastVersion;
-
-        if (sync.Messages.Any())
-            chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
-
-        await Execute(() => _db.Chats.Save(chat));
     }
 
-    private async Task SyncFullChats()
+    public async Task SyncFullChats()
     {
         var chats = (await Execute(() => _db.Chats.GetAllChats())) 
                     ?? new List<Chat>();
@@ -129,9 +148,38 @@ public class MessengerService : IMessengerService
         {
             var chat = chats.FirstOrDefault(c => c.Id == sync.ChatId);
             
-            foreach (var u in sync.Participants)
-                await Execute(() => _db.Users.Save(u));
+            if (chat == null)
+                chat = new Chat { Id = sync.ChatId };
 
+            chat.Version = sync.LastVersion;
+            chat.Name = sync.ChatName;
+            chat.CreatedAt = sync.CreatedAt;
+            chat.OwnerId = sync.OwnerId;
+            chat.Type = sync.ChatType;
+
+            if (sync.Messages.Count != 0)
+                chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
+
+            foreach (var u in sync.Participants)
+            {
+                try
+                {
+                    await Execute(() => _db.Users.Save(u));
+                }
+                catch{}
+            }
+            
+            await Execute(() => _db.Chats.Save(chat));
+            
+            foreach (var u in sync.Participants)
+            {
+                try
+                {
+                    await Execute(() => _db.Chats.AddUserToChat(chat.Id, u.Id));
+                }
+                catch{}
+            }
+            
             foreach (var m in sync.Messages)
             {
                 try
@@ -140,16 +188,6 @@ public class MessengerService : IMessengerService
                 }
                 catch{}
             }
-
-            if (chat == null)
-                chat = new Chat { Id = sync.ChatId };
-
-            chat.Version = sync.LastVersion;
-
-            if (sync.Messages.Any())
-                chat.LastMessageNum = sync.Messages.Max(m => m.MessageNumber);
-
-            await Execute(() => _db.Chats.Save(chat));
         }
     }
 
