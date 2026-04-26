@@ -11,55 +11,40 @@ permissions:
 jobs:
   review:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
-    
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Get PR diff
-        id: diff
-        run: |
-          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
-          echo "diff_size=$(wc -c < pr_diff.txt)" >> $GITHUB_OUTPUT
-
-      - name: AI Review via OpenRouter
+          
+      - name: Get diff
+        run: git diff origin/${{ github.base_ref }}...HEAD > diff.txt
+          
+      - name: AI Review
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DIFF=$(cat pr_diff.txt | head -c 12000)
+          # Берём первые 5000 символов diff
+          DIFF=$(head -c 5000 diff.txt)
           
-          # Создаём JSON-файл с запросом, чтобы избежать проблем с экранированием
-          cat > request.json << EOF
-          {
-            "model": "google/gemma-3n-e2b-it:free",
-            "messages": [
-              {
-                "role": "user",
-                "content": "Ты опытный разработчик. Внимательно проанализируй этот код. Напиши на русском. Обрати внимание на: потенциальные баги, проблемы безопасности, производительность, читаемость кода. Будь конкретен и краток. Используй markdown для форматирования.\n\n${DIFF}"
-              }
-            ]
-          }
+          # Сохраняем промпт в файл
+          cat > prompt.txt << EOF
+          Review this code diff. Be concise in Russian. Focus on bugs and security:
+          
+          $DIFF
           EOF
           
-          # Отправляем запрос и сохраняем ответ в файл
-          curl -s https://openrouter.ai/api/v1/chat/completions \
+          # Отправляем запрос через OpenRouter
+          RESPONSE=$(curl -s -X POST https://openrouter.ai/api/v1/chat/completions \
             -H "Authorization: Bearer $OPENROUTER_API_KEY" \
             -H "Content-Type: application/json" \
-            -d @request.json > response.json
+            -d "{
+              \"model\": \"google/gemma-3n-e2b-it:free\",
+              \"messages\": [{\"role\":\"user\",\"content\":$(jq -Rs . < prompt.txt)}]
+            }")
           
-          # Извлекаем комментарий с помощью jq (более надёжно, чем python)
-          COMMENT=$(jq -r '.choices[0].message.content // "⚠️ Не удалось получить ответ от AI"' response.json)
+          # Извлекаем ответ
+          COMMENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "API error: " + (.error.message // "Unknown")')
           
-          # Если комментарий пустой или содержит null, пишем ошибку
-          if [ "$COMMENT" = "null" ] || [ -z "$COMMENT" ]; then
-            COMMENT="⚠️ AI не смог обработать запрос. Проверь формат diff или попробуй другую модель."
-          fi
-          
-          # Постим комментарий в PR
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --body "## 🤖 AI Code Review\n\n${COMMENT}"
+          # Отправляем комментарий
+          gh pr comment ${{ github.event.pull_request.number }} --body "## 🤖 Review\n\n$COMMENT"
