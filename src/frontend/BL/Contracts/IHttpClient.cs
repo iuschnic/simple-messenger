@@ -12,7 +12,8 @@ public interface IHttpClient
     Task<User> GetUserByName(string uniqueName);
     Task<CurrentUser> UpdateMeDisplayName(string displayName);
     Task<User> UpdateContactName(Guid id, string contactName);
-
+    Task<List<User>> GetContacts();
+    
     // ================= USERS =================
 
     Task<User> GetUser(Guid id);
