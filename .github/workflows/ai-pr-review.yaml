@@ -1,0 +1,60 @@
+# .github/workflows/ai-pr-review.yml
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize] # запуск при открытии PR и добавлении новых коммитов
+
+# Разрешения для GitHub Token (принцип наименьших привилегий)[citation:4][citation:9]
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # Явно указываем права для этого конкретного job
+    permissions:
+      pull-requests: write
+      contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+          echo "diff_size=$(wc -c < pr_diff.txt)" >> $GITHUB_OUTPUT
+
+      - name: AI Review via OpenRouter
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DIFF=$(cat pr_diff.txt | head -c 12000)  # защита от превышения лимита токенов
+          
+          # Используем бесплатную модель с большим контекстом - Qwen 3.6[citation:6]
+          RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
+            -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "qwen/qwen3.6-plus-preview:free",
+              "messages": [{
+                "role": "user",
+                "content": "Review this code diff. Be concise. Focus on: bugs, security issues, performance, readability. Use markdown.\n\n'"$DIFF"'"
+              }]
+            }')
+          
+          COMMENT=$(echo "$RESPONSE" | python3 -c "
+          import sys, json
+          try:
+              data = json.load(sys.stdin)
+              print(data['choices'][0]['message']['content'])
+          except:
+              print('⚠️ AI review failed. Check OpenRouter API key and model availability.')
+          ")
+          
+          gh pr comment ${{ github.event.pull_request.number }} --body "## 🤖 AI Code Review\n\n$COMMENT"
