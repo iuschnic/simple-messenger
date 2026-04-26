@@ -26,77 +26,40 @@ jobs:
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
           echo "diff_size=$(wc -c < pr_diff.txt)" >> $GITHUB_OUTPUT
 
-      - name: AI Review via OpenRouter (debug)
+      - name: AI Review via OpenRouter
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DIFF=$(cat pr_diff.txt | head -c 12000)
           
-          # Добавляем отладочный вывод
-          echo "🔍 Debug: Checking if API key exists"
-          if [ -z "$OPENROUTER_API_KEY" ]; then
-            echo "❌ ERROR: OPENROUTER_API_KEY is not set!"
-            exit 1
-          fi
-          echo "✅ API key found (first 10 chars: ${OPENROUTER_API_KEY:0:10})..."
+          # Создаём JSON-файл с запросом, чтобы избежать проблем с экранированием
+          cat > request.json << EOF
+          {
+            "model": "google/gemma-3n-e2b-it:free",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Ты опытный разработчик. Внимательно проанализируй этот код. Напиши на русском. Обрати внимание на: потенциальные баги, проблемы безопасности, производительность, читаемость кода. Будь конкретен и краток. Используй markdown для форматирования.\n\n${DIFF}"
+              }
+            ]
+          }
+          EOF
           
-          echo "🔍 Debug: Sending request to OpenRouter..."
-          
-          # Сохраняем ответ и статус код
-          RESPONSE=$(curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
+          # Отправляем запрос и сохраняем ответ в файл
+          curl -s https://openrouter.ai/api/v1/chat/completions \
             -H "Authorization: Bearer $OPENROUTER_API_KEY" \
             -H "Content-Type: application/json" \
-            -d '{
-              "model": "openrouter/free",
-              "messages": [{
-                "role": "user",
-                "content": "Say 'OK' in one word if you receive this message."
-              }]
-            }')
+            -d @request.json > response.json
           
-          # Отделяем тело ответа от статус кода
-          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | sed '$d')
+          # Извлекаем комментарий с помощью jq (более надёжно, чем python)
+          COMMENT=$(jq -r '.choices[0].message.content // "⚠️ Не удалось получить ответ от AI"' response.json)
           
-          echo "🔍 Debug: HTTP Status Code: $HTTP_STATUS"
-          echo "🔍 Debug: Response body: $BODY"
-          
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "❌ ERROR: API returned status $HTTP_STATUS"
-            echo "Full response: $BODY"
-            
-            # Постим ошибку в PR
-            gh pr comment ${{ github.event.pull_request.number }} \
-              --body "## 🤖 AI Code Review Failed\n\n**Error Details:**\n\`\`\`\nHTTP $HTTP_STATUS\n$BODY\n\`\`\`\n\n**Possible fixes:**\n1. Check if OPENROUTER_API_KEY secret is set correctly\n2. Try a different model (edit the workflow file)\n3. Check [OpenRouter status](https://status.openrouter.ai/)"
-            exit 1
+          # Если комментарий пустой или содержит null, пишем ошибку
+          if [ "$COMMENT" = "null" ] || [ -z "$COMMENT" ]; then
+            COMMENT="⚠️ AI не смог обработать запрос. Проверь формат diff или попробуй другую модель."
           fi
           
-          # Если всё ок, пробуем с реальным diff'ом
-          REAL_RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
-            -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "model": "openrouter/free",
-              "messages": [{
-                "role": "user",
-                "content": "Review this code diff. Be concise. Focus on: bugs, security issues, performance, readability. Use markdown.\n\n'"$DIFF"'"
-              }]
-            }')
-          
-          COMMENT=$(echo "$REAL_RESPONSE" | python3 -c "
-          import sys, json
-          try:
-              data = json.load(sys.stdin)
-              if 'choices' in data and len(data['choices']) > 0:
-                  print(data['choices'][0]['message']['content'])
-              else:
-                  print('⚠️ Unexpected API response format')
-                  print('Full response:', file=sys.stderr)
-                  print(data, file=sys.stderr)
-          except Exception as e:
-              print(f'❌ Failed to parse JSON: {e}')
-          ")
-          
+          # Постим комментарий в PR
           gh pr comment ${{ github.event.pull_request.number }} \
-            --body "## 🤖 AI Code Review\n\n$COMMENT"
+            --body "## 🤖 AI Code Review\n\n${COMMENT}"
