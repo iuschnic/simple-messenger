@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.3.2-dev-02419" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Main.BL\Main.BL.csproj" />
+    <ProjectReference Include="..\Shared.Main.Auth\Shared.Main.Auth.csproj" />
+  </ItemGroup>
+
+</Project>

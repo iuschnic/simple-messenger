@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 1.0.0)'
+        required: true
+
+permissions:
+  actions: read
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-net10-${{ hashFiles('src/backend/**/*.csproj', 'src/backend/**/*.props', 'src/backend/**/*.targets') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-net10-
+
+      - name: Restore dependencies
+        run: dotnet restore src/backend
+
+      - name: Build
+        run: dotnet build src/backend --no-restore -c Release -o build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-output
+          path: build/
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-net9-${{ hashFiles('src/frontend/**/*.csproj', 'src/frontend/**/*.props', 'src/frontend/**/*.targets') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-net9-
+
+      - name: Restore dependencies
+        run: dotnet restore src/frontend -p:EnableWindowsTargeting=true
+
+      - name: Build
+        run: dotnet build src/frontend --no-restore -c Release -o build -p:EnableWindowsTargeting=true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-output
+          path: build/
+
+  backend-tests:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-build-output
+          path: build
+
+      # Отладка: покажем, что внутри build
+      # - name: List build output
+      #   run: ls -R build
+
+      - name: Run backend tests
+        # run: dotnet test src/backend/**/*.*Tests.csproj --no-build -c Release -o build --verbosity normal
+        # run: dotnet test src/backend/Realtime.UnitTests/Realtime.UnitTests.csproj --no-build -c Release -o build --verbosity normal
+        run: dotnet test build/*.*Tests.dll --verbosity normal
+
+  frontend-tests:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-output
+          path: build
+
+      - name: Run frontend tests
+        run: dotnet test build/*.UnitTest.dll --no-build -c Release -o build --verbosity normal
+
+  publish:
+    needs: [frontend-tests]
+    if: github.ref == 'refs/heads/main'  # только для ветки main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish self-contained exe for Windows
+        run: >
+          dotnet publish src/frontend/UI/UI.csproj \
+          -c Release \
+          -r win-x64 \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -p:EnableWindowsTargeting=true \
+          -p:DebugType=None \
+          -o ./publish
+
+      - name: Create ZIP archive
+        run: |
+          cd publish
+          zip -r ../backend-win-x64.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: Release v${{ github.event.inputs.version }}
+          files: backend-win-x64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
