@@ -301,6 +301,26 @@ internal sealed class FakeHttpClient : IHttpClient
 
         return Task.FromResult(result);
     }
+    
+    public Task<User> AddContact(Guid userContactId, string contactName)
+    {
+        var user = _users.TryGetValue(userContactId, out var existing)
+            ? existing
+            : new User
+            {
+                Id = userContactId,
+                UniqueName = "unknown",
+                DisplayName = "unknown"
+            };
+        
+        user.ContactName = contactName;
+        user.DisplayName ??= user.UniqueName;
+
+        _users[userContactId] = user;
+
+        return Task.FromResult(user);
+    }
+    
 
     public User? GetLoggedInUser()
         => _loggedInUser;
