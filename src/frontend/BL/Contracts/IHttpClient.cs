@@ -34,4 +34,6 @@ public interface IHttpClient
     Task<SyncChatResult> EditMessage(Guid chatId, ulong messageNum, string newText, ulong clientVersion);
     Task<SyncChatResult> DeleteMessage(Guid chatId, ulong messageNum, ulong clientVersion);
     Task<List<Message>> GetMessages(Guid chatId, ulong fromMessageNumber, int limit);
+
+    Task<User> AddContact(Guid userContactId, string contactName);
 }

@@ -144,7 +144,7 @@ internal partial class MessengerForm : Form
     private async Task UpdateContactAsync()
     {
         var user = GetSelectedUser();
-        var updated = await _session.Messenger.UpdateContactName(user.Id, contactNameTextBox.Text.Trim());
+        var updated = await _session.Messenger.CreateContact(user.Id, contactNameTextBox.Text.Trim());
         AddLog($"Контакт обновлён: {updated.UniqueName}");
         await SearchUserAsync();
         await LoadGroupContactsAsync();
