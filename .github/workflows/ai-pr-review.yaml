@@ -1,11 +1,9 @@
-# .github/workflows/ai-pr-review.yml
 name: AI Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize] # запуск при открытии PR и добавлении новых коммитов
+    types: [opened, synchronize]
 
-# Разрешения для GitHub Token (принцип наименьших привилегий)[citation:4][citation:9]
 permissions:
   contents: read
   pull-requests: write
@@ -13,7 +11,6 @@ permissions:
 jobs:
   review:
     runs-on: ubuntu-latest
-    # Явно указываем права для этого конкретного job
     permissions:
       pull-requests: write
       contents: read
@@ -29,32 +26,77 @@ jobs:
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
           echo "diff_size=$(wc -c < pr_diff.txt)" >> $GITHUB_OUTPUT
 
-      - name: AI Review via OpenRouter
+      - name: AI Review via OpenRouter (debug)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DIFF=$(cat pr_diff.txt | head -c 12000)  # защита от превышения лимита токенов
+          DIFF=$(cat pr_diff.txt | head -c 12000)
           
-          # Используем бесплатную модель с большим контекстом - Qwen 3.6[citation:6]
-          RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
+          # Добавляем отладочный вывод
+          echo "🔍 Debug: Checking if API key exists"
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "❌ ERROR: OPENROUTER_API_KEY is not set!"
+            exit 1
+          fi
+          echo "✅ API key found (first 10 chars: ${OPENROUTER_API_KEY:0:10})..."
+          
+          echo "🔍 Debug: Sending request to OpenRouter..."
+          
+          # Сохраняем ответ и статус код
+          RESPONSE=$(curl -s -w "\n%{http_code}" https://openrouter.ai/api/v1/chat/completions \
             -H "Authorization: Bearer $OPENROUTER_API_KEY" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "qwen/qwen3.6-plus-preview:free",
+              "model": "anthropic/claude-3-haiku-20240307",
+              "messages": [{
+                "role": "user",
+                "content": "Say 'OK' in one word if you receive this message."
+              }]
+            }')
+          
+          # Отделяем тело ответа от статус кода
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "🔍 Debug: HTTP Status Code: $HTTP_STATUS"
+          echo "🔍 Debug: Response body: $BODY"
+          
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ ERROR: API returned status $HTTP_STATUS"
+            echo "Full response: $BODY"
+            
+            # Постим ошибку в PR
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --body "## 🤖 AI Code Review Failed\n\n**Error Details:**\n\`\`\`\nHTTP $HTTP_STATUS\n$BODY\n\`\`\`\n\n**Possible fixes:**\n1. Check if OPENROUTER_API_KEY secret is set correctly\n2. Try a different model (edit the workflow file)\n3. Check [OpenRouter status](https://status.openrouter.ai/)"
+            exit 1
+          fi
+          
+          # Если всё ок, пробуем с реальным diff'ом
+          REAL_RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
+            -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "model": "anthropic/claude-3-haiku-20240307",
               "messages": [{
                 "role": "user",
                 "content": "Review this code diff. Be concise. Focus on: bugs, security issues, performance, readability. Use markdown.\n\n'"$DIFF"'"
               }]
             }')
           
-          COMMENT=$(echo "$RESPONSE" | python3 -c "
+          COMMENT=$(echo "$REAL_RESPONSE" | python3 -c "
           import sys, json
           try:
               data = json.load(sys.stdin)
-              print(data['choices'][0]['message']['content'])
-          except:
-              print('⚠️ AI review failed. Check OpenRouter API key and model availability.')
+              if 'choices' in data and len(data['choices']) > 0:
+                  print(data['choices'][0]['message']['content'])
+              else:
+                  print('⚠️ Unexpected API response format')
+                  print('Full response:', file=sys.stderr)
+                  print(data, file=sys.stderr)
+          except Exception as e:
+              print(f'❌ Failed to parse JSON: {e}')
           ")
           
-          gh pr comment ${{ github.event.pull_request.number }} --body "## 🤖 AI Code Review\n\n$COMMENT"
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "## 🤖 AI Code Review\n\n$COMMENT"
