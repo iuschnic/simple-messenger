@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-net10-${{ hashFiles('src/backend/**/*.csproj', 'src/backend/**/*.props', 'src/backend/**/*.targets') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-net10-
+
+      - name: Restore dependencies
+        run: dotnet restore src/backend
+
+      - name: Build
+        run: dotnet build src/backend --no-restore -c Release -o build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-output
+          path: build/
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-net9-${{ hashFiles('src/frontend/**/*.csproj', 'src/frontend/**/*.props', 'src/frontend/**/*.targets') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-net9-
+
+      - name: Restore dependencies
+        run: dotnet restore src/frontend -p:EnableWindowsTargeting=true
+
+      - name: Build
+        run: dotnet build src/frontend --no-restore -c Release -o build -p:EnableWindowsTargeting=true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-output
+          path: build/
+
+  backend-tests:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-build-output
+          path: build
+
+      # Отладка: покажем, что внутри build
+      # - name: List build output
+      #   run: ls -R build
+
+      - name: Run backend tests
+        # run: dotnet test src/backend/**/*.*Tests.csproj --no-build -c Release -o build --verbosity normal
+        # run: dotnet test src/backend/Realtime.UnitTests/Realtime.UnitTests.csproj --no-build -c Release -o build --verbosity normal
+        run: dotnet test build/*.*Tests.dll --verbosity normal
+
+  frontend-tests:
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-output
+          path: build
+
+      - name: Run frontend Unit tests
+        run: dotnet test build/*.UnitTest.dll --no-build -c Release -o build --verbosity normal
+
+      - name: Run frontend DB tests
+        run: dotnet test build/DB.Tests.dll --no-build -c Release -o build --verbosity normal
