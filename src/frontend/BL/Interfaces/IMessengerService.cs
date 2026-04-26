@@ -34,4 +34,6 @@ public interface IMessengerService
     Task UpdateLastReadMessageNum(Guid chatId, Guid userId);
 
     MessengerEvents Events { get; }
+    
+    Task<User> CreateContact(Guid id, string contact);
 }

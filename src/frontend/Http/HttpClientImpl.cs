@@ -379,4 +379,21 @@ public class HttpClientImpl : IHttpClient
 
         return list.Select(DtoMapper.ToMessage).ToList();
     }
+    
+    public async Task<User> AddContact(Guid userContactId, string contactName)
+    {
+        var res = await Send(() => _http.PostAsJsonAsync(
+            "users/me/contacts",
+            new
+            {
+                userContactId,
+                contactName
+            }));
+
+        await HandleErrors(res);
+
+        var dto = await Read<ContactDto>(res);
+
+        return DtoMapper.ToUser(dto);
+    }
 }

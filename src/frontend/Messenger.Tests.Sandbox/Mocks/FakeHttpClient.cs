@@ -8,6 +8,7 @@ public class FakeHttpClient : IHttpClient
     private readonly Dictionary<ulong, Message> _messages = new();
     private readonly Dictionary<Guid, Chat> _chats = new();
     private readonly Dictionary<Guid, User> _users = new();
+    public Exception? ExceptionToThrow { get; set; }
 
     private ulong _msgCounter = 1;
     private ulong _version = 1;
@@ -16,6 +17,28 @@ public class FakeHttpClient : IHttpClient
         Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     // ================= AUTH =================
+
+    private void MaybeThrow()
+    {
+        if (ExceptionToThrow != null)
+        {
+            var ex = ExceptionToThrow;
+            ExceptionToThrow = null;
+            throw ex;
+        }
+    }
+    private Task<T> Wrap<T>(Func<T> func)
+    {
+        MaybeThrow();
+        return Task.FromResult(func());
+    }
+
+    private Task Wrap(Action action)
+    {
+        MaybeThrow();
+        action();
+        return Task.CompletedTask;
+    }
 
     public Task Register(string uniqueName, string password, string email, string displayName)
     {
@@ -285,4 +308,29 @@ public class FakeHttpClient : IHttpClient
 
         return Task.FromResult(result);
     }
+    
+    public Task<User> AddContact(Guid userContactId, string contactName)
+        => Wrap(() =>
+        {
+            // если пользователя нет — просто создаём заглушку
+            if (!_users.TryGetValue(userContactId, out var user))
+            {
+                user = new User
+                {
+                    Id = userContactId,
+                    UniqueName = "unknown",
+                    DisplayName = "unknown"
+                };
+
+                _users[userContactId] = user;
+            }
+
+            return new User
+            {
+                Id = user.Id,
+                UniqueName = user.UniqueName,
+                DisplayName = user.DisplayName,
+                ContactName = contactName
+            };
+        });
 }

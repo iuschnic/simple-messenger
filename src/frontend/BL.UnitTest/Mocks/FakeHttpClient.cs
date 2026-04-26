@@ -296,4 +296,29 @@ public class FakeHttpClient : IHttpClient
             LastVersion = _version
         });
     }
+    
+    public Task<User> AddContact(Guid userContactId, string contactName)
+        => Wrap(() =>
+        {
+            // если пользователя нет — просто создаём заглушку
+            if (!_users.TryGetValue(userContactId, out var user))
+            {
+                user = new User
+                {
+                    Id = userContactId,
+                    UniqueName = "unknown",
+                    DisplayName = "unknown"
+                };
+
+                _users[userContactId] = user;
+            }
+
+            return new User
+            {
+                Id = user.Id,
+                UniqueName = user.UniqueName,
+                DisplayName = user.DisplayName,
+                ContactName = contactName
+            };
+        });
 }

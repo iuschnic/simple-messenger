@@ -114,7 +114,7 @@ public class MessengerService : IMessengerService
         await Execute(() => _db.Chats.Save(chat));
     }
 
-    private async Task SyncFullChats()
+    public async Task SyncFullChats()
     {
         var chats = (await Execute(() => _db.Chats.GetAllChats())) 
                     ?? new List<Chat>();
@@ -325,6 +325,21 @@ public class MessengerService : IMessengerService
 
         return user!;
     }
+    
+    public async Task<User> CreateContact(Guid id, string contact)
+    {
+        await Execute(() => _http.AddContact(id, contact));
+
+        var user = await Execute(() => _db.Users.Find(id));
+
+        if (user != null)
+        {
+            user.ContactName = contact;
+            await Execute(() => _db.Users.Save(user));
+        }
+
+        return user!;
+    }
 
     public async Task<List<User>> FindUsersWithContactName()
         => await Execute(() => _db.Users.FindUsersWithContactName());
@@ -426,6 +441,8 @@ public class MessengerService : IMessengerService
 
         return list;
     }
+    
+    
 
     public async Task<Message> SendMessage(Guid chatId, Guid senderId, string text)
     {
