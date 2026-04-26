@@ -108,4 +108,4 @@ jobs:
         run: dotnet test build/*.UnitTest.dll --no-build -c Release -o build --verbosity normal
 
       - name: Run frontend DB tests
-        run: dotnet test build/DB.Tests.dll --no-build -c Release -o build --verbosity normal
+        run: dotnet test build/*.Tests.dll --no-build -c Release -o build --verbosity normal
