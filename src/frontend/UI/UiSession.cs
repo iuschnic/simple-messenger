@@ -1,17 +1,16 @@
+using BL.Contracts;
 using BL.Interfaces;
 
 namespace UI;
 
 internal sealed class UiSession
 {
-    public UiSession(IMessengerService messenger, FakeRealtimeClient realtimeClient, FakeHttpClient httpClient)
+    public UiSession(IMessengerService messenger, IRealtimeClient realtimeClient, IHttpClient httpClient)
     {
         Messenger = messenger;
-        RealtimeClient = realtimeClient;
         HttpClient = httpClient;
     }
 
     public IMessengerService Messenger { get; }
-    public FakeRealtimeClient RealtimeClient { get; }
-    public FakeHttpClient HttpClient { get; }
+    public IHttpClient HttpClient { get; }
 }

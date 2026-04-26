@@ -30,7 +30,6 @@ internal partial class MessengerForm : Form
         markReadButton.Click += async (_, _) => await RunAction(MarkAsReadAsync);
         leaveChatButton.Click += async (_, _) => await RunAction(LeaveChatAsync);
         sendMessageButton.Click += async (_, _) => await RunAction(SendMessageAsync);
-        simulateReconnectButton.Click += async (_, _) => await RunAction(() => _session.RealtimeClient.EmitReconnected());
         chatsListBox.SelectedIndexChanged += async (_, _) => await RunAction(OnChatSelectedAsync);
 
         _session.Messenger.Events.MessageReceived += message =>
@@ -92,7 +91,9 @@ internal partial class MessengerForm : Form
     private async Task InitializeScreenAsync()
     {
         _currentUser = await _session.Messenger.GetCurrentUser();
-        _me = _session.HttpClient.GetLoggedInUser();
+        _me = _currentUser == null
+            ? null
+            : await _session.Messenger.GetUserByNameWithServer(_currentUser.UniqueName);
 
         currentUserLabel.Text = _currentUser == null || _me == null
             ? "Не авторизован"
@@ -249,7 +250,9 @@ internal partial class MessengerForm : Form
         {
             var sender = m.SenderId == _me?.Id
                 ? "Вы"
-                : participantMap.GetValueOrDefault(m.SenderId, ShortGuid(m.SenderId));
+                : m.SenderId.HasValue
+                    ? participantMap.GetValueOrDefault(m.SenderId.Value, ShortGuid(m.SenderId.Value))
+                    : "Unknown";
 
             return $"[{m.MessageNumber}] {sender}: {m.Text}";
         }).ToList();
@@ -358,7 +361,6 @@ internal partial class MessengerForm : Form
         markReadButton.Enabled = enabled;
         leaveChatButton.Enabled = enabled;
         sendMessageButton.Enabled = enabled;
-        simulateReconnectButton.Enabled = enabled;
     }
 
     private void AddLog(string text)
