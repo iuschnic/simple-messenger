@@ -69,6 +69,8 @@ public static class DtoMapper
         return new SyncChatResult
         {
             ChatId = chat.ChatId,
+            OwnerId = chat.ChatMeta?.OwnerUserId,
+            CreatedAt = chat.ChatMeta!.CreatedAt,
 
             LastVersion = chat.ChatMeta?.Version ?? 0,
 

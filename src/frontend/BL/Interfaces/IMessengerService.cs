@@ -5,6 +5,8 @@ namespace BL.Interfaces;
 
 public interface IMessengerService
 {
+    Task SyncFullChats();
+    
     Task<CurrentUser> RegisterUser(string uniqueName, string password, string email, string displayedName);
     Task<User> Login(string u, string p);
     Task<ReturnCode> LoginAgain();
