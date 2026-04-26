@@ -48,7 +48,7 @@ jobs:
             -H "Authorization: Bearer $OPENROUTER_API_KEY" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "anthropic/claude-3-haiku-20240307",
+              "model": "google/gemini-2.0-flash-exp:free",
               "messages": [{
                 "role": "user",
                 "content": "Say 'OK' in one word if you receive this message."
@@ -77,7 +77,7 @@ jobs:
             -H "Authorization: Bearer $OPENROUTER_API_KEY" \
             -H "Content-Type: application/json" \
             -d '{
-              "model": "anthropic/claude-3-haiku-20240307",
+              "model": "google/gemini-2.0-flash-exp:free",
               "messages": [{
                 "role": "user",
                 "content": "Review this code diff. Be concise. Focus on: bugs, security issues, performance, readability. Use markdown.\n\n'"$DIFF"'"
