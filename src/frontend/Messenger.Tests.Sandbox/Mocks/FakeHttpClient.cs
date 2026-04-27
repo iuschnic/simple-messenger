@@ -352,4 +352,9 @@ public class FakeHttpClient : IHttpClient
                 ContactName = "Chuck"
             }
         });
+    
+    public Task LeaveChat(Guid chatId)
+    {
+        return Task.CompletedTask;
+    }
 }
