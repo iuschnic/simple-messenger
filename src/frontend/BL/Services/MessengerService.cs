@@ -463,7 +463,7 @@ public class MessengerService : IMessengerService
     public async Task LeaveChat(Guid chatId, Guid userId)
     {
         var chat = await Execute(() => _db.Chats.Find(chatId));
-        await Execute(() => _http.RemoveUserFromChat(chatId, userId, chat!.Version));
+        await Execute(() => _http.LeaveChat(chatId));
         await Execute(() => _db.Chats.LeaveAndDeleteChat(chatId, userId));
     }
 
