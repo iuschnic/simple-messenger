@@ -126,14 +126,14 @@ jobs:
 
       - name: Publish self-contained exe for Windows
         run: >
-          dotnet publish src/frontend/UI/UI.csproj \
-          -c Release \
-          -r win-x64 \
-          --self-contained true \
-          -p:PublishSingleFile=true \
-          -p:IncludeNativeLibrariesForSelfExtract=true \
-          -p:EnableWindowsTargeting=true \
-          -p:DebugType=None \
+          dotnet publish src/frontend/UI/UI.csproj 
+          -c Release 
+          -r win-x64 
+          --self-contained true 
+          -p:PublishSingleFile=true 
+          -p:IncludeNativeLibrariesForSelfExtract=true 
+          -p:EnableWindowsTargeting=true 
+          -p:DebugType=None 
           -o ./publish
 
       - name: Create ZIP archive
