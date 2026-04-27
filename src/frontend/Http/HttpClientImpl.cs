@@ -332,6 +332,15 @@ public class HttpClientImpl : IHttpClient
 
         return DtoMapper.ToSync(dto.Chat);
     }
+    
+    public async Task LeaveChat(Guid chatId)
+    {
+        var res = await Send(() => _http.DeleteAsync(
+            $"chats/{chatId}/members/me"
+        ));
+
+        await HandleErrors(res);
+    }
 
     // ================= MESSAGES =================
 

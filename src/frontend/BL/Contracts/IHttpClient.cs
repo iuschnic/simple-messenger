@@ -28,6 +28,7 @@ public interface IHttpClient
     Task<SyncChatResult> SyncChat(Guid chatId, ulong clientVersion);
     Task<List<SyncChatResult>> SyncChats(List<(Guid chatId, ulong version)> chats);
     Task<SyncChatResult> RemoveUserFromChat(Guid chatId, Guid userId, ulong clientVersion);
+    Task LeaveChat(Guid chatId);
 
     // ================= MESSAGES =================
 
