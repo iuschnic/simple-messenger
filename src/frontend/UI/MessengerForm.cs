@@ -260,8 +260,11 @@ internal partial class MessengerForm : Form
 
         messagesListBox.DataSource = null;
         messagesListBox.DataSource = items;
-        messagesListBox.SelectedIndex = messagesListBox.Items.Count - 1;
-        messagesListBox.SetSelected(messagesListBox.Items.Count - 1, true);
+        if (messagesListBox.Items.Count > 0)
+        {
+            messagesListBox.SelectedIndex = messagesListBox.Items.Count - 1;
+            messagesListBox.SetSelected(messagesListBox.Items.Count - 1, true);
+        }
     }
 
     private async Task LoadParticipantsAsync()
