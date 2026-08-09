@@ -24,10 +24,6 @@ public class UserService : BaseService, IUserService
     }
     public async Task<UserDto> CreateUserAsync(Guid id, string uniqueName, string displayedName)
     {
-        if (string.IsNullOrWhiteSpace(displayedName))
-            throw new ArgumentException("Invalid displayed name");
-        if (string.IsNullOrWhiteSpace(uniqueName))
-            throw new ArgumentException("Invalid unique name");
         if (await _userRepo.ExistsByUniqueNameAsync(uniqueName))
             throw new RuleViolationException("User with the same unique name already exists");
         var user = User.Create(id, uniqueName, displayedName);
@@ -43,8 +39,6 @@ public class UserService : BaseService, IUserService
     }
     public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
     {
-        if (string.IsNullOrWhiteSpace(newDisplayedName))
-            throw new ArgumentException("Invalid displayed name");
         var user = await GetCurrentUserOrUnauthorized(currentUserId);
         if (!await _userRepo.UpdateDisplayedNameAsync(currentUserId, newDisplayedName))
             throw new TechnicalException("Failed to update user displayed name");
