@@ -25,7 +25,7 @@ public class UserService : BaseService, IUserService
     public async Task<UserDto> CreateUserAsync(Guid id, string uniqueName, string displayedName)
     {
         if (await _userRepo.ExistsByUniqueNameAsync(uniqueName))
-            throw new RuleViolationException("User with the same unique name already exists");
+            throw new ConflictException("User with the same unique name already exists");
         var user = User.Create(id, uniqueName, displayedName);
         if (!await _userRepo.CreateAsync(user))
             throw new TechnicalException("Failed to create user");
