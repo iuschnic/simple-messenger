@@ -36,7 +36,7 @@ public class User
     }
     private static void CheckId(Guid id)
     {
-        if (id != Guid.Empty)
+        if (id == Guid.Empty)
             throw new DomainValidationException("Empty id");
     }
     public static User CreateNew(string uniqueName,
