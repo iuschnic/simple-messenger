@@ -1,4 +1,5 @@
-﻿using Main.Application.Exceptions;
+﻿using Main.BL.Exceptions;
+using Main.Application.Exceptions;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -11,6 +12,7 @@ public class ExceptionHandlingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
     private readonly IWebHostEnvironment _env;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public ExceptionHandlingMiddleware(
         RequestDelegate next,
@@ -20,6 +22,11 @@ public class ExceptionHandlingMiddleware
         _next = next;
         _logger = logger;
         _env = env;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = _env.IsDevelopment()
+        };
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -51,6 +58,13 @@ public class ExceptionHandlingMiddleware
 
         switch (exception)
         {
+            case DomainValidationException ex:
+                response.StatusCode = StatusCodes.Status400BadRequest;
+                errorResponse.Error = ex.Message;
+                errorResponse.Code = "INVALID_ARGUMENT";
+                _logger.Information("Invalid argument: {ArgumentError}", ex.Message);
+                break;
+
             case UnauthorizedException ex:
                 response.StatusCode = StatusCodes.Status401Unauthorized;
                 errorResponse.Error = ex.Message;
@@ -86,13 +100,6 @@ public class ExceptionHandlingMiddleware
                 _logger.Information("Business rule violation: {RuleName}", ex.Message);
                 break;
 
-            case ArgumentException ex:
-                response.StatusCode = StatusCodes.Status400BadRequest;
-                errorResponse.Error = ex.Message;
-                errorResponse.Code = "INVALID_ARGUMENT";
-                _logger.Information("Invalid argument: {ArgumentError}", ex.Message);
-                break;
-
             case TechnicalException ex:
                 response.StatusCode = StatusCodes.Status500InternalServerError;
                 errorResponse.Error = _env.IsDevelopment()
@@ -109,11 +116,18 @@ public class ExceptionHandlingMiddleware
                 }
                 break;
 
+            case DomainException ex:
+                response.StatusCode = StatusCodes.Status400BadRequest;
+                errorResponse.Code = "DOMAIN_ERROR";
+                _logger.Warning("Unmapped DomainException subtype {ExceptionType}, {Message}", 
+                    ex.GetType().Name, ex.Message);
+                break;
+
             case AppException ex:
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "APPLICATION_ERROR";
-                _logger.Warning("Application error: {ErrorType} - {Message}",
+                _logger.Warning("Unmapped AppException subtype {ExceptionType}, {Message}",
                     ex.GetType().Name, ex.Message);
                 break;
 
@@ -141,12 +155,7 @@ public class ExceptionHandlingMiddleware
             if (exception is not AppException)
                 _logger.Debug("Stack trace: {StackTrace}", exception.StackTrace);
         }
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = _env.IsDevelopment()
-        };
-        await response.WriteAsJsonAsync(errorResponse, jsonOptions);
+        await response.WriteAsJsonAsync(errorResponse, _jsonOptions);
     }
 }
 
@@ -155,8 +164,6 @@ public class ErrorResponse
     public string Error { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string TraceId { get; set; } = string.Empty;
-    public object? Data { get; set; }
-    public Dictionary<string, string[]>? Errors { get; set; }
     public string? StackTrace { get; set; }
     public string? InnerError { get; set; }
 }
