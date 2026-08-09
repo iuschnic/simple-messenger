@@ -68,14 +68,12 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
         return true;
     }
-    public async Task<bool> UpdateDisplayedNameAsync(Guid id, string newDisplayedName)
+    public async Task<bool> UpdateAsync(User user)
     {
-        var userDb = await _context.Users.FindAsync(id);
+        var userDb = await _context.Users.FindAsync(user.Id);
         if (userDb == null)
             return false;
-        if (string.IsNullOrWhiteSpace(newDisplayedName))
-            return false;
-        userDb.DisplayedName = newDisplayedName;
+        userDb.DisplayedName = user.DisplayedName;
         await _context.SaveChangesAsync();
         return true;
     }

@@ -11,6 +11,6 @@ public interface IUserRepository
     Task<bool> ExistsAsync(Guid id);
     Task<bool> ExistsByUniqueNameAsync(string uniqueName);
     Task<bool> CreateAsync(User user);
-    Task<bool> UpdateDisplayedNameAsync(Guid id, string newDisplayedName);
+    Task<bool> UpdateAsync(User user);
     Task<bool> DeleteAsync(Guid id);
 }

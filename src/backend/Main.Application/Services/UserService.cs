@@ -40,7 +40,8 @@ public class UserService : BaseService, IUserService
     public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
     {
         var user = await GetCurrentUserOrUnauthorized(currentUserId);
-        if (!await _userRepo.UpdateDisplayedNameAsync(currentUserId, newDisplayedName))
+        user.ChangeDisplayedName(newDisplayedName);
+        if (!await _userRepo.UpdateAsync(user))
             throw new TechnicalException("Failed to update user displayed name");
 
         await _messageProducer.SendUserChangedAsync(user.Id, user.UniqueName, newDisplayedName);
