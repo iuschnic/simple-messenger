@@ -9,8 +9,7 @@ public interface IMessageRepository
     Task<IEnumerable<Message>> GetNewerMessagesAsync(Guid chatId, ulong fromMessageNumber, int limit = 50);
     Task<IEnumerable<Message>> GetLastMessagesAsync(Guid chatId, int limit = 50);
     Task<IEnumerable<Message>> GetMessagesAfterVersionAsync(Guid chatId, ulong fromVersion);
-    Task<ulong?> TryCreateAsync(Message message);
-    Task<bool> TryEditTextAsync(Guid chatId, ulong messageNumber, string newText);
-    Task<bool> TryDeleteAsync(Guid chatId, ulong messageNumber);
+    Task CreateAsync(Message message);
+    Task UpdateAsync(Message message);
     Task<bool> ExistsAsync(Guid chatId, ulong messageNumber);
 }

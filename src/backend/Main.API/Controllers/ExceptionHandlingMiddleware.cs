@@ -65,6 +65,13 @@ public class ExceptionHandlingMiddleware
                 _logger.Information("Invalid argument: {ArgumentError}", ex.Message);
                 break;
 
+            case DomainRuleViolationException ex:
+                response.StatusCode = StatusCodes.Status400BadRequest;
+                errorResponse.Error = ex.Message;
+                errorResponse.Code = "DOMAIN_RULE_VIOLATION";
+                _logger.Information("Business rule violation: {RuleName}", ex.Message);
+                break;
+
             case UnauthorizedException ex:
                 response.StatusCode = StatusCodes.Status401Unauthorized;
                 errorResponse.Error = ex.Message;
@@ -91,6 +98,13 @@ public class ExceptionHandlingMiddleware
                 errorResponse.Error = ex.Message;
                 errorResponse.Code = "CONFLICT";
                 _logger.Information("Conflict detected: {ConflictDetails}", ex.Message);
+                break;
+
+            case ConcurrencyException ex:
+                response.StatusCode = StatusCodes.Status409Conflict;
+                errorResponse.Error = ex.Message;
+                errorResponse.Code = "CONCURRENCY";
+                _logger.Information("Concurrency issue detected: {ConcurrencyDetails}", ex.Message);
                 break;
 
             case RuleViolationException ex:
