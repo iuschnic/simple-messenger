@@ -1,5 +1,6 @@
 ﻿using Main.BL.Models;
 using Main.Application.OutPorts;
+using Main.Application.Exceptions;
 using Main.DB.Converters;
 using Main.DB.Context;
 using Microsoft.EntityFrameworkCore;
@@ -17,32 +18,37 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid id)
     {
         var userDb = await _context.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == id);
         return userDb?.ToDomain();
     }
     public async Task<User?> GetByUniqueNameAsync(string uniqueName)
     {
         var userDb = await _context.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.UniqueName == uniqueName);
         return userDb?.ToDomain();
     }
     public async Task<IEnumerable<User>> GetByIdsAsync(List<Guid> userIds)
     {
         var usersDb = await _context.Users
+            .AsNoTracking()
             .Where(u => userIds.Contains(u.Id))
             .ToListAsync();
         return usersDb.Select(u => u.ToDomain());
     }
     public async Task<IEnumerable<User>> SearchAsync(
         string substr,
-        int maxUsers)
+        int maxUsers,
+        Guid excludeUserId)
     {
         var query = _context.Users.AsQueryable();
         if (!string.IsNullOrWhiteSpace(substr))
         {
             query = query.Where(u =>
-                u.UniqueName.Contains(substr) ||
-                u.DisplayedName.Contains(substr));
+                u.Id != excludeUserId &&
+                (u.UniqueName.Contains(substr) ||
+                u.DisplayedName.Contains(substr)));
         }
         var usersDb = await query
             .OrderBy(u => u.DisplayedName)
@@ -58,32 +64,28 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users.AnyAsync(u => u.UniqueName == uniqueName);
     }
-    public async Task<bool> CreateAsync(User user)
+    public async Task CreateAsync(User user)
     {
-        // var existDb = await _context.Users.FindAsync(user.UniqueName);
         if (await _context.Users.AnyAsync(u => u.UniqueName == user.UniqueName || u.Id == user.Id))
-            return false;
+            throw new ConflictException($"User with unique name {user.UniqueName}already exists");
         var userDb = user.ToDb();
         await _context.Users.AddAsync(userDb);
         await _context.SaveChangesAsync();
-        return true;
     }
-    public async Task<bool> UpdateAsync(User user)
+    public async Task UpdateAsync(User user)
     {
-        var userDb = await _context.Users.FindAsync(user.Id);
-        if (userDb == null)
-            return false;
+        var userDb = await _context.Users.FindAsync(user.Id)
+            ?? throw new NotFoundException($"User {user.Id} not found");
+
         userDb.DisplayedName = user.DisplayedName;
         await _context.SaveChangesAsync();
-        return true;
     }
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id)
     {
-        var userDb = await _context.Users.FindAsync(id);
-        if (userDb == null)
-            return false;
+        var userDb = await _context.Users.FindAsync(id)
+            ?? throw new NotFoundException($"User {id} not found");
+
         _context.Users.Remove(userDb);
         await _context.SaveChangesAsync();
-        return true;
     }
 }

@@ -7,10 +7,10 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid id);
     Task<User?> GetByUniqueNameAsync(string uniqueName);
     Task<IEnumerable<User>> GetByIdsAsync(List<Guid> userIds);
-    Task<IEnumerable<User>> SearchAsync(string substr, int maxUsers);
+    Task<IEnumerable<User>> SearchAsync(string substr, int maxUsers, Guid excludeUserId);
     Task<bool> ExistsAsync(Guid id);
     Task<bool> ExistsByUniqueNameAsync(string uniqueName);
-    Task<bool> CreateAsync(User user);
-    Task<bool> UpdateAsync(User user);
-    Task<bool> DeleteAsync(Guid id);
+    Task CreateAsync(User user);
+    Task UpdateAsync(User user);
+    Task DeleteAsync(Guid id);
 }

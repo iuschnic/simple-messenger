@@ -7,6 +7,12 @@ using Main.Application.Mappers;
 
 namespace Main.Application.Services;
 
+public static class UserPaging
+{
+    public const int MaxPageSize = 10;
+    public const int MinPageSize = 1;
+}
+
 public class UserService : BaseService, IUserService
 {
     public UserService(
@@ -26,27 +32,26 @@ public class UserService : BaseService, IUserService
     {
         if (await _userRepo.ExistsByUniqueNameAsync(uniqueName))
             throw new ConflictException("User with the same unique name already exists");
+
         var user = User.Create(id, uniqueName, displayedName);
-        if (!await _userRepo.CreateAsync(user))
-            throw new TechnicalException("Failed to create user");
+        await _userRepo.CreateAsync(user);
+
         return user.ToDto();
     }
-    public async Task RemoveUserAsync(Guid id)
+    public async Task RemoveUserAsync(Guid currentUserId)
     {
-        await EnsureUserExists(id);
-        if (!await _userRepo.DeleteAsync(id))
-            throw new TechnicalException("Failed to remove user");
+        await EnsureCurrentUserAuthorized(currentUserId);
+        await _userRepo.DeleteAsync(currentUserId);
     }
     public async Task<UserDto> UpdateDisplayedNameAsync(string newDisplayedName, Guid currentUserId)
     {
         var user = await GetCurrentUserOrUnauthorized(currentUserId);
+
         user.ChangeDisplayedName(newDisplayedName);
-        if (!await _userRepo.UpdateAsync(user))
-            throw new TechnicalException("Failed to update user displayed name");
+        await _userRepo.UpdateAsync(user);
 
-        await _messageProducer.SendUserChangedAsync(user.Id, user.UniqueName, newDisplayedName);
+        await _messageProducer.SendUserChangedAsync(user.Id, user.UniqueName, user.DisplayedName);
 
-        user = User.Create(user.Id, user.UniqueName, newDisplayedName);
         return user.ToDto();
     }
     public async Task<UserDto> GetMyProfileAsync(Guid currentUserId)
@@ -56,12 +61,14 @@ public class UserService : BaseService, IUserService
     }
     public async Task<IEnumerable<UserDto>> SearchUsersAsync(string substr, int maxUsers, Guid currentUserId)
     {
-        if (string.IsNullOrWhiteSpace(substr))
-            throw new ArgumentException("Invalid displayed name");
-        if (maxUsers <= 0)
-            throw new ArgumentException("Invalid maxUsers");
+        maxUsers = Math.Clamp(maxUsers, UserPaging.MinPageSize, UserPaging.MaxPageSize);
+
         await EnsureCurrentUserAuthorized(currentUserId);
-        var users = await _userRepo.SearchAsync(substr, maxUsers);
-        return users.Where(u => u.Id != currentUserId).Select(u => u.ToDto());
+
+        if (string.IsNullOrWhiteSpace(substr))
+            return [];
+
+        var users = await _userRepo.SearchAsync(substr, maxUsers, currentUserId);
+        return users.Select(u => u.ToDto());
     }
 }
