@@ -1,8 +1,20 @@
 ﻿using Main.BL.Enums;
+using Main.BL.Exceptions;
 namespace Main.BL.Models;
 
 public class Message
 {
+    public ulong MessageNumber { get; private set; }
+    public Guid ChatId { get; }
+    public Guid? SenderUserId { get; }  //может быть удален или сообщение системное
+    public string Text { get; private set; }
+    public DateTime CreatedAt { get; }
+    public DateTime? EditedAt { get; private set; }  //может не быть изменено
+    public bool Deleted { get; private set; }  //soft-delete в случае "удаления" сообщения самим пользователем
+    public ulong Version { get; private set; }
+    public MessageType Type { get; }
+    public ulong? ReplyToMessageNumber { get; }  //сообщение может быть удалено или сообщение не reply
+    public Guid? ForwardedFromUserId { get; }  //user может быть удален или сообщение не forward
     private Message(
         ulong messageNumber,
         Guid chatId,
@@ -16,16 +28,18 @@ public class Message
         ulong? replyToMessageNumber,
         Guid? forwardedFromUserId)
     {
-        if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Message cannot be empty");
+        CheckText(text);
+        EnsureNotEmptyIfPresent(chatId, "chatId");
+        EnsureNotEmptyIfPresent(senderUserId, "senderUserId");
+        EnsureNotEmptyIfPresent(forwardedFromUserId, "forwardedFromUserId");
         switch (type)
         {
             // Обычное сообщение не должно иметь ссылок на ReplyToMessageNumber или ForwardedFromUserId
             case MessageType.Regular:
                 if (replyToMessageNumber != null)
-                    throw new ArgumentException("Regular message cannot be a reply");
+                    throw new DomainValidationException("Regular message cannot be a reply");
                 if (forwardedFromUserId != null)
-                    throw new ArgumentException("Regular message cannot be a forwarded");
+                    throw new DomainValidationException("Regular message cannot be a forwarded");
                 break;
             /* Reply-сообщение не должно иметь ссылки на ForwardedFromUserId
              * Может иметь или не иметь ссылку на ReplyToMessageNumber
@@ -33,7 +47,7 @@ public class Message
              */
             case MessageType.Reply:
                 if (forwardedFromUserId != null)
-                    throw new ArgumentException("Reply message cannot be a forwarded");
+                    throw new DomainValidationException("Reply message cannot be a forwarded");
                 break;
             /* Forwarded-сообщение не должно иметь ссылки на ReplyToMessageNumber 
              * Может иметь или не иметь ссылку на ForwardedFromUserId
@@ -41,24 +55,24 @@ public class Message
              */
             case MessageType.Forward:
                 if (replyToMessageNumber != null)
-                    throw new ArgumentException("Forwarded message cannot be a reply");
+                    throw new DomainValidationException("Forwarded message cannot be a reply");
                 break;
             /* Системное сообщение не должно иметь SenderId
              * Не должно иметь ссылок на ReplyToMessageNumber или ForwardedFromUserId
              */
             case MessageType.System:
-                if (senderUserId != null && senderUserId != Guid.Empty)
-                    throw new ArgumentException("System message should not have a sender");
+                if (senderUserId != null)
+                    throw new DomainValidationException("System message should not have a sender");
                 if (replyToMessageNumber != null)
-                    throw new ArgumentException("System message cannot be a reply");
+                    throw new DomainValidationException("System message cannot be a reply");
                 if (forwardedFromUserId != null)
-                    throw new ArgumentException("System message cannot be a forwarded");
+                    throw new DomainValidationException("System message cannot be a forwarded");
                 break;
             default:
-                throw new ArgumentException($"Unknown message type: {type}", nameof(type));
+                throw new DomainValidationException($"Unknown message type: {type}");
         }
         if (editedAt != null && editedAt < createdAt)
-            throw new ArgumentException("EditedAt cannot be earlier than CreatedAt");
+            throw new DomainValidationException("EditedAt cannot be earlier than CreatedAt");
         MessageNumber = messageNumber;
         ChatId = chatId;
         SenderUserId = senderUserId;
@@ -70,6 +84,16 @@ public class Message
         Type = type;
         ReplyToMessageNumber = replyToMessageNumber;
         ForwardedFromUserId = forwardedFromUserId;
+    }
+    private static void EnsureNotEmptyIfPresent(Guid? id, string fieldName)
+    {
+        if (id == Guid.Empty)
+            throw new DomainValidationException($"{fieldName} cannot be empty");
+    }
+    private static void CheckText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            throw new DomainValidationException("Message cannot be empty");
     }
     public static Message CreateRegular(
         Guid chatId,
@@ -170,16 +194,33 @@ public class Message
             replyToMessageNumber,
             forwardedFromUserId);
     }
+    public void EditText(string newText)
+    {
+        if (Deleted)
+            throw new DomainRuleViolationException("Cannot edit a deleted message");
+        if (Type == MessageType.Forward)
+            throw new DomainRuleViolationException("Cannot edit a forwarded message");
 
-    public ulong MessageNumber { get; }
-    public Guid ChatId { get; }
-    public Guid? SenderUserId { get; }  //может быть удален или сообщение системное
-    public string Text { get; }
-    public DateTime CreatedAt { get; }
-    public DateTime? EditedAt { get; }  //может не быть изменено
-    public bool Deleted { get; }  //soft-delete в случае "удаления" сообщения самим пользователем
-    public ulong Version { get; }
-    public MessageType Type { get; }
-    public ulong? ReplyToMessageNumber { get; }  //сообщение может быть удалено или сообщение не reply
-    public Guid? ForwardedFromUserId { get; }  //user может быть удален или сообщение не forward
+        CheckText(newText);
+
+        Text = newText;
+        EditedAt = DateTime.UtcNow;
+    }
+    public void ApplyMessageNumber(ulong messageNumber)
+    {
+        // номер должен быть присвоен один раз репозиторием
+        if (MessageNumber != 0)
+            throw new DomainValidationException("Message number is already assigned");
+        MessageNumber = messageNumber;
+    }
+    public void ApplyNewVersion(ulong newVersion)
+    {
+        if (newVersion <= Version)
+            throw new DomainValidationException("Version can only increase");
+        Version = newVersion;
+    }
+    public void MarkDeleted()
+    {
+        Deleted = true;
+    }
 }

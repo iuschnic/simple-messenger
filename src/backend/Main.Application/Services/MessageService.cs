@@ -8,6 +8,12 @@ using Main.BL.Enums;
 
 namespace Main.Application.Services;
 
+public static class MessagePaging
+{
+    public const int MaxPageSize = 200;
+    public const int MinPageSize = 1;
+}
+
 public class MessageService: BaseService, IMessageService
 {
     public MessageService(
@@ -22,9 +28,7 @@ public class MessageService: BaseService, IMessageService
         int limit,
         Guid currentUserId)
     {
-        if (limit <= 0)
-            throw new ArgumentException("limit must be positive");
-        limit = Math.Min(limit, 200);
+        limit = Math.Clamp(limit, MessagePaging.MinPageSize, MessagePaging.MaxPageSize);
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
@@ -37,9 +41,7 @@ public class MessageService: BaseService, IMessageService
         int limit,
         Guid currentUserId)
     {
-        if (limit <= 0)
-            throw new ArgumentException("limit must be positive");
-        limit = Math.Min(limit, 200);
+        limit = Math.Clamp(limit, MessagePaging.MinPageSize, MessagePaging.MaxPageSize);
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
@@ -51,9 +53,7 @@ public class MessageService: BaseService, IMessageService
         int limit,
         Guid currentUserId)
     {
-        if (limit <= 0)
-            throw new ArgumentException("limit must be positive");
-        limit = Math.Min(limit, 200);
+        limit = Math.Clamp(limit, MessagePaging.MinPageSize, MessagePaging.MaxPageSize);
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
@@ -66,8 +66,6 @@ public class MessageService: BaseService, IMessageService
         Guid currentUserId,
         string text)
     {
-        if (string.IsNullOrEmpty(text))
-            throw new ArgumentException("Message text should not be null/whitespace");
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
@@ -88,8 +86,6 @@ public class MessageService: BaseService, IMessageService
         string text,
         ulong replyToMessageNumber)
     {
-        if (string.IsNullOrEmpty(text))
-            throw new ArgumentException("Message text should not be null/whitespace");
         await EnsureCurrentUserAuthorized(currentUserId);
         await EnsureChatExists(chatId);
         await EnsureParticipant(chatId, currentUserId);
@@ -173,7 +169,7 @@ public class MessageService: BaseService, IMessageService
         if (message.SenderUserId != currentUserId)
             throw new RuleViolationException("You can only edit your message");
         if (message.Deleted)
-            throw new RuleViolationException("Cannot delete a deleted message");
+            throw new RuleViolationException("Cannot edit a deleted message");
         if (message.Type == MessageType.Forward)
             throw new RuleViolationException("Cannot edit forwarded message");
         if (!await _messageRepo.TryEditTextAsync(chatId, messageNumber, newText))
